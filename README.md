@@ -8,14 +8,19 @@
 <br>
 
 ## Commit Convention
-| 타입       | 설명                     |
-| -------- | ------------------------ |
-| feat     | 새로운 기능 추가             |
-| fix      | 버그 수정                  |
-| refactor | 코드 구조 변경              |
-| perf     | 성능 개선                  |
-| merge    | 브랜치 병합                 |
-| conflict | 충돌 해결                  |
+<table>
+  <tr>
+    <th width="150">타입</th>
+    <th width="400">설명</th>
+  </tr>
+  <tr><td>feat</td><td>새로운 기능 추가</td></tr>
+  <tr><td>fix</td><td>버그 수정</td></tr>
+  <tr><td>refactor</td><td>코드 구조 변경</td></tr>
+  <tr><td>perf</td><td>성능 개선</td></tr>
+  <tr><td>merge</td><td>브랜치 병합</td></tr>
+  <tr><td>conflict</td><td>충돌 해결</td></tr>
+</table>
+
 ```
 feat: 마이페이지 기본 UI 구현
 ```
