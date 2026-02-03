@@ -15,8 +15,8 @@
     <th width="150">타입</th>
     <th width="430">설명</th>
   </tr>
-  <tr><td><code>Feat</code>code></td><td>새로운 기능 추가</td></tr>
-  <tr><td><code>Fix</code>code></td><td>버그 수정</td></tr>
+  <tr><td><code>Feat</code></td><td>새로운 기능 추가</td></tr>
+  <tr><td><code>Fix</code></td><td>버그 수정</td></tr>
   <tr><td><code>Design</code></td><td>UI/UX 디자인 변경</td></tr>
   <tr><td><code>Refactor</code></td><td>코드 리팩토링</td></tr>
   <tr><td><code>Style</code></td><td>코드 스타일 변경</td></tr>
