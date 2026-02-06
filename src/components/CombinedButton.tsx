@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import './CombinedButton.css';
+import styles from './CombinedButton.module.css';
 
 // CombinedButton 컴포넌트의 props 타입 정의
 type CombinedButtonProps = {
@@ -57,17 +57,17 @@ const CombinedButton: React.FC<CombinedButtonProps> = ({ onProjectsClick, onFaqC
   return (
     <div 
       ref={buttonRef}
-      className={`combined-button ${hoverSide ? `hover-${hoverSide}` : ''}`}
+      className={`${styles['combined-button']} ${hoverSide ? styles[`hover-${hoverSide}`] : ''}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       {/* 왼쪽 Projects 텍스트 - 호버 시 active 클래스 추가 */}
-      <span className={`label ${hoverSide === 'left' ? 'active' : ''}`}>Projects</span>
+      <span className={`${styles.label} ${hoverSide === 'left' ? styles.active : ''}`}>Projects</span>
       {/* 구분선 */}
-      <span className="divider"></span>
+      <span className={styles.divider}></span>
       {/* 오른쪽 FAQ 텍스트 - 호버 시 active 클래스 추가 */}
-      <span className={`text-wrapper ${hoverSide === 'right' ? 'active' : ''}`}>FAQ</span>
+      <span className={`${styles['text-wrapper']} ${hoverSide === 'right' ? styles.active : ''}`}>FAQ</span>
     </div>
   );
 };

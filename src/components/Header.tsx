@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
 import logoWhite from '../assets/icon/logo_white.svg';
-import './Header.css';
+import styles from './Header.module.css';
 
 // Header 컴포넌트의 props 타입 정의
 type HeaderProps = {
@@ -39,32 +39,32 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
   const handleClickOutside = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     // 홈 헤더 버튼이나 네비게이션 아이템 외부를 클릭한 경우에만 활성화 해제
-    if (!target.closest('.home-header-btn') && !target.closest('.nav-item')) {
+    if (!target.closest(`.${styles['home-header-btn']}`) && !target.closest(`.${styles['nav-item']}`)) {
       setActiveItem(null);
     }
   };
 
   return (
     // 헤더 컨테이너 - 외부 클릭 감지를 위해 onClick 이벤트 연결
-    <header className={`header ${className}`} onClick={handleClickOutside}>
+    <header className={`${styles.header} ${className}`} onClick={handleClickOutside}>
       {/* 헤더 내용을 감싸는 래퍼 */}
-      <div className="header-content">
+      <div className={styles['header-content']}>
         {/* 왼쪽 섹션 - 로고 */}
-        <div className="header-section left">
-          <div className="logo-button" style={{ height: '58px', display: 'flex', alignItems: 'center' }}>
+        <div className={`${styles['header-section']} ${styles.left}`}>
+          <div className={styles['logo-button']} style={{ height: '58px', display: 'flex', alignItems: 'center' }}>
             {/* 홈 헤더 로고 버튼 */}
             <HomeHeaderBtn
               type="logo"
               LIKELIONSwuLogoLikelionSwu={logoWhite}
-              className="logo-button"
+              className={styles['logo-button']}
             />
           </div>
         </div>
         
         {/* 중앙 섹션 - 네비게이션 */}
-        <div className="header-section center">
-          <nav className="header-nav">
-            <div className="combined-button-container">
+        <div className={`${styles['header-section']} ${styles.center}`}>
+          <nav className={styles['header-nav']}>
+            <div className={styles['combined-button-container']}>
               {/* 프로젝트/FAQ 결합 버튼 */}
               <CombinedButton 
                 onProjectsClick={() => handleItemClick('projects')}
@@ -75,10 +75,10 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         </div>
         
         {/* 오른쪽 섹션 - 지원하기 버튼 */}
-        <div className="header-section right">
-          <ul className="nav-list">
+        <div className={`${styles['header-section']} ${styles.right}`}>
+          <ul className={styles['nav-list']}>
             {rightMenuItems.map((item) => (
-              <li key={item.id} className="nav-item">
+              <li key={item.id} className={styles['nav-item']}>
                 {/* 지원하기 버튼 */}
                 <HomeHeaderBtn
                   type="label"
@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
                   menu={item.label}
                   status={activeItem === item.id ? 'active' : 'default'}
                   onClick={() => handleItemClick(item.id)}
-                  className="apply-button"
+                  className={styles['apply-button']}
                 />
               </li>
             ))}
