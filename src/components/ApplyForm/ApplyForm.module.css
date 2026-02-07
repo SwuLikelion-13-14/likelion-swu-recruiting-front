@@ -1,0 +1,285 @@
+/* 설문 컴포넌트 박스 */
+.wrapper {
+  width: 818px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* 박스 내부 여백 */
+  padding: 120px 97px 0px;
+
+}
+
+/* 배경색 variant */
+.bgDark {
+  background: rgba(0, 0, 0, 0.5); /* Alpha/black/50 */
+}
+
+.bgWhite {
+  background: #ffffff;
+}
+
+/* ===== 상단 텍스트 영역 ===== */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 60px; /* 설문 영역과 간격 */
+}
+
+/* 메인 타이틀 */
+.title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 38px;
+  margin: 0;
+  white-space: pre-line;
+  color: #FF7710;
+}
+
+/* 타이틀 색상 variant */
+.titleColored {
+  color: #FF7710;
+}
+
+.titleBlack {
+  color: #000000;
+}
+
+/* 서브 텍스트 */
+.subtitle {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 8px;
+  margin: 0;
+  color: #bdbdbd;
+}
+
+/* 서브 텍스트 색상 */
+.subtitleWhite {
+  color: #bdbdbd;
+}
+
+.subtitleBlack {
+  color: #000000;
+}
+
+/* ===== 설문 영역 ===== */
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* 질문 + 인풋 한 쌍 */
+.item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 질문 텍스트 */
+.question {
+  width: 580px;          
+  margin: 0 auto;
+  font-size: 20px;
+  line-height: 120%;
+  margin: 0;
+  font-weight: 500;
+  color: #dddddd;
+}
+
+/* 질문 색상 variant */
+.questionWhite {
+  color: #dddddd;
+}
+
+.questionBlack {
+  color: #000000;
+}
+
+/* ===== 인풋 ===== */
+.input {
+  width: 580px;
+  height: 47px;
+  padding: 14px 16px;
+  border: 1px solid #8F8F8F;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 400;
+  background-color: transparent; /* 배경 없앰 */
+  color: white; /* 입력 글자 색 기본 검정 */
+  box-sizing: border-box;
+}
+
+/* 플레이스홀더 스타일 */
+.input::placeholder {
+  color: #BDBDBD;
+  font-size: 16px;
+}
+
+.input:read-only {
+  background-color: transparent; /* read-only도 배경 없음 */
+}
+
+/* ===== 동의 영역 ===== */
+.consentSection {
+  margin-top: 120px; /* 질문 영역과의 간격 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.consentTitle {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 140%;
+  text-align: center;
+  color: #FF7710;
+  margin-bottom: 40px;
+}
+
+.consentList {
+  width: 580px;
+  display: flex;
+  flex-direction: column;
+  padding-left: 20px;
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.listTitle {
+  font-size: 18px;
+  font-weight: 400;
+  margin-top: 20px;
+  color: white;
+  line-height: 120%;
+}
+
+.consentBox {
+  font-size: 18px;
+  line-height: 120%;
+  color: #bdbdbd;
+  margin-top: 12px;
+  font-weight: 400;
+  padding-left: 16px;
+  position: relative;
+}
+
+.consentBox::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  top: 0.2em; /* 글자 중앙 정렬용 */
+  font-size: 14px;
+  color: #bdbdbd;
+}
+
+.consentCheck {
+  width: 590px;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+
+/* input은 화면에서 숨김 */
+.consentCheck input {
+  display: none;
+}
+
+/* 기본 아이콘 */
+.checkboxIcon {
+  width: 24px;
+  height: 24px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: inline-block;
+}
+
+/* 비활성 상태 */
+.consentCheck input:disabled + .checkboxIcon {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.checkboxText {
+  font-size: 20px;
+  font-weight: 400;
+  color: white;
+}
+
+/* ===== 주의사항 영역 ===== */
+.noticeSection {
+  margin-top: 120px; /* 질문 영역과의 간격 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.noticeTitle {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 140%;
+  text-align: center;
+  color: #FF7710;
+  margin-bottom: 60px;
+}
+
+.noticeItems {
+  width: 580px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-bottom: 182px;
+}
+
+.noticeItem {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.noticeTextGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.noticeIcon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.noticeText {
+  font-size: 18px;
+  font-weight: 400;
+  color: white;
+  line-height: 120%;
+  margin: 0;
+}
+
+.noticeTextDetail {
+  font-size: 16px;
+  font-weight: 500;
+  color: #bdbdbd;
+  line-height: 120%;
+  margin-left: -32px;
+}
+
+.highlight {
+  color: #FF7710;
+  font-weight: 600;
+}

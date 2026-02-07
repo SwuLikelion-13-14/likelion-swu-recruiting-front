@@ -1,8 +1,13 @@
-function App() {
+import { Routes, Route } from 'react-router-dom'
+import FrontPage from '@/pages/apply/FrontPage'
+
+
+const App = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white text-3xl font-bold">
-      Tailwind 적용 
-    </div>
+    <Routes>
+      <Route path="/" element={<FrontPage />} />
+
+    </Routes>
   )
 }
 
