@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Header } from '@/components/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import styles from './FrontPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS } from '@/constants/applyQuestions'
@@ -27,7 +28,7 @@ const FrontPage = () => {
   // 페이지 전체 상태 관리
   const [sets, setSets] = useState(questionSets)
   const [consentChecked, setConsentChecked] = useState(false)
-  
+
   const handleChange = (setIndex: number, id: number, value: string) => {
     setSets(prev =>
       prev.map((set, i) =>
@@ -46,6 +47,7 @@ const FrontPage = () => {
 
   return (
     <div className={styles.page}>
+        <Header/>
       {sets.map((set, idx) => (
         <ApplyForm
           key={idx}

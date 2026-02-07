@@ -5,19 +5,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  /* 박스 내부 여백 */
   padding: 120px 97px 0px;
-
 }
 
 /* 배경색 variant */
 .bgDark {
-  background: rgba(0, 0, 0, 0.5); /* Alpha/black/50 */
+  background: rgb(var(--alpha-black-50));
 }
 
 .bgWhite {
-  background: #ffffff;
+  background: rgb(var(--gray-white));
 }
 
 /* ===== 상단 텍스트 영역 ===== */
@@ -26,46 +23,39 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  margin-bottom: 60px; /* 설문 영역과 간격 */
+  margin-bottom: 60px;
 }
 
 /* 메인 타이틀 */
 .title {
   text-align: center;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 38px;
-  margin: 0;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-bold-32);
+  font-weight: var(--text-bold-32--font-weight);
+  line-height: var(--text-bold-32--line-height);
   white-space: pre-line;
-  color: #FF7710;
+  margin: 0;
+  color: rgb(var(--primary-60));
 }
 
 /* 타이틀 색상 variant */
 .titleColored {
-  color: #FF7710;
+  color: rgb(var(--primary-60));
 }
 
 .titleBlack {
-  color: #000000;
+  color: rgb(var(--gray-black));
 }
 
 /* 서브 텍스트 */
 .subtitle {
   text-align: center;
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 8px;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-20);
+  font-weight: var(--text-regular-20--font-weight);
+  line-height: var(--text-regular-20--line-height);
   margin: 0;
-  color: #bdbdbd;
-}
-
-/* 서브 텍스트 색상 */
-.subtitleWhite {
-  color: #bdbdbd;
-}
-
-.subtitleBlack {
-  color: #000000;
+  color: rgb(var(--gray-40));
 }
 
 /* ===== 설문 영역 ===== */
@@ -87,22 +77,22 @@
 
 /* 질문 텍스트 */
 .question {
-  width: 580px;          
-  margin: 0 auto;
-  font-size: 20px;
-  line-height: 120%;
+  width: 580px;
   margin: 0;
-  font-weight: 500;
-  color: #dddddd;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-medium-20);
+  font-weight: var(--text-medium-20--font-weight);
+  line-height: var(--text-medium-20--line-height);
+  color: rgb(var(--gray-20));
 }
 
 /* 질문 색상 variant */
 .questionWhite {
-  color: #dddddd;
+  color: rgb(var(--gray-20));
 }
 
 .questionBlack {
-  color: #000000;
+  color: rgb(var(--gray-black));
 }
 
 /* ===== 인풋 ===== */
@@ -110,28 +100,24 @@
   width: 580px;
   height: 47px;
   padding: 14px 16px;
-  border: 1px solid #8F8F8F;
+  border: 1px solid rgb(var(--gray-60));
   border-radius: 12px;
-  font-size: 16px;
-  font-weight: 400;
-  background-color: transparent; /* 배경 없앰 */
-  color: white; /* 입력 글자 색 기본 검정 */
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-16);
+  font-weight: var(--text-regular-16--font-weight);
+  background-color: transparent;
+  color: rgb(var(--gray-white));
   box-sizing: border-box;
 }
 
 /* 플레이스홀더 스타일 */
 .input::placeholder {
-  color: #BDBDBD;
-  font-size: 16px;
-}
-
-.input:read-only {
-  background-color: transparent; /* read-only도 배경 없음 */
+  color: rgb(var(--gray-40));
 }
 
 /* ===== 동의 영역 ===== */
 .consentSection {
-  margin-top: 120px; /* 질문 영역과의 간격 */
+  margin-top: 120px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -139,11 +125,12 @@
 }
 
 .consentTitle {
-  font-size: 32px;
-  font-weight: 700;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-bold-32);
+  font-weight: var(--text-bold-32--font-weight);
   line-height: 140%;
   text-align: center;
-  color: #FF7710;
+  color: rgb(var(--primary-60));
   margin-bottom: 40px;
 }
 
@@ -152,25 +139,30 @@
   display: flex;
   flex-direction: column;
   padding-left: 20px;
-  color: #FFFFFF;
-  font-size: 18px;
-  font-weight: 400;
+  list-style: decimal;   
+  list-style-position: outside;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-18);
+  font-weight: var(--text-regular-18--font-weight);
+  color: rgb(var(--gray-white));
 }
 
 .listTitle {
-  font-size: 18px;
-  font-weight: 400;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-18);
+  font-weight: var(--text-regular-18--font-weight);
   margin-top: 20px;
-  color: white;
+  color: rgb(var(--gray-white));
   line-height: 120%;
 }
 
 .consentBox {
-  font-size: 18px;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-18);
+  font-weight: var(--text-regular-18--font-weight);
   line-height: 120%;
-  color: #bdbdbd;
+  color: rgb(var(--gray-40));
   margin-top: 12px;
-  font-weight: 400;
   padding-left: 16px;
   position: relative;
 }
@@ -179,9 +171,9 @@
   content: '•';
   position: absolute;
   left: 0;
-  top: 0.2em; /* 글자 중앙 정렬용 */
+  top: 0.2em;
   font-size: 14px;
-  color: #bdbdbd;
+  color: rgb(var(--gray-40));
 }
 
 .consentCheck {
@@ -193,13 +185,10 @@
   margin-top: 30px;
 }
 
-
-/* input은 화면에서 숨김 */
 .consentCheck input {
   display: none;
 }
 
-/* 기본 아이콘 */
 .checkboxIcon {
   width: 24px;
   height: 24px;
@@ -208,21 +197,21 @@
   display: inline-block;
 }
 
-/* 비활성 상태 */
 .consentCheck input:disabled + .checkboxIcon {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
 .checkboxText {
-  font-size: 20px;
-  font-weight: 400;
-  color: white;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-20);
+  font-weight: var(--text-regular-20--font-weight);
+  color: rgb(var(--gray-white));
 }
 
 /* ===== 주의사항 영역 ===== */
 .noticeSection {
-  margin-top: 120px; /* 질문 영역과의 간격 */
+  margin-top: 120px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -230,11 +219,12 @@
 }
 
 .noticeTitle {
-  font-size: 32px;
-  font-weight: 700;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-bold-32);
+  font-weight: var(--text-bold-32--font-weight);
   line-height: 140%;
   text-align: center;
-  color: #FF7710;
+  color: rgb(var(--primary-60));
   margin-bottom: 60px;
 }
 
@@ -255,6 +245,7 @@
 .noticeTextGroup {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .noticeIcon {
@@ -264,22 +255,24 @@
 }
 
 .noticeText {
-  font-size: 18px;
-  font-weight: 400;
-  color: white;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-regular-18);
+  font-weight: var(--text-regular-18--font-weight);
+  color: rgb(var(--gray-white));
   line-height: 120%;
   margin: 0;
 }
 
 .noticeTextDetail {
-  font-size: 16px;
-  font-weight: 500;
-  color: #bdbdbd;
+  font-family: var(--font-pretendard);
+  font-size: var(--text-medium-16);
+  font-weight: var(--text-medium-16--font-weight);
+  color: rgb(var(--gray-40));
   line-height: 120%;
   margin-left: -32px;
 }
 
 .highlight {
-  color: #FF7710;
+  color: rgb(var(--primary-60));
   font-weight: 600;
 }
