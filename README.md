@@ -6,6 +6,7 @@
 ## Git Branch Strategy
 - `main`: 배포 가능하도록 관리 브랜치
 - `dev`: 개발 중인 코드 관리 브랜치
+- `feature/{기능명}`: 기능 개발 브랜치
 
 <br>
 
