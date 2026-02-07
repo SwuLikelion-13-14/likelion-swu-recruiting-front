@@ -3,6 +3,8 @@ export interface Question {
   question: string
   answer: string
   placeholder?: string
+  type?: 'text' | 'file'
+  file?: File | null
 }
 
 export type Mode = 'edit' | 'view'
@@ -15,6 +17,7 @@ export interface ApplyFormProps {
   subtitle?: string
   questions: Question[]
   onChange?: (id: number, value: string) => void
+  onFileChange?: (id: number, file: File) => void 
   enableConsent?: boolean
   enableNotice?: boolean
   enableActions?: boolean

@@ -14,12 +14,25 @@ const ApplyForm = ({
   subtitle,
   questions,
   onChange,
+  onFileChange,
   enableConsent,
   enableNotice,
   enableActions,
   consentChecked,
   onConsentChange
 }: ApplyFormProps) => {
+
+  const handleFileUpload = (id: number) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.onchange = e => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+      onFileChange?.(id, file)  // FrontPage에서 상태 업데이트
+    }
+    input.click()
+  }
+
   return (
     <section
       className={`${styles.wrapper} ${variant === 'survey'
@@ -48,21 +61,50 @@ const ApplyForm = ({
             <p
               className={`${styles.question} ${variant === 'survey'
                 ? styles.colored
-                : styles.black
+                : styles.blackinput
                 }`}
             >
               {item.question}
             </p>
 
-            <input
-              className={styles.input}
-              value={item.answer}
-              placeholder={item.placeholder}
-              readOnly={mode === 'view'}
-              onChange={e =>
-                onChange?.(item.id, e.target.value)
-              }
-            />
+
+            {item.type === 'file' ? (
+              <>
+                <div className={styles.fileInputWrapper}>
+                  <input
+                    className={styles.input}
+                    value={item.answer}
+                    placeholder={item.placeholder}
+                    readOnly={mode === 'view'}
+                    onChange={e => onChange?.(item.id, e.target.value)}
+                  />
+
+                  <div className={styles.buttonWrapper}>
+                    <button
+                      className={styles.uploadButton}
+                      onClick={() => handleFileUpload(item.id)}
+                      disabled={mode === 'view'}
+                    >
+                      {mode === 'view'
+                        ? '파일 다운로드'
+                        : item.file
+                          ? '파일 변경하기'
+                          : '파일 업로드'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <input
+                className={styles.input}
+                value={item.answer}
+                placeholder={item.placeholder}
+                readOnly={mode === 'view'}
+                onChange={e => onChange?.(item.id, e.target.value)}
+              />
+            )}
+
+
           </div>
         ))}
       </div>
@@ -153,9 +195,9 @@ const ApplyForm = ({
                 </p>
 
                 <p className={styles.noticeTextDetail}>
-                  현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은 <span className={styles.highlight}>불가능</span> 합니다.
-                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,
-                  변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요.
+                  현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은 <span className={styles.highlight}>불가능</span> 합니다. <br/>
+                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후, <br/>
+                  변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br/>
                   내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span> 복사/붙여넣기를 권장 드립니다.
                 </p>
               </div>
@@ -173,11 +215,10 @@ const ApplyForm = ({
                 </p>
 
                 <p className={styles.noticeTextDetail}>
-                  1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다. <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후,
-                  변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요.
+                  1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다. <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br/>
                   최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
-                  <br/>
-                  <br/>
+                  <br />
+                  <br />
                   1차 서류 모집 기간이 끝나면, 지원서 수정 및 열람은 <span className={styles.highlight}>불가능</span> 합니다.
                 </p>
               </div>

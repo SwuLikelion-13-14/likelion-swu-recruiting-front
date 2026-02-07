@@ -58,7 +58,7 @@
   color: rgb(var(--gray-40));
 }
 
-/* ===== 설문 영역 ===== */
+/* ===== 폼 영역 ===== */
 .form {
   width: 100%;
   display: flex;
@@ -154,6 +154,7 @@
   margin-top: 20px;
   color: rgb(var(--gray-white));
   line-height: 120%;
+  margin-bottom: 7px;
 }
 
 .consentBox {
@@ -162,7 +163,7 @@
   font-weight: var(--text-regular-18--font-weight);
   line-height: 120%;
   color: rgb(var(--gray-40));
-  margin-top: 12px;
+  margin-top: 5px;
   padding-left: 16px;
   position: relative;
 }
@@ -268,7 +269,7 @@
   font-size: var(--text-medium-16);
   font-weight: var(--text-medium-16--font-weight);
   color: rgb(var(--gray-40));
-  line-height: 120%;
+  line-height: 20px;
   margin-left: -32px;
 }
 
@@ -276,3 +277,33 @@
   color: rgb(var(--primary-60));
   font-weight: 600;
 }
+
+.fileInputWrapper {
+  display: flex;
+  flex-direction: column; /* input 위에 버튼 배치 */
+  gap: 8px; /* input과 버튼 사이 간격 */
+}
+
+.buttonWrapper {
+  display: flex;
+  justify-content: flex-end; /* 오른쪽 끝으로 이동 */
+  width: 100%; /* wrapper는 full width */
+}
+
+.uploadButton {
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25); 
+  background-color: rgba(0, 0, 0, 0.75);      
+  color: #FFFFFF;                               
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 12px;
+  cursor: pointer;
+  flex-shrink: 0; /* 버튼이 작아지지 않도록 */
+}
+
+.uploadButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
