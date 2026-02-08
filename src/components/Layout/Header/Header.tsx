@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
-import logoWhite from '../assets/icon/logo_white.svg';
+import logoWhite from '@/assets/icon/logo_white.svg';
 import styles from './Header.module.css';
 
 // Header 컴포넌트의 props 타입 정의

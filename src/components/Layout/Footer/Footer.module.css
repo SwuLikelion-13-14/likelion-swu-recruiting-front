@@ -1,18 +1,17 @@
 /* 푸터 기본 스타일 */
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-    height: 80px;
-
+  position: relative;
+  width: 100%;
+  z-index: 1;
+  height: auto;
+  min-height: 80px;
   background: transparent;
   opacity: 0.6;
   display: flex;
   justify-content: space-between;
-  padding: 40px 100px;
+  padding: 20px 100px;
   box-sizing: border-box;
+  margin-top: auto;
 }
 
 /* 푸터 내용 컨테이너 */
