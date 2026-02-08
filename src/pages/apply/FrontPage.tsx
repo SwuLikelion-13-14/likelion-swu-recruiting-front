@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Header } from '@/components/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
+import Banner from '@/components/Banner'
 import styles from './FrontPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS } from '@/constants/applyQuestions'
+import Footer from '@/components/Footer';
 
 
 // 각 세트 질문 더미
@@ -25,49 +27,73 @@ const questionSets = [
 ]
 
 const FrontPage = () => {
-  // 페이지 전체 상태 관리
-  const [sets, setSets] = useState(questionSets)
-  const [consentChecked, setConsentChecked] = useState(false)
+    // 페이지 전체 상태 관리
+    const [sets, setSets] = useState(questionSets)
+    const [consentChecked, setConsentChecked] = useState(false)
 
-  const handleChange = (setIndex: number, id: number, value: string) => {
-    setSets(prev =>
-      prev.map((set, i) =>
-        i === setIndex
-          ? {
-              ...set,
-              questions: set.questions.map(q =>
-                q.id === id ? { ...q, answer: value } : q
-              ),
-            }
-          : set
-      )
+    const handleChange = (setIndex: number, id: number, value: string) => {
+        setSets(prev =>
+            prev.map((set, i) =>
+                i === setIndex
+                    ? {
+                        ...set,
+                        questions: set.questions.map(q =>
+                            q.id === id ? { ...q, answer: value } : q
+                        ),
+                    }
+                    : set
+            )
+        )
+    }
+
+    const handleFileChange = (setIndex: number, id: number, file: File) => {
+        setSets(prev =>
+            prev.map((set, i) =>
+                i === setIndex
+                    ? {
+                        ...set,
+                        questions: set.questions.map(q =>
+                            q.id === id ? { ...q, file, answer: file.name } : q
+                        ),
+                    }
+                    : set
+            )
+        )
+    }
+
+
+
+    return (
+        <div className={styles.page}>
+            <Header />
+            <Banner
+                line1="프론트엔드 개발"
+                line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서"
+            />
+
+            {sets.map((set, idx) => (
+                <ApplyForm
+                    key={idx}
+                    mode="edit"
+                    variant="survey"
+                    title={set.title}
+                    subtitle={set.subtitle}
+                    questions={set.questions}
+                    onChange={(id, value) => handleChange(idx, id, value)}
+                    enableConsent={idx === sets.length - 1}
+                    enableNotice={idx === sets.length - 1}
+                    enableActions={idx === sets.length - 1}
+                    consentChecked={consentChecked}
+                    onConsentChange={setConsentChecked}
+                    onFileChange={(id, file) => handleFileChange(idx, id, file)}
+                >
+                </ApplyForm>
+            ))}
+
+            <Footer />
+
+        </div>
     )
-  }
-
-
-  return (
-    <div className={styles.page}>
-        <Header/>
-      {sets.map((set, idx) => (
-        <ApplyForm
-          key={idx}
-          mode="edit"
-          variant="survey"
-          title={set.title}
-          subtitle={set.subtitle}
-          questions={set.questions}
-          onChange={(id, value) => handleChange(idx, id, value)}
-          enableConsent={idx === sets.length - 1}
-          enableNotice={idx === sets.length - 1}
-          enableActions={idx === sets.length - 1}
-          consentChecked={consentChecked}
-          onConsentChange={setConsentChecked}
-        >
-        </ApplyForm>
-      ))}
- 
-    </div>
-  )
 }
 
 export default FrontPage

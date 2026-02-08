@@ -3,8 +3,11 @@ export interface Question {
   question: string
   answer: string
   placeholder?: string
-  type?: 'text' | 'file'
+  type?: 'text' | 'password' | 'file';
   file?: File | null
+  required?: boolean 
+  pattern?: RegExp; 
+  errorMessage?: string; 
 }
 
 export type Mode = 'edit' | 'view'
