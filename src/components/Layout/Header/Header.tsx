@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
 import logoWhite from '@/assets/icon/logo_white.svg';
@@ -22,11 +23,18 @@ const rightMenuItems = [
 
 /*웹사이트 상단 헤더 컴포넌트/로고, 네비게이션, 지원하기 버튼 */
 export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
+  const navigate = useNavigate();
   // 현재 활성화된 메뉴 아이템의 ID를 저장하는 상태
   const [activeItem, setActiveItem] = useState<string | null>(null);
 
   // 메뉴 아이템 클릭 핸들러
   const handleItemClick = (itemId: string) => {
+    // 지원하기 버튼 클릭 시 /front로 이동
+    if (itemId === 'apply') {
+      navigate('/front');
+      return;
+    }
+    
     // 이미 활성화된 아이템을 클릭하면 비활성화, 아니면 활성화
     if (activeItem === itemId) {
       setActiveItem(null);
@@ -52,11 +60,12 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
         {/* 왼쪽 섹션 - 로고 */}
         <div className={`${styles['header-section']} ${styles.left}`}>
           <div className={styles['logo-button']} style={{ height: '58px', display: 'flex', alignItems: 'center' }}>
-            {/* 홈 헤더 로고 버튼 */}
+            {/* 홈 헤더 로고 버튼 - 클릭 시 홈으로 이동 */}
             <HomeHeaderBtn
               type="logo"
               LIKELIONSwuLogoLikelionSwu={logoWhite}
               className={styles['logo-button']}
+              onClick={() => navigate('/')}
             />
           </div>
         </div>
