@@ -4,7 +4,7 @@ import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/Banner'
 import styles from './FrontPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS } from '@/constants/applyQuestions'
-import Footer from '@/components/Footer';
+import Footer from '@/components/Layout/Footer/Footer';
 
 
 // 각 세트 질문 더미
@@ -30,6 +30,7 @@ const FrontPage = () => {
     // 페이지 전체 상태 관리
     const [sets, setSets] = useState(questionSets)
     const [consentChecked, setConsentChecked] = useState(false)
+    const allQuestions = sets.flatMap(set => set.questions)
 
     const handleChange = (setIndex: number, id: number, value: string) => {
         setSets(prev =>
@@ -79,6 +80,7 @@ const FrontPage = () => {
                     title={set.title}
                     subtitle={set.subtitle}
                     questions={set.questions}
+                    allQuestions={allQuestions}
                     onChange={(id, value) => handleChange(idx, id, value)}
                     enableConsent={idx === sets.length - 1}
                     enableNotice={idx === sets.length - 1}

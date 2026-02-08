@@ -1,6 +1,5 @@
 .page {
   width: 100%;
-
   background-image: url('/img/Form_front.png');
   background-size: cover;        /* 화면 꽉 채우기 */
   background-position: center;   /* 중앙 기준 */

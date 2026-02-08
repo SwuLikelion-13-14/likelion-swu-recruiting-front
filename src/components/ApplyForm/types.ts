@@ -26,6 +26,5 @@ export interface ApplyFormProps {
   enableActions?: boolean
   consentChecked?: boolean
   onConsentChange?: (checked: boolean) => void
+  allQuestions: Question[]
 }
-
-
