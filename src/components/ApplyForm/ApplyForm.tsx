@@ -24,10 +24,12 @@ const studentMessages: Record<StudentStatus, string> = {
 // 중복 학번 검증 api 연결 자리
 const mockCheckStudentId = (id: string): StudentStatus => {
   if (!/^\d{10}$/.test(id)) return 'invalid'
-  if (id === '1234567890') return 'draft-exists' // 임시저장
-  if (id === '2026000000') return 'submitted-exists' // 제출된 지원서
+  if (id === '1234567890') return 'draft-exists'
+  if (id === '2026000000') return 'submitted-exists'
   return 'valid'
 }
+
+type ButtonState = 'default' | 'unactive'
 
 const ApplyForm = ({
   mode,
@@ -41,7 +43,8 @@ const ApplyForm = ({
   enableNotice,
   enableActions,
   consentChecked,
-  onConsentChange
+  onConsentChange,
+  allQuestions
 }: ApplyFormProps) => {
 
   const [errors, setErrors] = useState<{ [id: number]: string }>({})
@@ -56,7 +59,7 @@ const ApplyForm = ({
       const q = questions[i]
 
       if (q.type === 'file') {
-        if (q.required && !q.answer) {
+        if (q.required && !q.file) {
           newErrors[q.id] = '기획디자인 트랙 지원자는 필수 답변 항목입니다.'
         }
         continue
@@ -90,8 +93,6 @@ const ApplyForm = ({
       onFileChange?.(id, file)
       onChange?.(id, file.name)
 
-      const q = questions.find(q => q.id === id)
-      if (!q) return
       const newErrors = { ...errors }
       const newSuccess = { ...success }
 
@@ -100,6 +101,36 @@ const ApplyForm = ({
     }
     input.click()
   }
+
+  // ✅ ===== 버튼 상태 계산 =====
+
+  const hasAnyInput = questions.some(q => q.answer.trim() !== '')
+  const requiredFilled = allQuestions
+    .filter(q => q.required)
+    .every(q => {
+      if (q.type === 'file') {
+        return !!q.file
+      }
+      return q.answer.trim() !== ''
+    })
+
+  const studentValid = studentStatus === 'valid'
+  const passwordValid = Object.keys(success).length > 0
+  const consentOk = !!consentChecked
+
+  const cancelState: ButtonState = 'default'
+
+  const draftState: ButtonState =
+    hasAnyInput && studentValid && passwordValid && consentOk
+      ? 'default'
+      : 'unactive'
+
+  const submitState: ButtonState =
+    requiredFilled && studentValid && passwordValid && consentOk
+      ? 'default'
+      : 'unactive'
+
+  // =============================
 
   return (
     <section className={`${styles.wrapper} ${variant === 'survey' ? styles.bgDark : styles.bgWhite}`}>
@@ -146,21 +177,20 @@ const ApplyForm = ({
                 </div>
               </div>
             ) : (
-
               <>
                 <input
                   type={item.type ?? 'text'}
                   className={`${styles.input} ${item.id === STUDENT_ID
-                      ? studentStatus === 'valid'
-                        ? styles.inputSuccess
-                        : studentStatus
-                          ? styles.inputError
-                          : ''
-                      : errors[item.id]
+                    ? studentStatus === 'valid'
+                      ? styles.inputSuccess
+                      : studentStatus
                         ? styles.inputError
-                        : success[item.id]
-                          ? styles.inputSuccess
-                          : ''
+                        : ''
+                    : errors[item.id]
+                      ? styles.inputError
+                      : success[item.id]
+                        ? styles.inputSuccess
+                        : ''
                     }`}
                   value={item.answer}
                   placeholder={item.placeholder}
@@ -302,6 +332,29 @@ const ApplyForm = ({
               </div>
             </div>
           </div>
+          {/*  버튼 영역 */}
+          {enableActions && (
+            <div className={styles.actionRow}>
+              <button className={`${styles.actionButton} ${styles[cancelState]}`}>
+                작성 취소
+              </button>
+
+              <button
+                className={`${styles.actionButton} ${styles[draftState]}`}
+                disabled={draftState === 'unactive'}
+              >
+                임시 저장
+              </button>
+
+              <button
+                className={`${styles.actionButton} ${styles[submitState]}`}
+                disabled={submitState === 'unactive'}
+              >
+                최종 제출
+              </button>
+            </div>
+          )}
+
         </section>
       )}
     </section>

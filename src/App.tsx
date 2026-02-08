@@ -1,13 +1,17 @@
 import { Routes, Route } from 'react-router-dom'
 import FrontPage from '@/pages/apply/FrontPage'
 import HomePage from './pages/home/HomePage';
+import DesignPage from './pages/apply/DesignPage';
+import BackPage from './pages/apply/BackPage';
 import AnnualPlanPage from './pages/home/annual-plan/AnnualPlanPage';
 
 const App = () => {
   return (
     <Routes>
-      <Route path="/front" element={<FrontPage />} />
       <Route path="/" element={<HomePage />} />
+      <Route path="/front" element={<FrontPage />} />
+      <Route path="/design" element={<DesignPage />} />
+      <Route path="/back" element={<BackPage />} />
       <Route path="annual-plan" element={<AnnualPlanPage /> } />
     </Routes>
   )
