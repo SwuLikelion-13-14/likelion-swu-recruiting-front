@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Header } from '@/components/Header';
+import { Header } from '@/components/Layout/Header/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/Banner'
 import styles from './FrontPage.module.css'

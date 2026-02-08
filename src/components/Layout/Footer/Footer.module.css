@@ -1,0 +1,62 @@
+/* 푸터 기본 스타일 */
+.footer {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+  height: auto;
+  min-height: 80px;
+  background: transparent;
+  opacity: 0.6;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 100px;
+  box-sizing: border-box;
+  margin-top: auto;
+}
+
+/* 푸터 내용 컨테이너 */
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* 왼쪽/오른쪽 섹션 공통 스타일 */
+.footer-left,
+.footer-right {
+  color: #bcbcbc;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* 왼쪽 섹션 (연락처) 스타일 */
+.footer-left {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* 오른쪽 섹션 (저작권) 스타일 */
+.footer-right {
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 300;
+}
+
+/* 반응형 디자인 - 모바일 대응 */
+/* 태블릿 및 모바일 화면 (최대 768px) */
+@media (max-width: 768px) {
+  /* 모바일에서 세로 정렬로 변경 */
+  .footer-content {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  /* 모바일에서 왼쪽/오른쪽 섹션을 전체 너비로 확장 */
+  .footer-left,
+  .footer-right {
+    width: 100%;
+  }
+}
