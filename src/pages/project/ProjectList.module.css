@@ -1,0 +1,67 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 메인 컨테이너 스타일 */
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+
+
+/* 콘텐츠 영역 스타일 */
+.content {
+  width: 100%;
+  max-width: 100%;
+  padding: 60px 140px;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+  overflow: visible;
+  color: #333;
+}
+
+/* 제목 섹션 스타일 */
+.titleSection {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+h1 {
+  color: #FF7710;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 48px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 130%;
+  letter-spacing: -1px;
+  margin: 0;
+  padding: 0;
+}
+
+.subtitle {
+  color: #F5F5F5;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 120%;
+}
+
+/* 프로젝트 리스트 스타일 */
+.projectList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
