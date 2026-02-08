@@ -110,6 +110,11 @@
   box-sizing: border-box;
 }
 
+.input:focus {
+  outline: none; /* 파란 테두리 제거 */
+
+}
+
 /* 플레이스홀더 스타일 */
 .input::placeholder {
   color: rgb(var(--gray-40));
@@ -284,12 +289,6 @@
   gap: 8px; /* input과 버튼 사이 간격 */
 }
 
-.buttonWrapper {
-  display: flex;
-  justify-content: flex-end; /* 오른쪽 끝으로 이동 */
-  width: 100%; /* wrapper는 full width */
-}
-
 .uploadButton {
   padding: 12px 16px;
   border: 1px solid rgba(255, 255, 255, 0.25); 
@@ -305,5 +304,40 @@
 .uploadButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.inputError {
+  border: 1px solid #EF4444; /* 빨강 테두리 */
+}
+
+.errorText {
+  font-size: 12px;
+  font-weight: 400;
+  color: #EF4444;
+  align-self: flex-start;
+  margin-left: 22px;
+}
+
+.fileErrorText {
+  margin-left: 0;
+}
+
+
+.inputSuccess {
+  border: 1px solid #10B981; 
+}
+
+.successText {
+  font-size: 12px;
+  font-weight: 400;
+  color: #10B981;
+  align-self: flex-start;
+  margin-left: 22px;
+}
+
+.fileBottomRow {
+  width: 580px;
+  display: flex;
+  justify-content: space-between;
 }
 
