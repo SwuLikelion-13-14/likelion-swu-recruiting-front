@@ -36,7 +36,7 @@ html, body {
 /* 제목 섹션 스타일 */
 .titleSection {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 86px;
 }
 
 h1 {
@@ -58,10 +58,98 @@ h1 {
   line-height: 120%;
 }
 
-/* 프로젝트 리스트 스타일 */
-.projectList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
+/* 프로젝트 컨테이너 */
+.projectsContainer {
+  width: 100%;
+  max-width: 1143px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+/* 프로젝트 섹션 */
+.projectSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 프로젝트 콘텐츠 공통 스타일 */
+.projectContent {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px 50px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  position: relative;
+
+}
+
+/* 프로젝트 타이틀 컨테이너 */
+.titleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 20 50px;
+}
+
+/* 프로젝트 타이틀 */
+.projectTitle {
+  color: #FFFFFF;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 120%;
+  letter-spacing: -2%;
+  margin: 0;
+}
+
+/* 제목 컨테이너 */
+.titleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 20px 0;
+  position: relative;
+}
+
+/* 셰브론 아이콘 컨테이너 */
+.chevronContainer {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 셰브론 아이콘 */
+.chevronIcon {
+  width: 40px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+/* 13th Projects */
+.project13 {
+  height: 1404px;
+}
+
+/* 12th Projects */
+.project12 {
+  height: 1404px;
+}
+
+/* 11th Projects */
+.project11 {
+  height: 766px;
 }

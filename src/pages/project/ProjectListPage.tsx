@@ -2,6 +2,7 @@ import React from 'react';
 import backgroundImage from '../../assets/img/14th_home_img.png';
 import Layout from '../../components/Layout/Layout';
 import styles from './ProjectList.module.css';
+import ChevronUp from '../../assets/icon/chevron_up.svg';
 
 const ProjectListPage: React.FC = () => {
   return (
@@ -20,9 +21,46 @@ const ProjectListPage: React.FC = () => {
             </div>
           </div>
           
-          {/* 프로젝트 리스트가 들어갈 부분 */}
-          <div className={styles.projectList}>
-            {/* 프로젝트 아이템*/}
+          {/* 프로젝트 섹션 */}
+          <div className={styles.projectsContainer}>
+            {/* 13th Projects */}
+<div className={styles.projectSection}>
+  <div className={`${styles.projectContent} ${styles.project13}`}>
+    <div className={styles.titleContainer}>
+      <h2 className={styles.projectTitle}>13th Projects</h2>
+      <div className={styles.chevronContainer}>
+        <img src={ChevronUp} alt="Toggle projects" className={styles.chevronIcon} />
+      </div>
+    </div>
+    {/* 13th 프로젝트 아이템들이 들어갈 자리 */}
+  </div>
+</div>
+            
+            {/* 12th Projects */}
+<div className={styles.projectSection}>
+  <div className={`${styles.projectContent} ${styles.project12}`}>
+    <div className={styles.titleContainer}>
+      <h2 className={styles.projectTitle}>12th Projects</h2>
+      <div className={styles.chevronContainer}>
+        <img src={ChevronUp} alt="Toggle projects" className={styles.chevronIcon} />
+      </div>
+    </div>
+    {/* 12th 프로젝트 아이템들이 들어갈 자리 */}
+  </div>
+</div>
+            
+            {/* 11th Projects */}
+<div className={styles.projectSection}>
+  <div className={`${styles.projectContent} ${styles.project11}`}>
+    <div className={styles.titleContainer}>
+      <h2 className={styles.projectTitle}>11th Projects</h2>
+      <div className={styles.chevronContainer}>
+        <img src={ChevronUp} alt="Toggle projects" className={styles.chevronIcon} />
+      </div>
+    </div>
+    {/* 11th 프로젝트 아이템들이 들어갈 자리 */}
+  </div>
+</div>
           </div>
         </div>
       </Layout>
