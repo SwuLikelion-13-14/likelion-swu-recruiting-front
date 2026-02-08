@@ -10,7 +10,9 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className={styles.layoutContainer}>
+    <div 
+      className={styles.layoutContainer}
+    >
       <Header />
       
       {/* 본문 영역: children이 있으면 children을, 없으면 Outlet을 렌더링 */}
@@ -18,7 +20,9 @@ const Layout = ({ children }: LayoutProps) => {
         {children || <Outlet />}
       </main>
 
-      <Footer />
+      <div className={styles.footerContainer}>
+        <Footer />
+      </div>
     </div>
   );
 };
