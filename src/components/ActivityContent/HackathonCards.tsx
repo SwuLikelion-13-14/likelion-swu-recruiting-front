@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import styles from './HackathonCards.module.css';
 
-import likelionWhiteIcon from '../assets/icon/likelion_white.svg';
+import likelionWhiteIcon from '../../assets/icon/likelion_white.svg';
 
 type CardItem = {
   title: string;

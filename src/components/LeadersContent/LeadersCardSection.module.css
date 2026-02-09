@@ -1,0 +1,138 @@
+.wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-items: center;
+}
+
+.topRow {
+  width: 100%;
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* 카드 공통 */
+.card {
+  box-sizing: border-box;
+  padding: 20px 40px;
+  border-radius: 20px;
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+
+  box-shadow:
+    inset 2px 2px 8.1px rgb(var(--alpha-white-50)),
+    inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* 기존 half/full 유지 */
+.cardHalf {
+  /* width는 여기서 고정하지 않고, 아래 cardFixed/cardGrow로 제어 */
+}
+
+.cardFull {
+  width: 100%;
+  padding: 20px;
+}
+
+/* PM&Design: 고정폭(470) */
+.cardFixed {
+  flex: 0 0 470px;
+  width: 470px;
+}
+
+/* Frontend: 남는 폭 모두 사용(Backend 오른쪽 끝과 정렬) */
+.cardGrow {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+}
+
+.trackBadge {
+  padding: 8px 20px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trackIcon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.memberRow {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.memberRowCenter {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 34px;
+}
+
+.member {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: rgb(var(--alpha-white-10));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.memberText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nameRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rolePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgb(var(--secondary-70));
+}

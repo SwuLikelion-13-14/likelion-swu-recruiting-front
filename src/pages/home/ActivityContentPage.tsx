@@ -2,11 +2,11 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Header } from '../../components/Layout/Header/Header';
 import Footer from '../../components/Layout/Footer/Footer';
 import mainBg from '../../assets/img/main_img.png';
-import ActivityCards from '../../components/ActivityCards';
-import HackathonCards from '../../components/HackathonCards';
-import SessionCurriculum from '../../components/SessionCurriculum';
-import CompletionFeeCards from '../../components/CompletionFeeCards';
-import RecruitBanner from '../../components/RecruitBanner';
+import ActivityCards from '../../components/ActivityContent/ActivityCards';
+import HackathonCards from '../../components/ActivityContent/HackathonCards';
+import SessionCurriculum from '../../components/ActivityContent/SessionCurriculum';
+import CompletionFeeCards from '../../components/ActivityContent/CompletionFeeCards';
+import RecruitBanner from '../../components/ActivityContent/RecruitBanner';
 
 type ScrollDir = 'down' | 'up';
 

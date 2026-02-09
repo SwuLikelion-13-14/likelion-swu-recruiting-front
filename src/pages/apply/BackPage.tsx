@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Header } from '@/components/Layout/Header/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
-import Banner from '@/components/Banner'
+import Banner from '@/components/ActivityContent/Banner'
 import styles from './FrontPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS, BACKEND_QUESTIONS } from '@/constants/applyQuestions'
 import Footer from '@/components/Layout/Footer/Footer';

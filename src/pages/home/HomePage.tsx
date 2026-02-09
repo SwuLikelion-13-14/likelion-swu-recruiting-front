@@ -10,6 +10,7 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   const goActivity = () => navigate('/activity-content');
+  const goLeaders = () => navigate('/leaders');
 
   return (
     <div
@@ -90,7 +91,15 @@ const HomePage = () => {
               </div>
 
               {/* 14th Leaders Card */}
-              <div className={styles.card}>
+              <div 
+                className={styles.card}
+                role="button"
+                tabIndex={0}
+                onClick={goLeaders}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') goLeaders();
+                }}
+                >
                 <div className={styles.cardBg}>
                   <div className={styles.radialGradient1} />
                   <div className={styles.radialGradient2} />

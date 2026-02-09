@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import styles from './ActivityCards.module.css';
 
-import scheduleIcon from '../assets/icon/schedule_red.svg';
-import studyIcon from '../assets/icon/study_red.svg';
-import collaboIcon from '../assets/icon/collaboWork_red.svg';
+import scheduleIcon from '../../assets/icon/schedule_red.svg';
+import studyIcon from '../../assets/icon/study_red.svg';
+import collaboIcon from '../../assets/icon/collaboWork_red.svg';
 
 type CardItem = {
   icon: string;
