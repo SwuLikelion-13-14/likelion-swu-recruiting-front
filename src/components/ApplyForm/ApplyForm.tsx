@@ -7,6 +7,8 @@ import noticeIcon from '@/assets/icon/alert_octagon.svg'
 import type { Question } from '@/components/ApplyForm/types'
 import ApplyFormActions from './ApplyFormActions'
 import Modal from '@/components/Modal/Modal'
+import { useNavigationGuard } from '@/contexts/NavigationGuardContext'
+
 
 type StudentStatus =
   | 'invalid'
@@ -15,6 +17,8 @@ type StudentStatus =
   | 'valid'
 
 const STUDENT_ID = 15
+const PASSWORD_ID = 16
+
 
 const studentMessages: Record<StudentStatus, string> = {
   invalid: '형식이 다릅니다. 숫자 10자리를 입력하세요.',
@@ -53,6 +57,11 @@ const ApplyForm = ({
   const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(undefined)
   const [modalOpen, setModalOpen] = useState(false)
   const [modalType, setModalType] = useState<'submitted' | 'draft' | null>(null)
+
+  const { setDirty, registerValidator } = useNavigationGuard()
+
+  const passwordAnswer =
+    allQuestions.find(q => q.id === PASSWORD_ID)?.answer ?? ''
 
 
   useEffect(() => {
@@ -122,14 +131,62 @@ const ApplyForm = ({
     input.click()
   }
 
+  const validateInfoSection = () => {
+    const studentOk = studentStatus === 'valid'
+    const passwordOk = /^\d{4}$/.test(passwordAnswer)
+
+    if (!studentOk || !passwordOk) {
+      const newErrors: { [id: number]: string } = {}
+
+      if (!studentOk) {
+        newErrors[STUDENT_ID] = '필수 답변 항목입니다.'
+      }
+
+
+      if (!passwordOk) {
+        newErrors[PASSWORD_ID] = '필수 답변 항목입니다.'
+      }
+
+      setErrors(prev => ({
+        ...prev,
+        ...newErrors
+      }))
+
+
+      const firstErrorId = !studentOk
+        ? STUDENT_ID
+        : PASSWORD_ID
+
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`field-${firstErrorId}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      })
+
+      return false
+    }
+
+
+    return true
+  }
+
+  useEffect(() => {
+    registerValidator(validateInfoSection)
+  }, [studentStatus, passwordAnswer])
+
+
   // 버튼 상태 계산
   const hasAnyInput = questions.some(q => q.answer.trim() !== '')
+  useEffect(() => {
+    setDirty(hasAnyInput)
+  }, [hasAnyInput])
+
   const requiredFilled = allQuestions
     .filter(q => q.required)
     .every(q => (q.type === 'file' ? !!q.file : q.answer.trim() !== ''))
 
   const studentValid = studentStatus === 'valid'
-  const passwordValid = Object.keys(success).length > 0
+  const passwordValid = /^\d{4}$/.test(passwordAnswer)
   const consentOk = !!consentChecked
 
   const cancelState: ButtonState = 'default'
@@ -153,7 +210,7 @@ const ApplyForm = ({
       </header>
 
       {/* 폼 */}
-      <div className={styles.form}>
+      <div id="info-section" className={styles.form}>
         {questions.map((item) => (
           <div className={styles.item} key={item.id}>
             <p className={`${styles.question} ${variant === 'survey' ? styles.colored : styles.blackinput}`}>
@@ -185,12 +242,13 @@ const ApplyForm = ({
             ) : (
               <>
                 <input
+                  id={`field-${item.id}`}
                   type={item.type ?? 'text'}
                   className={`${styles.input} ${item.id === STUDENT_ID
-                    ? studentStatus === 'valid'
-                      ? styles.inputSuccess
-                      : studentStatus
-                        ? styles.inputError
+                    ? errors[item.id]
+                      ? styles.inputError
+                      : studentStatus === 'valid'
+                        ? styles.inputSuccess
                         : ''
                     : errors[item.id]
                       ? styles.inputError
@@ -206,33 +264,57 @@ const ApplyForm = ({
                     onChange?.(item.id, value)
 
                     if (item.id === STUDENT_ID) {
-                      setStudentStatus(mockCheckStudentId(value))
+                      const newErrors = { ...errors }
+                      delete newErrors[STUDENT_ID]   // validate 에러 제거
+                      setErrors(newErrors)
+
+                      setStudentStatus(mockCheckStudentId(value)) // 즉시 invalid/valid 계산
                       return
                     }
 
-                    const q = questions.find(q => q.id === item.id)
-                    if (!q) return
-                    const newErrors = { ...errors }
-                    const newSuccess = { ...success }
 
-                    if (q.required && !value.trim()) newErrors[item.id] = '필수 답변 항목입니다.'
-                    else delete newErrors[item.id]
+                    if (item.id === PASSWORD_ID) {
+                      const newErrors = { ...errors }
+                      const newSuccess = { ...success }
 
-                    if (q.pattern && q.pattern.test(value)) newSuccess[item.id] = '비밀번호가 설정되었습니다.'
-                    else delete newSuccess[item.id]
+                      // validate에서 생긴 필수 에러 제거
+                      delete newErrors[PASSWORD_ID]
 
-                    setErrors(newErrors)
-                    setSuccess(newSuccess)
+                      if (!/^\d{4}$/.test(value)) {
+                        newErrors[PASSWORD_ID] = '형식이 다릅니다. 숫자 4자리를 입력하세요.'
+                        delete newSuccess[PASSWORD_ID]
+                      } else {
+                        newSuccess[PASSWORD_ID] = '비밀번호가 설정되었습니다.'
+                        delete newErrors[PASSWORD_ID]
+                      }
+
+                      setErrors(newErrors)
+                      setSuccess(newSuccess)
+                      return
+                    }
+
                   }}
                   onBlur={() => handleBlur(item.id, allQuestions)}
                 />
-                {item.id === STUDENT_ID && studentStatus && (
-                  <div className={studentStatus === 'valid' ? styles.successText : styles.errorText}>
-                    {studentMessages[studentStatus]}
+                {item.id === STUDENT_ID ? (
+                  <div
+                    className={
+                      errors[item.id]
+                        ? styles.errorText
+                        : studentStatus === 'valid'
+                          ? styles.successText
+                          : styles.errorText
+                    }
+                  >
+                    {errors[item.id] || (studentStatus ? studentMessages[studentStatus] : '')}
                   </div>
+                ) : (
+                  <>
+                    {errors[item.id] && <div className={styles.errorText}>{errors[item.id]}</div>}
+                    {success[item.id] && !errors[item.id] && <div className={styles.successText}>{success[item.id]}</div>}
+                  </>
                 )}
-                {errors[item.id] && <div className={styles.errorText}>{errors[item.id]}</div>}
-                {success[item.id] && !errors[item.id] && <div className={styles.successText}>{success[item.id]}</div>}
+
               </>
             )}
           </div>
@@ -354,14 +436,14 @@ const ApplyForm = ({
           description={
             <span>
               여러 개의 지원서를 임시저장 할 수 없으므로,<br />
-               현재 작성 중인 지원서는 <span style={{ color: '#FF7710' }}>‘작성 취소’</span> 해주세요.
+              현재 작성 중인 지원서는 <span style={{ color: '#FF7710' }}>‘작성 취소’</span> 해주세요.
             </span>
           }
           extraText={
             <span>
               해당 학번으로 다시 로그인하여,<br />
               기존에 임시 저장한 지원서를 다시 확인해 주세요.
-              <br/><br/>
+              <br /><br />
               현재 작성 된 내용은 <span style={{ color: '#FF7710' }}>저장되지 않으니,</span><br />
               <span style={{ color: '#FF7710' }}>복사/붙여넣기를 권장 드립니다.</span>
             </span>
