@@ -31,7 +31,7 @@ const questionSets = [
 
 ]
 
-const FrontPage = () => {
+const BackPage = () => {
     // 페이지 전체 상태 관리
     const [sets, setSets] = useState(questionSets)
     const [consentChecked, setConsentChecked] = useState(false)
@@ -103,4 +103,4 @@ const FrontPage = () => {
     )
 }
 
-export default FrontPage
+export default BackPage

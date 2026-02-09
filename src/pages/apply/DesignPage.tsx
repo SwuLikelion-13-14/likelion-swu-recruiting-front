@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Header } from '@/components/Layout/Header/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/Banner'
-import styles from './FrontPage.module.css'
+import styles from './DesignPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS_DESIGN, CHECK_QUESTIONS } from '@/constants/applyQuestions'
 import Footer from '@/components/Layout/Footer/Footer';
 
@@ -26,7 +26,7 @@ const questionSets = [
 
 ]
 
-const FrontPage = () => {
+const DesignPage = () => {
     // 페이지 전체 상태 관리
     const [sets, setSets] = useState(questionSets)
     const [consentChecked, setConsentChecked] = useState(false)
@@ -98,4 +98,4 @@ const FrontPage = () => {
     )
 }
 
-export default FrontPage
+export default DesignPage

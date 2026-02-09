@@ -4,6 +4,7 @@ import type { ApplyFormProps } from './types'
 import checkboxDefault from '@/assets/icon/checkbox_default.svg'
 import checkboxChecked from '@/assets/icon/checkbox_checked.svg'
 import noticeIcon from '@/assets/icon/alert_octagon.svg'
+import type { Question } from '@/components/ApplyForm/types'
 
 type StudentStatus =
   | 'invalid'
@@ -51,38 +52,36 @@ const ApplyForm = ({
   const [success, setSuccess] = useState<{ [id: number]: string }>({})
   const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(undefined)
 
-  const handleBlur = (index: number) => {
-    const newErrors: { [id: number]: string } = {}
-    const newSuccess: { [id: number]: string } = {}
+  const handleBlur = (currentId: number, allQuestions: Question[]) => {
+  const newErrors: { [id: number]: string } = {}
+  const newSuccess: { [id: number]: string } = {}
 
-    for (let i = 0; i <= index; i++) {
-      const q = questions[i]
+  // 현재 필드 index
+  const currentIndex = allQuestions.findIndex(q => q.id === currentId)
+  if (currentIndex === -1) return
 
-      if (q.type === 'file') {
-        if (q.required && !q.file) {
-          newErrors[q.id] = '기획디자인 트랙 지원자는 필수 답변 항목입니다.'
-        }
-        continue
+  for (let i = 0; i <= currentIndex; i++) {
+    const q = allQuestions[i]
+
+    if (q.type === 'file') {
+      if (q.required && !q.file) {
+        newErrors[q.id] = '기획디자인 트랙 지원자는 필수 답변 항목입니다.'
       }
-
-      if (q.id !== STUDENT_ID && q.required && !q.answer.trim()) {
-        newErrors[q.id] = '필수 답변 항목입니다.'
-        continue
-      }
-
-      if (q.pattern && !q.pattern.test(q.answer)) {
-        newErrors[q.id] = q.errorMessage || '형식이 다릅니다. 숫자 4자리를 입력하세요.'
-        continue
-      }
-
-      if (q.pattern && q.pattern.test(q.answer)) {
-        newSuccess[q.id] = '비밀번호가 설정되었습니다.'
-      }
+      continue
     }
 
-    setErrors(newErrors)
-    setSuccess(newSuccess)
+    if (q.id !== STUDENT_ID && q.required && !q.answer.trim()) {
+      newErrors[q.id] = '필수 답변 항목입니다.'
+    } else if (q.pattern && !q.pattern.test(q.answer)) {
+      newErrors[q.id] = q.errorMessage || '형식이 다릅니다. 숫자 4자리를 입력하세요.'
+    } else if (q.pattern && q.pattern.test(q.answer)) {
+      newSuccess[q.id] = '비밀번호가 설정되었습니다.'
+    }
   }
+
+  setErrors(newErrors)
+  setSuccess(newSuccess)
+}
 
   const handleFileUpload = (id: number) => {
     const input = document.createElement('input')
@@ -93,6 +92,8 @@ const ApplyForm = ({
       onFileChange?.(id, file)
       onChange?.(id, file.name)
 
+      const q = questions.find(q => q.id === id)
+      if (!q) return
       const newErrors = { ...errors }
       const newSuccess = { ...success }
 
@@ -174,6 +175,7 @@ const ApplyForm = ({
                         ? '파일 변경하기'
                         : '파일 업로드'}
                   </button>
+                  
                 </div>
               </div>
             ) : (
@@ -227,7 +229,8 @@ const ApplyForm = ({
                     setErrors(newErrors)
                     setSuccess(newSuccess)
                   }}
-                  onBlur={() => handleBlur(index)}
+                 onBlur={() => handleBlur(item.id, allQuestions)}
+
                 />
 
                 {item.id === STUDENT_ID && studentStatus && (
