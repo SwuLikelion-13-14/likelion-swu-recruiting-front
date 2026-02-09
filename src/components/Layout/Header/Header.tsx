@@ -35,6 +35,18 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
       return;
     }
     
+    // FAQ 버튼 클릭 시 /faq로 이동
+    if (itemId === 'faq') {
+      navigate('/faq');
+      return;
+    }
+    
+    // Projects 버튼 클릭 시 /project로 이동
+    if (itemId === 'projects') {
+      navigate('/project-list');
+      return;
+    }
+    
     // 이미 활성화된 아이템을 클릭하면 비활성화, 아니면 활성화
     if (activeItem === itemId) {
       setActiveItem(null);
@@ -59,13 +71,16 @@ export const Header: React.FC<HeaderProps> = ({ className = '' }) => {
       <div className={styles['header-content']}>
         {/* 왼쪽 섹션 - 로고 */}
         <div className={`${styles['header-section']} ${styles.left}`}>
-          <div className={styles['logo-button']} style={{ height: '58px', display: 'flex', alignItems: 'center' }}>
+          <div 
+            className={styles['logo-button']} 
+            style={{ height: '58px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+          >
             {/* 홈 헤더 로고 버튼 - 클릭 시 홈으로 이동 */}
             <HomeHeaderBtn
               type="logo"
               LIKELIONSwuLogoLikelionSwu={logoWhite}
               className={styles['logo-button']}
-              onClick={() => navigate('/')}
             />
           </div>
         </div>
