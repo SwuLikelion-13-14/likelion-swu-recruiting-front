@@ -11,7 +11,6 @@ import { useNavigationGuard } from '@/contexts/NavigationGuardContext'
 // Header 컴포넌트의 props 타입 정의
 type HeaderProps = {
   className?: string;
-  onNavigate?: (url: string) => void; // ← 핵심
 };
 
 /* 왼쪽 메뉴 항목들 (현재는 사용되지 않는데 나중에 처리할게요)
@@ -27,8 +26,7 @@ const rightMenuItems = [
 
 /*웹사이트 상단 헤더 컴포넌트/로고, 네비게이션, 지원하기 버튼 */
 export const Header: React.FC<HeaderProps> = ({
-  className = '',
-  onNavigate //  받기
+  className = ''
 }) => {
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState<string | null>(null);
@@ -36,7 +34,6 @@ export const Header: React.FC<HeaderProps> = ({
   // 폼 페이지에서만 화면 이동 제한
   const requestNavigation = (url: string) => {
     if (isDirty) {
-      setPendingUrl(url)
       setWarningOpen(true)
       return
     }
@@ -45,7 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
   }
 
   const { isDirty, validateDraft, setDirty } = useNavigationGuard()
-  const [pendingUrl, setPendingUrl] = useState<string | null>(null)
   const [warningOpen, setWarningOpen] = useState(false)
   const [draftStep1Open, setDraftStep1Open] = useState(false)
   const [draftStep2Open, setDraftStep2Open] = useState(false)
