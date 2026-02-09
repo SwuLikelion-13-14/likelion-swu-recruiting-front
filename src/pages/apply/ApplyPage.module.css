@@ -1,0 +1,87 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 메인 컨테이너 스타일 */
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+.pageWrapper {
+  width: 100vw;
+  flex-direction: column;
+  display: flex;
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+  margin-top: 42px;
+}
+
+.bottomButton {
+  position: relative;
+  width: 554px;
+  height: 76px;
+  margin-top: 48px;          /* ApplyBox와 간격 */
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 12px 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+  cursor: pointer;
+
+  /* 글라스 그림자 */
+  box-shadow:
+    2px 2px 8.1px 0 rgba(255, 255, 255, 0.5) inset,
+    -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
+
+  /* outline */
+  outline: 1px rgba(255, 255, 255, 0.2) solid;
+  outline-offset: -1px;
+}
+
+.bottomButtonBg {
+  position: absolute;
+  width: 659px;
+  height: 659px;
+  left: -300px;
+  top: -378px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(255, 0, 0, 0.34) 0%,
+    rgba(255, 0, 0, 0.03) 100%
+  );
+  pointer-events: none;
+}
+
+.bottomButton span {
+  color: #F5F5F5;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 36px;
+  z-index: 10;
+}
+
+.chevronRight {
+  width: 12px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}

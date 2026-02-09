@@ -6,6 +6,7 @@ import BackPage from './pages/apply/BackPage';
 import AnnualPlanPage from './pages/home/annual-plan/AnnualPlanPage';
 import ProjectListPage from './pages/project/ProjectListPage';
 import FaqPage from './pages/faq/FaqPage';
+import ApplyPage from '@/pages/apply/ApplyPage'
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
       <Route path="/design" element={<DesignPage />} />
       <Route path="/back" element={<BackPage />} />
       <Route path="/faq" element={<FaqPage /> } />
+      <Route path="/apply" element={<ApplyPage /> } />
     </Routes>
   )
 }
