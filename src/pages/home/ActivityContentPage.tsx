@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Header } from '../../components/Header';
+import { Header } from '../../components/Layout/Header/Header';
 import mainBg from '../../assets/img/main_img.png';
 import ActivityCards from '../../components/ActivityCards';
 import HackathonCards from '../../components/HackathonCards';
