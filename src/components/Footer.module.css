@@ -1,7 +1,5 @@
 /* 푸터 기본 스타일 */
 .footer {
-  position: fixed;
-  bottom: 0;
   left: 0;
   right: 0;
   z-index: 1000;
