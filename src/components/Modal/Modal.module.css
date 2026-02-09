@@ -1,7 +1,7 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,7 +13,7 @@
   height: fit-content;
   padding: 40px 40px;
   border-radius: 20px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.8);
   box-shadow: 2px 2px 8px rgba(255,255,255,0.5) inset, -10px -10px 8px 2px rgba(255,74,67,0.2) inset;
   outline: 1px rgba(255,255,255,0.2) solid;
   display: flex;
@@ -47,10 +47,10 @@
 .extraText {
   font-family: 'Pretendard';
   font-weight: 400;
-  font-size: 18px;
+  font-size: 17px;
   color: #DDDDDD;
   text-align: center;
-  line-height: 1.2;
+  line-height: 120%;
 }
 
 .buttons {
@@ -67,7 +67,7 @@
 
   width: 181px;
   height: 60px;
-  padding: 11px 50px;
+  padding: 11px 40px;
   border-radius: 100px;
 
   background: transparent;
@@ -91,7 +91,7 @@
 .primaryButton {
   width: 181px;
   height: 60px;
-  padding: 11px 50px;
+  padding: 11px 40px;
   border-radius: 100px;
   border: 1px solid rgba(255, 255, 255, 0.25);
   position: relative;
