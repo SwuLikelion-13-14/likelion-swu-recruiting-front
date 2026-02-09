@@ -1,7 +1,7 @@
 import styles from './CompletionFeeCards.module.css';
 
-import glassDoc from '../assets/icon/glass_doc.svg';
-import glassWallet from '../assets/icon/glass_wallet.svg';
+import glassDoc from '../../assets/icon/glass_doc.svg';
+import glassWallet from '../../assets/icon/glass_wallet.svg';
 
 type Props = {
   completionItems?: string[];

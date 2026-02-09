@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './SessionCurriculum.module.css';
 
-import pdOn from '../assets/icon/P_D_red_icon_on.svg';
-import pdOff from '../assets/icon/P_D_gray_icon_off.svg';
-import feOn from '../assets/icon/front_red_icon_on.svg';
-import feOff from '../assets/icon/front_gary_icon_off.svg';
-import beOn from '../assets/icon/back_red_icon_on.svg';
-import beOff from '../assets/icon/back_gray_icon_off.svg';
+import pdOn from '../../assets/icon/P_D_red_icon_on.svg';
+import pdOff from '../../assets/icon/P_D_gray_icon_off.svg';
+import feOn from '../../assets/icon/front_red_icon_on.svg';
+import feOff from '../../assets/icon/front_gary_icon_off.svg';
+import beOn from '../../assets/icon/back_red_icon_on.svg';
+import beOff from '../../assets/icon/back_gray_icon_off.svg';
 
 type TrackKey = 'PD' | 'FE' | 'BE';
 
