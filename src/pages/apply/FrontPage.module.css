@@ -1,0 +1,12 @@
+.page {
+  width: 100%;
+  background-image: url('/img/Form_front.png');
+  background-size: cover;        /* 화면 꽉 채우기 */
+  background-position: center;   /* 중앙 기준 */
+  background-repeat: no-repeat;
+  flex-direction: column; 
+  display: flex;
+  justify-content: center;       /* 가로 중앙 */
+  align-items: flex-start;       /* 세로는 위부터 */
+  overflow-y: auto;
+}

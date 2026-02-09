@@ -1,0 +1,221 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 메인 컨테이너 스타일 */
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  overflow: hidden;
+}
+
+/* 콘텐츠 영역 스타일 */
+.content {
+  width: 100%;
+  max-width: 100%;
+  padding: 60px 140px;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+  overflow: visible;
+  color: #333;
+}
+
+/* 제목 섹션 스타일 */
+.titleSection {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+h1 {
+  color: #FF7710;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 48px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 130%;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  color: #F5F5F5;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 120%;
+  letter-spacing: -2px;
+  margin: 0;
+}
+
+.scheduleLegend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  margin-left: 190px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorBox {
+  width: 24px;
+  height: 24px;
+  aspect-ratio: 1/1;
+  border-radius: 4px;
+}
+
+.legendItem span {
+  color: #DDD;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 120%;
+  letter-spacing: -1px;
+}
+
+.scheduleList {
+  margin-top: 30px;
+}
+
+/* Timeline Container */
+.timelineContainer {
+  position: relative;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 20px;
+  overflow: hidden;
+}
+
+/* Timeline Grid */
+.timelineGrid {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Date styles - now inside grid cells */
+.dateText {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46.789px;
+  height: 15.984px;
+  color: #DDD;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 120%;
+  text-align: center;
+}
+
+/* Grid Container */
+.gridContainer {
+  position: relative;
+  width: 100%;
+  border-left: 1px dashed #8F8F8F;
+  border-right: 1px dashed #8F8F8F;
+  box-sizing: border-box;
+}
+
+/* Grid Rows */
+.gridRow {
+  display: flex;
+  width: 100%;
+  height: 250px;
+}
+
+.gridRow:first-child {
+  border-bottom: 1px dashed #8F8F8F;
+}
+
+/* Grid Cells */
+.gridCell {
+  width: 190px;
+  height: 100%;
+  border-right: 1px dashed #8F8F8F;
+  box-sizing: border-box;
+  position: relative;
+  padding-top: 30px;
+}
+
+.gridCell:last-child {
+  border-right: none;
+}
+
+/* Events Container */
+.eventsContainer {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  width: 100%;
+  height: calc(500px - 50px);
+  pointer-events: none;
+}
+
+/* Event Bar */
+.eventBar {
+  position: absolute;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  color: white;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.eventBar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+.arrowRight {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 15px 8px 15px 0;
+  border-color: transparent var(--arrowColor) transparent transparent;
+}
+
+
+
+.arrowRight {
+  right: -8px;
+  transform: rotate(180deg);
+  border-right-color: var(--arrowColor);
+}
+
+.eventTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  text-align: center;
+}
