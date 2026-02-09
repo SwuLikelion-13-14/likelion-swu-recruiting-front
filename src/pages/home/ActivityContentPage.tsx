@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Header } from '../../components/Layout/Header/Header';
+import Footer from '../../components/Layout/Footer/Footer';
 import mainBg from '../../assets/img/main_img.png';
 import ActivityCards from '../../components/ActivityCards';
 import HackathonCards from '../../components/HackathonCards';
@@ -19,7 +20,6 @@ function useDownOnlyReveal<T extends HTMLElement>() {
   const [play, setPlay] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
-  // 모션 줄이기 설정
   useEffect(() => {
     const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     if (!mq) return;
@@ -36,7 +36,6 @@ function useDownOnlyReveal<T extends HTMLElement>() {
     };
   }, []);
 
-  // 스크롤 방향
   useEffect(() => {
     lastYRef.current = window.scrollY;
 
@@ -50,7 +49,6 @@ function useDownOnlyReveal<T extends HTMLElement>() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // in-view 감지 (아래로 들어올 때만 재생)
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -69,7 +67,6 @@ function useDownOnlyReveal<T extends HTMLElement>() {
           setVisible(true);
           setPlay(dirRef.current === 'down');
         } else {
-          // 화면 밖으로 나가면 리셋 → 다음에 down으로 들어올 때 다시 재생
           setVisible(false);
           setPlay(false);
         }
@@ -128,30 +125,30 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
 }
 
 export default function ActivityContentPage() {
-  const isRecruiting = true; // false로 바꾸면 마감 배너
+  const isRecruiting = true;
 
   // 배경 이미지 조절은 여기서만
-  const BG_ZOOM = 1.5; // 확대(1.0 기본)
-  const BG_POS_Y = 62; // 세로 위치(0=상단, 50=중앙, 100=하단)
+  const BG_ZOOM = 1.5;
+  const BG_POS_Y = 62;
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-gray-black text-gray-white font-pretendard">
-      {/* Background Image */}
+      {/* Background */}
       <div
-        className="pointer-events-none absolute inset-0 z-1"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{
           backgroundImage: `url(${mainBg})`,
           backgroundRepeat: 'no-repeat',
-          backgroundSize: `${BG_ZOOM * 500}% auto`, // 확대 여기
-          backgroundPosition: `50% ${BG_POS_Y}%`,   // 위치 여기
+          backgroundSize: `${BG_ZOOM * 500}% auto`,
+          backgroundPosition: `50% ${BG_POS_Y}%`,
         }}
       />
 
-      {/* Overlay Gradient */}
+      {/* Overlay */}
       <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-black to-black/50" />
 
       {/* Header */}
-      <div className="sticky top-0 z-[300]">
+      <div className="fixed top-0 left-0 right-0 z-[300]">
         <Header />
       </div>
 
@@ -165,7 +162,6 @@ export default function ActivityContentPage() {
           flex flex-col gap-[220px] min-[1180px]:gap-[352px]
         "
       >
-        {/* 1) Activity */}
         <section className="flex flex-col gap-[86px]">
           <Reveal>
             <SectionHeader
@@ -176,7 +172,6 @@ export default function ActivityContentPage() {
           <ActivityCards enableHover enableReveal waveReveal waveStepMs={140} />
         </section>
 
-        {/* 2) Hackathon */}
         <section className="flex flex-col gap-[86px]">
           <Reveal>
             <SectionHeader
@@ -187,7 +182,6 @@ export default function ActivityContentPage() {
           <HackathonCards />
         </section>
 
-        {/* 3) Session Curriculum */}
         <section className="flex flex-col gap-[86px]">
           <Reveal>
             <SectionHeader
@@ -200,7 +194,6 @@ export default function ActivityContentPage() {
           </Reveal>
         </section>
 
-        {/* 4) Completion conditions */}
         <section className="flex flex-col gap-[86px]">
           <Reveal>
             <SectionHeader
@@ -214,8 +207,8 @@ export default function ActivityContentPage() {
         </section>
       </main>
 
-      {/* 5) 모집 배너 */}
-      <div className="relative z-20">
+      {/* Banner + Footer */}
+      <div className="relative z-20 mb-[120px]">
         <Reveal>
           <RecruitBanner
             isRecruiting={isRecruiting}
@@ -224,7 +217,11 @@ export default function ActivityContentPage() {
             }}
           />
         </Reveal>
+
+        
       </div>
+      {/* Footer */}
+        <Footer />
     </div>
   );
 }
