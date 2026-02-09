@@ -9,6 +9,7 @@ import FaqPage from './pages/faq/FaqPage';
 import ApplyPage from '@/pages/apply/ApplyPage'
 import ActivityContentPage from './pages/home/ActivityContentPage';
 import LeadersPage from './pages/home/LeadersPage';
+import RecruitPage from './pages/recruit/RecruitPage';
 
 
 const App = () => {
@@ -24,6 +25,7 @@ const App = () => {
       <Route path="/apply" element={<ApplyPage /> } />
       <Route path="/activity-content" element={<ActivityContentPage />} />
       <Route path="/leaders" element={<LeadersPage />} />
+      <Route path="/recruit" element={<RecruitPage />} />
     </Routes>
   )
 }
