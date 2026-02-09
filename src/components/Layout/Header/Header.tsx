@@ -55,7 +55,8 @@ export const Header: React.FC<HeaderProps> = ({
   const handleItemClick = (itemId: string) => {
     // 지원하기 버튼 클릭 시 /front로 이동
     if (itemId === 'apply') {
-      requestNavigation('/front');
+      navigate('/apply');
+
       return;
     }
 

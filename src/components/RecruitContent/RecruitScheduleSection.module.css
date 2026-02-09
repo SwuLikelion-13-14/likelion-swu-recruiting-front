@@ -1,0 +1,115 @@
+.section {
+  width: 1140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 86px;
+}
+
+.header {
+  width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.row {
+  width: 1140px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 카드 */
+.card {
+  width: 232px;
+  padding: 22px 16px;
+  box-sizing: border-box;
+
+  border-radius: 20px;
+  background: var(--Alpha-black-50, rgba(0, 0, 0, 0.5));
+  outline: 1px solid var(--element-Stroke-white-alpha25, rgba(255, 255, 255, 0.2));
+  outline-offset: -1px;
+
+  box-shadow:
+    2px 2px 8.1px rgba(255, 255, 255, 0.5) inset,
+    -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
+
+  /* 글래스 느낌 */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+/* 아이콘 영역 */
+.iconBox {
+  width: 100%;
+  height: 120px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+  overflow: visible;
+}
+
+.iconImg {
+  height: 120px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.textBox {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.cardTitle {
+  width: 100%;
+  text-align: center;
+  color: var(--text-white, #f5f5f5);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 28.8px;
+}
+
+.cardDesc {
+  width: 100%;
+  text-align: center;
+
+  font-size: 20px;
+  line-height: 24px;
+
+  /* 줄바꿈 자연스럽게 */
+  word-break: keep-all;
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.emph {
+  color: var(--text-primary, #ff7710);
+  font-weight: 600;
+}
+
+.dim {
+  color: var(--text-light-gray, #dddddd);
+  font-weight: 400;
+}
+
+.arrowImg {
+  width: 12px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+}

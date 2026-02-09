@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Header } from '../../components/Layout/Header/Header';
 import Footer from '../../components/Layout/Footer/Footer';
@@ -125,11 +126,16 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
 }
 
 export default function ActivityContentPage() {
+
+  const navigate = useNavigate();
+  // 배너 상태 여부
   const isRecruiting = true;
 
   // 배경 이미지 조절은 여기서만
   const BG_ZOOM = 1.5;
   const BG_POS_Y = 62;
+
+  const goApply = () => navigate('/apply');
 
   return (
     <div className="relative w-full min-h-screen overflow-x-hidden bg-gray-black text-gray-white font-pretendard">
@@ -209,14 +215,10 @@ export default function ActivityContentPage() {
 
       {/* Banner + Footer */}
       <div className="relative z-20 mb-[120px]">
-        <Reveal>
           <RecruitBanner
             isRecruiting={isRecruiting}
-            onApplyClick={() => {
-              // window.open('...', '_blank');
-            }}
+            onApplyClick={goApply}
           />
-        </Reveal>
 
         
       </div>

@@ -32,11 +32,6 @@
   gap: 20px;
 }
 
-/* 기존 half/full 유지 */
-.cardHalf {
-  /* width는 여기서 고정하지 않고, 아래 cardFixed/cardGrow로 제어 */
-}
-
 .cardFull {
   width: 100%;
   padding: 20px;
