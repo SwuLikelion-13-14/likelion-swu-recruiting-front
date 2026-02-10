@@ -10,6 +10,7 @@ import ApplyPage from '@/pages/apply/ApplyPage'
 import ActivityContentPage from './pages/home/ActivityContentPage';
 import LeadersPage from './pages/home/LeadersPage';
 import RecruitPage from './pages/recruit/RecruitPage';
+import RecruitTrackPage from './pages/apply/RecruitTrackPage';
 
 
 const App = () => {
@@ -26,6 +27,7 @@ const App = () => {
       <Route path="/activity-content" element={<ActivityContentPage />} />
       <Route path="/leaders" element={<LeadersPage />} />
       <Route path="/recruit" element={<RecruitPage />} />
+      <Route path="/recruit-track" element={<RecruitTrackPage />} />
     </Routes>
   )
 }
