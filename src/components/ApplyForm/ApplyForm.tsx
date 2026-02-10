@@ -247,18 +247,20 @@ const ApplyForm = ({
               <>
                 <textarea
                   id={`field-${item.id}`}
-                  className={`${styles.input} ${item.id === STUDENT_ID
-                    ? errors[item.id]
-                      ? styles.inputError
-                      : studentStatus === 'valid'
-                        ? styles.inputSuccess
-                        : ''
-                    : errors[item.id]
-                      ? styles.inputError
-                      : success[item.id]
-                        ? styles.inputSuccess
-                        : ''
-                    }`}
+                  className={`${styles.input} ${
+  item.id === STUDENT_ID
+    ? studentStatus && studentStatus !== 'valid'
+      ? styles.inputError
+      : studentStatus === 'valid'
+        ? styles.inputSuccess
+        : ''
+    : errors[item.id]
+      ? styles.inputError
+      : success[item.id]
+        ? styles.inputSuccess
+        : ''
+}`}
+
                   value={item.answer}
                   placeholder={item.placeholder}
                   readOnly={mode === 'view'}

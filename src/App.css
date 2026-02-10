@@ -6,6 +6,12 @@
   overflow: visible;
 }
 
+body {
+  background-color: #000; /* 이미지 로딩 전 검은색 */
+  margin: 0;              /* 불필요한 여백 제거 */
+  min-height: 100vh;      /* 화면 전체 영역 확보 */
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
