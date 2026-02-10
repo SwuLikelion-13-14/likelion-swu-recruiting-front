@@ -157,3 +157,13 @@
   width: 18px;
   height: 11px;
 }
+
+.inputField input.errorInput {
+  border: 1px solid #ff4d4f;
+}
+
+.errorText {
+  color: #ff4d4f;
+  font-size: 12px;
+  font-weight: 400;
+}
