@@ -1,5 +1,5 @@
+import { useNavigate } from 'react-router-dom';
 import styles from './RecruitTrackPage.module.css';
-
 import toolDatabase from '../../assets/icon/tool_database.svg';
 import toolFigma from '../../assets/icon/tool_figma.svg';
 import toolGit from '../../assets/icon/tool_git.svg';
@@ -11,6 +11,7 @@ const TRACKS = [
 ];
 
 export default function RecruitTrackPage() {
+  const navigate = useNavigate();
   return (
     <div className={styles.pageWrapper}>
       <h2 className={styles.pageTitle}>지원할 트랙을 선택해 주세요</h2>
@@ -18,7 +19,7 @@ export default function RecruitTrackPage() {
         {TRACKS.map((t) => (
           <button
             key={t.id}
-            className={styles.trackCard} onClick={() => window.location.href = t.link}
+            className={styles.trackCard} onClick={() => navigate(t.link)}
           >
             <div className={styles.trackInner}>
               <img src={t.icon} alt="" className={styles.trackIcon} />
