@@ -4,7 +4,7 @@ import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
 import styles from './FrontPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS } from '@/constants/applyQuestions'
-import Footer from '@/components/Layout/Footer/Footer';
+import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
 
 
 // 각 세트 질문 더미
@@ -92,7 +92,7 @@ const FrontPage = () => {
                 </ApplyForm>
             ))}
 
-            <Footer />
+            <ApplyFooter />
 
         </div>
     )

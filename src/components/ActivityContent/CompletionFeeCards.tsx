@@ -17,7 +17,7 @@ export default function CompletionFeeCards({
   ],
   feeItems = [
     '50,000원 (입부 후, 1회 일괄 납부)',
-    '공간 대여, 굿즈 제작, 서터 및 회식 등에서 사용',
+    '공간 대여, 굿즈 제작, 새터 및 회식 등에서 사용',
   ],
 }: Props) {
   return (

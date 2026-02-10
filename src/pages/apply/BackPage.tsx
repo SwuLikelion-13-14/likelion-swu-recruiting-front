@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Header } from '@/components/Layout/Header/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
-import styles from './FrontPage.module.css'
+import styles from './BackPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS, BACKEND_QUESTIONS } from '@/constants/applyQuestions'
-import Footer from '@/components/Layout/Footer/Footer';
+import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
 
 
 // 각 세트 질문 더미
@@ -97,7 +97,7 @@ const BackPage = () => {
                 </ApplyForm>
             ))}
 
-            <Footer />
+            <ApplyFooter />
 
         </div>
     )

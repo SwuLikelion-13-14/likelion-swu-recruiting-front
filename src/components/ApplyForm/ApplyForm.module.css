@@ -99,7 +99,7 @@
 /* ===== 인풋 ===== */
 .input {
   width: 580px;
-  height: 47px;
+  min-height: 48px;
   padding: 14px 16px;
   border: 1px solid rgb(var(--gray-60));
   border-radius: 12px;
@@ -109,6 +109,8 @@
   background-color: transparent;
   color: rgb(var(--gray-white));
   box-sizing: border-box;
+  overflow: hidden; /* 스크롤 제거 */
+  resize: none; /* 사용자가 직접 resize 못하게 */
 }
 
 .input:focus {
