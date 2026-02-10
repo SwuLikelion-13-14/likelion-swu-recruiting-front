@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from './RecruitTrackPage.module.css';
 
 import toolDatabase from '../../assets/icon/tool_database.svg';
@@ -19,8 +18,7 @@ export default function RecruitTrackPage() {
         {TRACKS.map((t) => (
           <button
             key={t.id}
-            className={styles.trackCard}
-            onClick={() => window.location.href = t.link}
+            className={styles.trackCard} onClick={() => window.location.href = t.link}
           >
             <div className={styles.trackInner}>
               <img src={t.icon} alt="" className={styles.trackIcon} />
