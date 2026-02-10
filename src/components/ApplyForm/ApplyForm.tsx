@@ -82,6 +82,7 @@ const ApplyForm = ({
     }
   }, [studentStatus])
 
+  
 
   const handleBlur = (currentId: number, allQuestions: Question[]) => {
     const newErrors: { [id: number]: string } = {}
@@ -112,6 +113,7 @@ const ApplyForm = ({
     setErrors(newErrors)
     setSuccess(newSuccess)
   }
+  
 
   const handleFileUpload = (id: number) => {
     const input = document.createElement('input')
@@ -130,6 +132,7 @@ const ApplyForm = ({
     }
     input.click()
   }
+  
 
   const validateInfoSection = () => {
     const studentOk = studentStatus === 'valid'
@@ -181,7 +184,7 @@ const ApplyForm = ({
     setDirty(hasAnyInput)
   }, [hasAnyInput])
 
-  const requiredFilled = allQuestions
+  const requiredFilled = questions
     .filter(q => q.required)
     .every(q => (q.type === 'file' ? !!q.file : q.answer.trim() !== ''))
 
