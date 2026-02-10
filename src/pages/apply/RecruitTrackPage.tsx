@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from './RecruitTrackPage.module.css';
 
 import toolDatabase from '../../assets/icon/tool_database.svg';
