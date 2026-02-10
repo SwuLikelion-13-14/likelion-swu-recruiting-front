@@ -82,7 +82,7 @@ const ApplyForm = ({
     }
   }, [studentStatus])
 
-  
+
 
   const handleBlur = (currentId: number, allQuestions: Question[]) => {
     const newErrors: { [id: number]: string } = {}
@@ -113,7 +113,7 @@ const ApplyForm = ({
     setErrors(newErrors)
     setSuccess(newSuccess)
   }
-  
+
 
   const handleFileUpload = (id: number) => {
     const input = document.createElement('input')
@@ -132,7 +132,7 @@ const ApplyForm = ({
     }
     input.click()
   }
-  
+
 
   const validateInfoSection = () => {
     const studentOk = studentStatus === 'valid'
@@ -227,6 +227,7 @@ const ApplyForm = ({
                   value={item.answer}
                   placeholder={item.placeholder}
                   onChange={e => onChange?.(item.id, e.target.value)}
+                  onBlur={() => handleBlur(item.id, allQuestions)}
                 />
                 <div className={styles.fileBottomRow}>
                   <div>
@@ -244,9 +245,8 @@ const ApplyForm = ({
               </div>
             ) : (
               <>
-                <input
+                <textarea
                   id={`field-${item.id}`}
-                  type={item.type ?? 'text'}
                   className={`${styles.input} ${item.id === STUDENT_ID
                     ? errors[item.id]
                       ? styles.inputError
@@ -262,25 +262,31 @@ const ApplyForm = ({
                   value={item.answer}
                   placeholder={item.placeholder}
                   readOnly={mode === 'view'}
+                  rows={1} // 최소 높이
+                  style={{ resize: 'none', overflow: 'hidden' }} // 스크롤 제거, 자동 확장
                   onChange={e => {
                     const value = e.target.value
                     onChange?.(item.id, value)
 
+                    // 자동 높이 조절
+                    const textarea = e.target
+                    textarea.style.height = 'auto' // 먼저 초기화
+                    textarea.style.height = `${textarea.scrollHeight}px` // 내용에 맞게 높이 설정
+
+                    // STUDENT_ID, PASSWORD_ID 로직 그대로 유지
                     if (item.id === STUDENT_ID) {
                       const newErrors = { ...errors }
-                      delete newErrors[STUDENT_ID]   // validate 에러 제거
+                      delete newErrors[STUDENT_ID]
                       setErrors(newErrors)
 
-                      setStudentStatus(mockCheckStudentId(value)) // 즉시 invalid/valid 계산
+                      setStudentStatus(mockCheckStudentId(value))
                       return
                     }
-
 
                     if (item.id === PASSWORD_ID) {
                       const newErrors = { ...errors }
                       const newSuccess = { ...success }
 
-                      // validate에서 생긴 필수 에러 제거
                       delete newErrors[PASSWORD_ID]
 
                       if (!/^\d{4}$/.test(value)) {
@@ -295,10 +301,10 @@ const ApplyForm = ({
                       setSuccess(newSuccess)
                       return
                     }
-
                   }}
                   onBlur={() => handleBlur(item.id, allQuestions)}
                 />
+
                 {item.id === STUDENT_ID ? (
                   <div
                     className={
