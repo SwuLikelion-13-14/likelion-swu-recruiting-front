@@ -22,7 +22,7 @@ html, body {
 .content {
   width: 100%;                
   max-width: 100%;            
-  padding: 140px 140px 0 140px; /* 상단 140px, 좌우 140px 패딩 */
+  padding: 107.5px 140px 0 140px;
   position: relative;         /* 상대적 위치 설정 */
   z-index: 10;              
   box-sizing: border-box;     /* 패딩을 너비에 포함 */
