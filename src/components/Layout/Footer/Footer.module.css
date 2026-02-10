@@ -3,7 +3,6 @@
   position: relative;
   width: 100%;
   z-index: 1;
-  height: auto;
   min-height: 80px;
   background: transparent;
   opacity: 0.6;
@@ -11,7 +10,7 @@
   justify-content: space-between;
   padding: 20px 100px;
   box-sizing: border-box;
-  margin-top: -80px;
+  margin-top: auto;
 }
 
 /* 푸터 내용 컨테이너 */
@@ -20,7 +19,8 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin: 0;
+  max-width: 1440px;
+  margin: 0 auto;
   padding: 0;
 }
 

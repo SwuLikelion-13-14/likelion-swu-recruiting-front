@@ -11,6 +11,7 @@ const HomePage = () => {
 
   const goActivity = () => navigate('/activity-content');
   const goLeaders = () => navigate('/leaders');
+  const goAnnualPlan = () => navigate('/annual-plan');
 
   return (
     <div
@@ -68,7 +69,16 @@ const HomePage = () => {
               </div>
 
               {/* Annual Plan Card */}
-              <div className={styles.card}>
+              <div 
+                className={styles.card}
+                role="button"
+                tabIndex={0}
+                onClick={goAnnualPlan}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') goAnnualPlan();
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className={styles.cardBg}>
                   <div className={styles.radialGradient1} />
                   <div className={styles.radialGradient2} />
