@@ -5,9 +5,9 @@ export interface Question {
   placeholder?: string
   type?: 'text' | 'password' | 'file';
   file?: File | null
-  required?: boolean 
-  pattern?: RegExp; 
-  errorMessage?: string; 
+  required?: boolean
+  pattern?: RegExp;
+  errorMessage?: string;
 }
 
 export type Mode = 'edit' | 'view'
@@ -20,11 +20,14 @@ export interface ApplyFormProps {
   subtitle?: string
   questions: Question[]
   onChange?: (id: number, value: string) => void
-  onFileChange?: (id: number, file: File) => void 
+  onFileChange?: (id: number, file: File) => void
   enableConsent?: boolean
   enableNotice?: boolean
   enableActions?: boolean
   consentChecked?: boolean
   onConsentChange?: (checked: boolean) => void
   allQuestions: Question[]
+  onSubmit?: () => void
+  onDraftSave?: () => void
+
 }
