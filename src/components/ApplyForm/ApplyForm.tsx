@@ -19,6 +19,7 @@ type StudentStatus =
 const STUDENT_ID = 15
 const PASSWORD_ID = 16
 
+
 const studentMessages: Record<StudentStatus, string> = {
   invalid: '형식이 다릅니다. 숫자 10자리를 입력하세요.',
   'draft-exists': '임시저장 된 지원서가 이미 있습니다. 여러 개의 지원서를 임시저장할 수 없습니다.',
@@ -48,31 +49,20 @@ const ApplyForm = ({
   enableActions,
   consentChecked,
   onConsentChange,
-  allQuestions,
-  onSubmit,
-  onDraftSave
+  allQuestions
 }: ApplyFormProps) => {
 
   const [errors, setErrors] = useState<{ [id: number]: string }>({})
   const [success, setSuccess] = useState<{ [id: number]: string }>({})
   const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(undefined)
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalType, setModalType] =
-    useState<'submitted' | 'draft' | 'leave' | null>(null)
+  const [modalType, setModalType] = useState<'submitted' | 'draft' | null>(null)
 
-
-  const [focusedFields, setFocusedFields] = useState<{ [id: number]: boolean }>({})
   const { setDirty, registerValidator } = useNavigationGuard()
 
   const passwordAnswer =
     allQuestions.find(q => q.id === PASSWORD_ID)?.answer ?? ''
 
-
-  // 버튼 상태 계산
-  const hasAnyInput = questions.some(q => q.answer.trim() !== '')
-  useEffect(() => {
-    setDirty(hasAnyInput)
-  }, [hasAnyInput])
 
   useEffect(() => {
     if (studentStatus === 'submitted-exists') {
@@ -107,39 +97,19 @@ const ApplyForm = ({
       if (q.type === 'file') {
         if (q.required && !q.file) {
           newErrors[q.id] = '기획디자인 트랙 지원자는 필수 답변 항목입니다.'
-        } else if (q.file) {
-          delete newErrors[q.id]
         }
         continue
       }
 
-      if (q.required && !q.answer.trim()) {
-        // 모든 필수 필드 체크, 학번 포함
+      if (q.id !== STUDENT_ID && q.required && !q.answer.trim()) {
         newErrors[q.id] = '필수 답변 항목입니다.'
-        continue
-      }
-
-      // STUDENT_ID 특수 처리
-      if (q.id === STUDENT_ID && q.answer.trim()) {
-        const status = mockCheckStudentId(q.answer)
-        setStudentStatus(status)
-        if (status !== 'valid') {
-          newErrors[q.id] = studentMessages[status]
-        } else {
-          delete newErrors[q.id]
-        }
-      }
-
-      // 비밀번호 체크
-      if (q.id === PASSWORD_ID && q.answer.trim()) {
-        if (!/^\d{4}$/.test(q.answer)) {
-          newErrors[q.id] = '형식이 다릅니다. 숫자 4자리를 입력하세요.'
-        } else {
-          delete newErrors[q.id]
-          newSuccess[q.id] = '비밀번호가 설정되었습니다.'
-        }
+      } else if (q.pattern && !q.pattern.test(q.answer)) {
+        newErrors[q.id] = q.errorMessage || '형식이 다릅니다. 숫자 4자리를 입력하세요.'
+      } else if (q.pattern && q.pattern.test(q.answer)) {
+        newSuccess[q.id] = '비밀번호가 설정되었습니다.'
       }
     }
+
     setErrors(newErrors)
     setSuccess(newSuccess)
   }
@@ -154,13 +124,11 @@ const ApplyForm = ({
       onFileChange?.(id, file)
       onChange?.(id, file.name)
 
-      setErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[id]
-        return newErrors
-      })
+      const newErrors = { ...errors }
+      const newSuccess = { ...success }
 
-
+      setErrors(newErrors)
+      setSuccess(newSuccess)
     }
     input.click()
   }
@@ -209,30 +177,12 @@ const ApplyForm = ({
     registerValidator(validateInfoSection)
   }, [studentStatus, passwordAnswer])
 
+
+  // 버튼 상태 계산
+  const hasAnyInput = questions.some(q => q.answer.trim() !== '')
   useEffect(() => {
-    const handleBack = (e: PopStateEvent) => {
-      if (!hasAnyInput) return
-
-      e.preventDefault()
-
-      // 이동 막고 현재 페이지 유지
-      window.history.pushState(null, '', window.location.href)
-
-      // 경고 모달 열기
-      setModalType('leave')
-      setModalOpen(true)
-    }
-
-    // 현재 페이지를 history에 다시 등록
-    window.history.pushState(null, '', window.location.href)
-    window.addEventListener('popstate', handleBack)
-
-    return () => {
-      window.removeEventListener('popstate', handleBack)
-    }
+    setDirty(hasAnyInput)
   }, [hasAnyInput])
-
-
 
   const requiredFilled = questions
     .filter(q => q.required)
@@ -275,27 +225,9 @@ const ApplyForm = ({
                 <input
                   className={`${styles.input} ${errors[item.id] ? styles.inputError : success[item.id] ? styles.inputSuccess : ''}`}
                   value={item.answer}
-                  placeholder={errors[item.id] || focusedFields[item.id] ? '' : item.placeholder}
-
-                  onFocus={() => setFocusedFields(prev => ({ ...prev, [item.id]: true }))}
-                  onBlur={() => {
-                    setFocusedFields(prev => ({ ...prev, [item.id]: false }))
-                    handleBlur(item.id, allQuestions)
-                  }}
-                  onChange={e => {
-                    const value = e.target.value
-                    onChange?.(item.id, value) // 기존 onChange 호출
-
-                    // 포트폴리오 링크가 들어오면 에러 제거
-                    if (item.type === 'file' && value.trim() !== '') {
-                      setErrors(prev => {
-                        const newErrors = { ...prev }
-                        delete newErrors[item.id]  // 링크가 들어오면 에러 제거
-                        return newErrors
-                      })
-                    }
-                  }}
-
+                  placeholder={item.placeholder}
+                  onChange={e => onChange?.(item.id, e.target.value)}
+                  onBlur={() => handleBlur(item.id, allQuestions)}
                 />
                 <div className={styles.fileBottomRow}>
                   <div>
@@ -315,25 +247,25 @@ const ApplyForm = ({
               <>
                 <textarea
                   id={`field-${item.id}`}
-                  className={`${styles.input} ${errors[item.id]
-                    ? styles.inputError
-                    : success[item.id]
-                      ? styles.inputSuccess
-                      : ''
-                    }`}
-
+                  className={`${styles.input} ${
+  item.id === STUDENT_ID
+    ? studentStatus && studentStatus !== 'valid'
+      ? styles.inputError
+      : studentStatus === 'valid'
+        ? styles.inputSuccess
+        : ''
+    : errors[item.id]
+      ? styles.inputError
+      : success[item.id]
+        ? styles.inputSuccess
+        : ''
+}`}
 
                   value={item.answer}
-                  placeholder={focusedFields[item.id] || errors[item.id] ? '' : item.placeholder}
-
+                  placeholder={item.placeholder}
                   readOnly={mode === 'view'}
                   rows={1} // 최소 높이
                   style={{ resize: 'none', overflow: 'hidden' }} // 스크롤 제거, 자동 확장
-                  onFocus={() => setFocusedFields(prev => ({ ...prev, [item.id]: true }))}
-                  onBlur={() => {
-                    setFocusedFields(prev => ({ ...prev, [item.id]: false }))
-                    handleBlur(item.id, allQuestions)
-                  }}
                   onChange={e => {
                     const value = e.target.value
                     onChange?.(item.id, value)
@@ -345,25 +277,13 @@ const ApplyForm = ({
 
                     // STUDENT_ID, PASSWORD_ID 로직 그대로 유지
                     if (item.id === STUDENT_ID) {
-                      const status = mockCheckStudentId(value)
                       const newErrors = { ...errors }
-                      const newSuccess = { ...success }
-
-                      setStudentStatus(status)
-
-                      if (status !== 'valid') {
-                        newErrors[STUDENT_ID] = studentMessages[status]
-                        delete newSuccess[STUDENT_ID]
-                      } else {
-                        delete newErrors[STUDENT_ID]
-                        newSuccess[STUDENT_ID] = 'valid'
-                      }
-
+                      delete newErrors[STUDENT_ID]
                       setErrors(newErrors)
-                      setSuccess(newSuccess)
+
+                      setStudentStatus(mockCheckStudentId(value))
                       return
                     }
-
 
                     if (item.id === PASSWORD_ID) {
                       const newErrors = { ...errors }
@@ -384,6 +304,7 @@ const ApplyForm = ({
                       return
                     }
                   }}
+                  onBlur={() => handleBlur(item.id, allQuestions)}
                 />
 
                 {item.id === STUDENT_ID ? (
@@ -487,9 +408,8 @@ const ApplyForm = ({
               cancelState={cancelState}
               draftState={draftState}
               submitState={submitState}
-              hasInput={hasAnyInput}
-              onDraftSave={() => onDraftSave?.()}
-              onSubmit={onSubmit}
+              onDraftSave={() => console.log('임시저장')}
+              onSubmit={() => console.log('최종제출')}
               onCancelConfirmed={() => window.location.href = '/'} // 홈 이동
             />
           )}
@@ -546,33 +466,6 @@ const ApplyForm = ({
           onClose={() => setModalOpen(false)}
         />
       )}
-
-      {modalOpen && modalType === 'leave' && (
-        <Modal
-          isOpen={modalOpen}
-          title="WARNING"
-          description={
-            <span>
-              페이지를 나가면<br />
-              작성 중인 지원서는 저장되지 않습니다.
-            </span>
-          }
-          extraText="현재까지 작성한 내용을 임시 저장할까요?"
-          primaryButton={{
-            text: '뒤로 가기',
-            onClick: () => {
-              setModalOpen(false)
-              window.history.back()
-            }
-          }}
-          secondaryButton={{
-            text: '계속 작성',
-            onClick: () => setModalOpen(false)
-          }}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
-
 
     </section>
   )

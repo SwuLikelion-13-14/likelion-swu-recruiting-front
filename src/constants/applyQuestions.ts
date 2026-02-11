@@ -2,7 +2,7 @@ import type { Question } from '@/components/ApplyForm/types'
 
 export const BASIC_INFO_QUESTIONS: Question[] = [
     { id: 1, question: '이름', answer: '', placeholder: '김슈니',required: true },
-    { id: 2, question: '학번', answer: '', placeholder: '학번 10자리를 입력하세요' ,required: true},
+    { id: 2, question: '학번', answer: '', placeholder: '22학번' ,required: true},
     { id: 3, question: '본 전공', answer: '', placeholder: '소프트웨어융합학과' ,required: true},
     {
         id: 4,

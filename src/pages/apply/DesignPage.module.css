@@ -4,7 +4,6 @@
   background-size: cover;        /* 화면 꽉 채우기 */
   background-position: center;   /* 중앙 기준 */
   background-repeat: no-repeat;
-  background-color: black;
   flex-direction: column; 
   display: flex;
   justify-content: center;       /* 가로 중앙 */
