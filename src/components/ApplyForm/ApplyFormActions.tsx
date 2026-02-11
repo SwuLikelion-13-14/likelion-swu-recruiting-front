@@ -45,15 +45,6 @@ const ApplyFormActions = ({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [hasInput])
 
-  // 입력이 있을 때 경고 모달로 확인 후 실제 동작 실행
-  const confirmActionWithWarning = (action: () => void) => {
-    if (hasInput) {
-      setPendingAction(() => action)
-      setIsWarningModalOpen(true)
-    } else {
-      action()
-    }
-  }
 
   const handleDraftSave = () => {
     setIsDraftStep1Open(true)
@@ -66,7 +57,7 @@ const ApplyFormActions = ({
         {/* 작성 취소 버튼 */}
         <button
           className={`${styles.actionButton} ${styles[cancelState]}`}
-          onClick={() => confirmActionWithWarning(() => setIsCancelStep1Open(true))}
+          onClick={() => setIsCancelStep1Open(true)}
         >
           작성 취소
         </button>
@@ -84,7 +75,7 @@ const ApplyFormActions = ({
         <button
           className={`${styles.actionButton} ${styles[submitState]}`}
           disabled={submitState === 'unactive'}
-          onClick={() => confirmActionWithWarning(() => setIsSubmitStep1Open(true))}
+          onClick={() => setIsSubmitStep1Open(true)}
         >
           최종 제출
         </button>
@@ -142,13 +133,21 @@ const ApplyFormActions = ({
             </span>
           }
           primaryButton={{
-            text: '제출하기',
-            onClick: () => {
-              onSubmit?.()
-              setIsSubmitStep1Open(false)
-              setIsSubmitStep2Open(true)
-            }
-          }}
+  text: '제출하기',
+  onClick: async () => {
+    try {
+      if(onSubmit){
+        await onSubmit(); // handleFinalSubmit async 호출
+      }
+      setIsSubmitStep1Open(false);
+      setIsSubmitStep2Open(true);
+    } catch(err) {
+      console.error('제출 실패:', err);
+      alert('제출 실패, 다시 시도해주세요.');
+    }
+  }
+}}
+
           secondaryButton={{
             text: '취소',
             onClick: () => setIsSubmitStep1Open(false)
@@ -201,7 +200,7 @@ const ApplyFormActions = ({
           }}
         />
       )}
-      
+
       {/* 임시저장 Step1 */}
       {isDraftStep1Open && (
         <Modal
