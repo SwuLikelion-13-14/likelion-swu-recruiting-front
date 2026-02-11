@@ -133,6 +133,12 @@ export default function ApplyForm({
         delete next[id];
         return next;
       });
+
+      setSuccess((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
     };
     input.click();
   };
@@ -170,7 +176,9 @@ export default function ApplyForm({
   }, [studentStatus, passwordAnswer]);
 
   const hasAnyInput = questions.some((q) =>
-    q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""
+    q.type === "file"
+      ? !!q.file || q.answer.trim() !== ""
+      : q.answer.trim() !== ""
   );
 
   useEffect(() => {
@@ -619,3 +627,4 @@ export default function ApplyForm({
     </section>
   );
 }
+

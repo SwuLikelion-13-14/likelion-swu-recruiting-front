@@ -90,7 +90,7 @@
 
 .input {
   width: 580px;
-  height: 47px;
+  min-height: 48px;
   padding: 14px 16px;
   border: 1px solid rgb(var(--gray-60));
   border-radius: 12px;
@@ -99,6 +99,8 @@
   font-weight: var(--text-regular-16--font-weight);
   background-color: transparent;
   box-sizing: border-box;
+  overflow: hidden;
+  resize: none;
 }
 
 .input:focus {
@@ -475,4 +477,14 @@
 
 .wrapper[data-variant="result"] *:not(img):not(svg):not(.uploadButton) {
   color: rgb(var(--gray-black)) !important;
+}
+
+textarea.inputError,
+input.inputError {
+  border: 1px solid #ef4444 !important;
+}
+
+textarea.inputSuccess,
+input.inputSuccess {
+  border: 1px solid #10b981 !important;
 }
