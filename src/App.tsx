@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./pages/home/HomePage";
 import AnnualPlanPage from "./pages/home/annual-plan/AnnualPlanPage";
@@ -14,13 +14,14 @@ import FrontPage from "@/pages/apply/FrontPage";
 import DesignPage from "./pages/apply/DesignPage";
 import BackPage from "./pages/apply/BackPage";
 
-// ✅ Admin
+import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminApplicationsPage from "@/pages/admin/AdminApplicationsPage";
+import AdminApplicationDetailPage from "@/pages/admin/AdminApplicationDetailPage";
+import AdminSchedulePage from "@/pages/admin/AdminSchedulePage";
 
 const App = () => {
   return (
     <Routes>
-      {/* App (User) */}
       <Route path="/" element={<HomePage />} />
       <Route path="/annual-plan" element={<AnnualPlanPage />} />
       <Route path="/project-list" element={<ProjectListPage />} />
@@ -34,8 +35,15 @@ const App = () => {
       <Route path="/design" element={<DesignPage />} />
       <Route path="/back" element={<BackPage />} />
 
-      {/* Admin */}
-      <Route path="/admin/applications" element={<AdminApplicationsPage />} />
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<Navigate to="applications" replace />} />
+        <Route path="applications" element={<AdminApplicationsPage />} />
+        <Route path="schedule" element={<AdminSchedulePage />} />
+        <Route
+          path="applications/detail/:code"
+          element={<AdminApplicationDetailPage />}
+        />
+      </Route>
     </Routes>
   );
 };

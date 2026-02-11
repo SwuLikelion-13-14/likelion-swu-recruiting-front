@@ -37,7 +37,6 @@ function NavItem({
       onClick={onClick}
       className={`${base} ${active ? activeCls : inactiveCls}`}
     >
-      {/* stroke 아이콘이면 stroke-current가 필요 */}
       <Icon
         className={`w-6 h-6 stroke-current ${
           active ? "text-[#F5F5F5]" : "text-[#424242]"

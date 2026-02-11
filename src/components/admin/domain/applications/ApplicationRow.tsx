@@ -1,6 +1,5 @@
-// src/components/admin/domain/applications/ApplicationRow.tsx
-import ChevronDown from "@/assets/icon/chevron_down.svg";
-import ChevronRight from "@/assets/icon/chevron_right.svg";
+import ChevronRight from "@/assets/icon/chevron-right-gray.svg";
+import ChipDropdown from "@/components/admin/ui/ChipDropdown";
 
 export type ResultStatus = "pending" | "pass" | "fail";
 
@@ -9,6 +8,17 @@ const statusLabel: Record<ResultStatus, string> = {
   pass: "합격",
   fail: "불합격",
 };
+
+function getStatusChipClass(status: ResultStatus) {
+  switch (status) {
+    case "pass":
+      return "bg-[#10B981] text-[#1A1A1A]";
+    case "fail":
+      return "bg-[#FF9A9A] text-[#1A1A1A]";
+    default:
+      return "bg-[#EBF3FF] text-[#1A1A1A]";
+  }
+}
 
 interface ApplicationRowProps {
   code: string;
@@ -29,55 +39,34 @@ export default function ApplicationRow({
   onChangeStatus,
   onOpen,
 }: ApplicationRowProps) {
+  const options: ResultStatus[] = ["pending", "pass", "fail"];
+
   return (
     <div className="mt-4">
-      <div
-        className={[
-          // ✅ SVG: 741x54, rx=8
-          "w-[741px] h-[54px] rounded-[8px] bg-white",
-
-          // ✅ SVG 컬럼 폭 그대로
-          "grid grid-cols-[150px_120px_126px_213px_105px_27px] items-center",
-
-          // ✅ SVG 텍스트 스펙
-          "text-[14px] font-normal text-[#1A1A1A] font-['Inter'] leading-normal",
-        ].join(" ")}
-      >
-        {/* padding은 SVG가 거의 12px 느낌이라 px-3로 맞춤 */}
+      <div className="w-[741px] h-[54px] rounded-[8px] bg-white grid grid-cols-[150px_120px_126px_213px_105px_27px] items-center text-[14px] font-normal text-[#1A1A1A]">
         <div className="pl-3">{code}</div>
         <div>{name}</div>
         <div>{phone}</div>
         <div>{part}</div>
 
-        {/* ✅ 상태 칩 영역 (609~714) */}
-        <div className="relative flex items-center justify-start">
-          <select
+        <div className="flex justify-start">
+          <ChipDropdown<ResultStatus>
             value={status}
-            onChange={(e) => onChangeStatus(e.target.value as ResultStatus)}
-            className={[
-              "appearance-none outline-none border-0",
-              "h-[24px] w-[52px] rounded-full bg-[#EBF3FF]",
-              "px-[12px] pr-[22px]", // 텍스트+아이콘 공간
-              "text-[14px] font-normal text-[#1A1A1A] font-['Inter']",
-            ].join(" ")}
-          >
-            <option value="pending">{statusLabel.pending}</option>
-            <option value="pass">{statusLabel.pass}</option>
-            <option value="fail">{statusLabel.fail}</option>
-          </select>
-
-          <img
-            src={ChevronDown}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute right-[6px] top-1/2 -translate-y-1/2 w-[12px] h-[12px]"
+            options={options}
+            labelMap={statusLabel}
+            onChange={onChangeStatus}
+            chipClass={getStatusChipClass}
+            panelAlignClass="right-0"
+            panelWidthClass="w-[200px]"
           />
         </div>
 
-        {/* ✅ 우측 화살표 영역 (714~741) */}
         <button
           type="button"
-          onClick={onOpen}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen?.();
+          }}
           className="flex items-center justify-center"
           aria-label="상세 보기"
         >
@@ -85,7 +74,7 @@ export default function ApplicationRow({
             src={ChevronRight}
             alt=""
             aria-hidden="true"
-            className="w-[16px] h-[16px]"
+            className="w-[24px] h-[24px] pointer-events-none"
           />
         </button>
       </div>

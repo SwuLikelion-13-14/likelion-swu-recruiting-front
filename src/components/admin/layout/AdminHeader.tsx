@@ -1,11 +1,10 @@
-// src/components/admin/layout/AdminHeader.tsx
 import logo from "@/assets/icon/logo_orange.svg"; 
 interface AdminHeaderProps {
   subtitle?: string; 
 }
 
 export default function AdminHeader({
-  subtitle = "멋쟁이 사자처럼 대학 서울여대 14기",
+  subtitle = "서울여대 멋쟁이사자처럼 14기",
 }: AdminHeaderProps) {
   return (
     <header className="w-full bg-white border-b border-[#EDEDED]">

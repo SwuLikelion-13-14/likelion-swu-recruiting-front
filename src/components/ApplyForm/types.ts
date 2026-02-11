@@ -11,7 +11,8 @@ export interface Question {
 }
 
 export type Mode = 'edit' | 'view'
-export type Variant = 'survey' | 'result'
+export type Variant = "survey" | "result" | "admin";
+
 
 export interface ApplyFormProps {
   mode: Mode
