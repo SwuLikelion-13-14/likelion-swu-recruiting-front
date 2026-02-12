@@ -766,4 +766,3 @@ export default function ApplyForm({
     </section>
   );
 }
-
