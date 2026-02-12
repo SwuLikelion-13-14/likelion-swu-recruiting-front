@@ -43,7 +43,9 @@ const ApplyBox = () => {
         }
 
         // 성공
-        navigate('/my-application');
+        localStorage.setItem('admin-auth', 'true');
+        navigate('/admin');
+
     };
 
 

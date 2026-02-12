@@ -19,6 +19,17 @@ import AdminApplicationsPage from "@/pages/admin/AdminApplicationsPage";
 import AdminApplicationDetailPage from "@/pages/admin/AdminApplicationDetailPage";
 import AdminSchedulePage from "@/pages/admin/AdminSchedulePage";
 
+const ProtectedAdmin = ({ children }: { children: React.ReactNode }) => {
+  const isAuth = localStorage.getItem('admin-auth') === 'true';
+
+  if (!isAuth) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+
 const App = () => {
   return (
     <Routes>
@@ -35,7 +46,15 @@ const App = () => {
       <Route path="/design" element={<DesignPage />} />
       <Route path="/back" element={<BackPage />} />
 
-      <Route path="/admin" element={<AdminLayout />}>
+      <Route
+        path="/admin"
+        element={
+          <ProtectedAdmin>
+            <AdminLayout />
+          </ProtectedAdmin>
+        }
+      >
+
         <Route index element={<Navigate to="applications" replace />} />
         <Route path="applications" element={<AdminApplicationsPage />} />
         <Route path="schedule" element={<AdminSchedulePage />} />

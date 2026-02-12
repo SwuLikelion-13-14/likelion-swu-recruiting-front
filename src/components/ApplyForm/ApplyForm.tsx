@@ -72,6 +72,7 @@ export default function ApplyForm({
 
   const { setDirty, registerValidator } = useNavigationGuard();
 
+
   // allQuestions 안전 보정
   const safeAllQuestions = useMemo(
     () => (allQuestions && allQuestions.length ? allQuestions : questions),
@@ -248,9 +249,17 @@ export default function ApplyForm({
   }, [studentStatus, passwordAnswer]);
 
   // 버튼 상태 계산
-  const requiredFilled = questions
-    .filter((q) => q.required)
-    .every((q) => (q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""));
+  const requiredQuestions = safeAllQuestions.filter(
+    (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
+  );
+
+  const requiredFilled =
+    requiredQuestions.length > 0 &&
+    requiredQuestions.every((q) =>
+      q.type === "file"
+        ? !!q.file || q.answer.trim() !== ""
+        : q.answer.trim() !== ""
+    );
 
   const studentValid = studentStatus === "valid";
   const passwordValid = /^\d{4}$/.test(passwordAnswer);
@@ -292,13 +301,13 @@ export default function ApplyForm({
             ? errors[item.id]
               ? styles.inputError
               : studentStatus === "valid"
-              ? styles.inputSuccess
-              : ""
+                ? styles.inputSuccess
+                : ""
             : errors[item.id]
-            ? styles.inputError
-            : success[item.id]
-            ? styles.inputSuccess
-            : "";
+              ? styles.inputError
+              : success[item.id]
+                ? styles.inputSuccess
+                : "";
 
           // ✅ view 모드: 텍스트 입력은 textarea 대신 input/textarea 그대로 두되 readOnly 처리
           const placeholderText =
@@ -325,8 +334,8 @@ export default function ApplyForm({
                       errors[item.id]
                         ? styles.inputError
                         : success[item.id]
-                        ? styles.inputSuccess
-                        : "",
+                          ? styles.inputSuccess
+                          : "",
                     ].join(" ")}
                     value={item.answer}
                     placeholder={item.placeholder}
@@ -378,8 +387,8 @@ export default function ApplyForm({
                       {mode === "view"
                         ? "파일 다운로드"
                         : item.file
-                        ? "파일 변경하기"
-                        : "파일 업로드"}
+                          ? "파일 변경하기"
+                          : "파일 업로드"}
                     </button>
                   </div>
                 </div>
@@ -477,8 +486,8 @@ export default function ApplyForm({
                         errors[item.id]
                           ? styles.errorText
                           : studentStatus === "valid"
-                          ? styles.successText
-                          : styles.errorText
+                            ? styles.successText
+                            : styles.errorText
                       }
                     >
                       {errors[item.id] ||
