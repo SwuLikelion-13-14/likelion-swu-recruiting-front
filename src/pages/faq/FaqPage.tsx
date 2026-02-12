@@ -70,21 +70,24 @@ const FaqPage: React.FC = () => {
 
   // 하이라이트 텍스트 처리 함수
   const getHighlightedText = (text: string, highlights: string[]) => {
-    if (!highlights || highlights.length === 0) return text;
+  if (!highlights || highlights.length === 0) return text;
 
-    // 하이라이트 단어들을 정규식으로 만듦 (예: "단어1|단어2")
-    const regex = new RegExp(`(${highlights.join('|')})`, 'gi');
-    const parts = text.split(regex);
+  // 특수문자를 이스케이프 처리
+  const escapedHighlights = highlights.map(highlight => 
+    highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
+  
+  const regex = new RegExp(`(${escapedHighlights.join('|')})`, 'gi');
+  const parts = text.split(regex);
 
-    return parts.map((part, i) => 
-      highlights.includes(part) ? (
-        <span key={i} className={styles.highlight}>{part}</span>
-      ) : (
-        part
-      )
-    );
-  };
-
+  return parts.map((part, i) => 
+    highlights.some(h => part.toLowerCase() === h.toLowerCase()) ? (
+      <span key={i} className={styles.highlight}>{part}</span>
+    ) : (
+      part
+    )
+  );
+};
   return (
     <div className={styles.container}>
       <Layout>
