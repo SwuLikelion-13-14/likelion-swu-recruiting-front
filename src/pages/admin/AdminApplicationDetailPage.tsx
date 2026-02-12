@@ -8,38 +8,53 @@ import type { ResultStatus } from "@/components/admin/domain/applications/Applic
 import ChevronRight from "@/assets/icon/chevron-right-black.svg?react";
 import ChipDropdown from "@/components/admin/ui/ChipDropdown";
 
-type ApplicantDetail = {
-  code: string;
+const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
+
+type Track = "FRONT" | "BACK" | "PND";
+
+type ApiAnswer = {
+  questionId: number;
+  part: string; 
+  no: number;
+  question: string;
+  responseText: string;
+};
+
+type ApiDetailResult = {
+  responseId: number;
   name: string;
-  phone: string;
-  part?: string;
+  track: Track;
+  answers: ApiAnswer[];
+  fileName?: string | null;
+  fileUrl?: string | null;
+};
+
+type ApiDetailResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: ApiDetailResult;
+};
+
+type ApplicantDetailFromState = {
+  responseId?: number;
+  userId?: number;
+  code?: string;
+  name?: string;
+  phone?: string;
   partLabel?: string;
   status?: ResultStatus;
-
-  studentId?: string;
-  major?: string;
-  doubleMajor?: string;
-  schoolStatus?: string;
-  email?: string;
-
-  answers?: Record<number, string>;
-  portfolio?: string;
-
-  confirmStudentId?: string;
-  confirmPassword?: string;
-
-  consentChecked?: boolean;
 };
 
 type LocationState = {
-  applicant?: ApplicantDetail;
+  applicant?: ApplicantDetailFromState;
   partLabel?: string;
 };
 
-const PART_LABEL: Record<string, string> = {
-  frontend: "프론트엔드",
-  backend: "백엔드",
-  design: "기획/디자인",
+const TRACK_LABEL: Record<Track, string> = {
+  FRONT: "프론트엔드",
+  BACK: "백엔드",
+  PND: "기획/디자인",
 };
 
 const STATUS_LABEL: Record<ResultStatus, string> = {
@@ -59,148 +74,164 @@ function getStatusChipClass(status: ResultStatus) {
   }
 }
 
+function toViewQuestion(a: ApiAnswer): Question {
+  return {
+    id: a.questionId,
+    question: a.question,
+    type: "text",
+    answer: a.responseText ?? "",
+    placeholder: "",
+  };
+}
+
 export default function AdminApplicationDetailPage() {
   const navigate = useNavigate();
-  const { code } = useParams<{ code: string }>();
+  const { code } = useParams<{ code: string }>(); 
   const { state } = useLocation() as { state: LocationState | null };
+
+  const responseId = useMemo(() => {
+    const n = Number(code);
+    return Number.isFinite(n) ? n : null;
+  }, [code]);
 
   const applicantFromState = state?.applicant;
 
-  const applicant: ApplicantDetail | null = useMemo(() => {
-    if (applicantFromState) return applicantFromState;
-    if (!code) return null;
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    return {
-      code,
-      name: "",
-      phone: "",
-      partLabel: state?.partLabel ?? "",
-      status: "pending",
-      consentChecked: true,
-      answers: {},
-    };
-  }, [applicantFromState, code, state?.partLabel]);
+  const [detail, setDetail] = useState<ApiDetailResult | null>(null);
 
   const [status, setStatus] = useState<ResultStatus>(
-    applicant?.status ?? "pending"
+    applicantFromState?.status ?? "pending"
   );
-  const [consentChecked, setConsentChecked] = useState<boolean>(
-    applicant?.consentChecked ?? true
-  );
+
+  const [consentChecked, setConsentChecked] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!applicant) return;
-    setStatus(applicant.status ?? "pending");
-    setConsentChecked(applicant.consentChecked ?? true);
-  }, [applicant]);
+    if (!responseId) {
+      setErrorMsg("유효하지 않은 responseId 입니다.");
+      return;
+    }
 
-  if (!applicant) {
-    return (
-      <div className="p-6">
-        <button onClick={() => navigate(-1)}>← 뒤로</button>
-        <p className="mt-4">지원자 데이터가 없어요.</p>
-      </div>
-    );
-  }
+    const controller = new AbortController();
 
-  const breadcrumbPart =
-    applicant.partLabel ??
-    PART_LABEL[applicant.part ?? ""] ??
-    applicant.part ??
-    state?.partLabel ??
-    "프론트엔드";
+    async function fetchDetail() {
+      setLoading(true);
+      setErrorMsg(null);
 
-  const requiredQuestions: Question[] = useMemo(
-    () => [
-      { id: 1, question: "이름", type: "text", answer: applicant.name ?? "", placeholder: "" },
-      { id: 2, question: "학번", type: "text", answer: applicant.studentId ?? "", placeholder: "22학번" },
-      { id: 3, question: "본 전공", type: "text", answer: applicant.major ?? "", placeholder: "소프트웨어융합학과" },
-      {
-        id: 4,
-        question: "복수 전공",
-        type: "text",
-        answer: applicant.doubleMajor ?? "",
-        placeholder: "디지털미디어학과 (없다면 작성하지 않아도 됩니다.)",
-      },
-      {
-        id: 5,
-        question: "재학 상태",
-        type: "text",
-        answer: applicant.schoolStatus ?? "",
-        placeholder: "X학년 X학기 재학, 휴학 또는 졸업 유예",
-      },
-      { id: 6, question: "전화번호", type: "text", answer: applicant.phone ?? "", placeholder: "010-1234-5678" },
-      { id: 7, question: "메일 주소", type: "text", answer: applicant.email ?? "", placeholder: "example@gmail.com" },
-    ],
-    [applicant]
-  );
+      try {
+        const url = `${API_BASE}/api/admin/response/${responseId}`;
+        console.log("ADMIN DETAIL URL:", url);
 
-  const commonQuestions: Question[] = useMemo(
-    () => [
-      {
-        id: 101,
-        question:
-          "1. 다양한 IT 동아리 중에서 멋쟁이 사자처럼 대학 14기를 선택하고 지원하시게 된 이유를 작성해주세요. · · · · · (500자 이내)",
-        type: "text",
-        answer: applicant.answers?.[101] ?? "",
-        placeholder: "내용을 입력해주세요",
-      },
-      {
-        id: 102,
-        question: "2. 해당 파트와 관련된 경험을 작성해주세요. · · · · · (600자 이내)",
-        type: "text",
-        answer: applicant.answers?.[102] ?? "",
-        placeholder: "내용을 입력해주세요",
-      },
-      {
-        id: 103,
-        question: "3. 해당 파트에서 이루고자하는 목표를 작성해주세요. · · · · · (500자 이내)",
-        type: "text",
-        answer: applicant.answers?.[103] ?? "",
-        placeholder: "내용을 입력해주세요",
-      },
-      {
-        id: 104,
-        question:
-          "4. 팀 프로젝트 경험과 프로젝트에서 맡은 역할을 설명해주세요. 팀 프로젝트를 통해 무엇을 얻었는지, 프로젝트를 진행 도중에 어떤 문제를 만났으며 어떻게 해결했는지 알려주세요. 팀 프로젝트 경험이 없다면 개인 프로젝트로 무언가 개발했거나 학습한 경험을 알려주세요. · · · · · (1000자 이내)",
-        type: "text",
-        answer: applicant.answers?.[104] ?? "",
-        placeholder: "내용을 입력해주세요",
-      },
-      {
-        id: 105,
-        question:
-          "5. 본인의 기술적 역량을 향상시키기 위해 학습한 경험을 설명해주세요. 해당 경험과 그 과정에서의 느낀점을 구체적으로 작성해주세요. · · · · · (700자 이내)",
-        type: "text",
-        answer: applicant.answers?.[105] ?? "",
-        placeholder: "내용을 입력해주세요",
-      },
-      {
-        id: 106,
-        question:
-          "6. 멋쟁이사자처럼 대학은 최소 1회 모임 & 10시간 이상의 시간 투자를 권장합니다. 활동 기간 동안 얼마나 열정적으로, 매주 얼만큼의 시간을 할애하실 수 있는지 작성해주세요. · · · · · (500자 이내)",
-        type: "text",
-        answer: applicant.answers?.[106] ?? "",
-        placeholder: "내용을 입력해주세요",
-      },
-      {
-        id: 107,
-        question: "7. 포트폴리오 또는 깃허브 링크를 제출해주세요.",
+        const res = await fetch(url, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const raw = await res.text();
+        if (raw.trim().startsWith("<")) {
+          throw new Error("API 대신 HTML을 받았습니다. URL/서버 라우팅 확인 필요.");
+        }
+
+        const data: ApiDetailResponse = JSON.parse(raw);
+        if (!data?.isSuccess) throw new Error(data?.message ?? "요청 실패");
+
+        setDetail(data.result);
+      } catch (e: any) {
+        if (e?.name === "AbortError") return;
+        console.error("ADMIN DETAIL ERROR:", e);
+        setDetail(null);
+        setErrorMsg(e?.message ?? "상세 정보를 불러오지 못했어요.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDetail();
+    return () => controller.abort();
+  }, [responseId]);
+
+  const breadcrumbPart = useMemo(() => {
+    if (detail?.track) return TRACK_LABEL[detail.track];
+    if (applicantFromState?.partLabel) return applicantFromState.partLabel;
+    if (state?.partLabel) return state.partLabel;
+    return "지원자";
+  }, [detail?.track, applicantFromState?.partLabel, state?.partLabel]);
+
+  const requiredQuestions: Question[] = useMemo(() => {
+    if (!detail) return [];
+
+    const basics = (detail.answers ?? [])
+      .filter((a) => a.part === "BASIC")
+      .sort((a, b) => a.no - b.no)
+      .map(toViewQuestion);
+
+    if (basics.length === 0) {
+      return [
+        {
+          id: 1,
+          question: "이름",
+          type: "text",
+          answer: detail.name ?? "",
+          placeholder: "",
+        },
+      ];
+    }
+
+    return basics;
+  }, [detail]);
+
+  const commonQuestions: Question[] = useMemo(() => {
+    if (!detail) return [];
+
+    const others = (detail.answers ?? [])
+      .filter((a) => a.part !== "BASIC")
+      .sort((a, b) => {
+        if (a.part === b.part) return a.no - b.no;
+        return String(a.part).localeCompare(String(b.part));
+      })
+      .map(toViewQuestion);
+
+    const hasFile = !!detail.fileUrl;
+    if (hasFile) {
+      others.push({
+        id: 999999,
+        question: `포트폴리오 (${detail.fileName ?? "파일"})`,
         type: "file",
-        answer: applicant.portfolio ?? "",
-        placeholder: "링크를 첨부하거나 파일을 업로드 해주세요",
-      },
-    ],
-    [applicant]
-  );
+        answer: detail.fileUrl ?? "",
+        placeholder: "",
+      });
+    }
+
+    return others;
+  }, [detail]);
 
   const finalCheckQuestions: Question[] = useMemo(
     () => [
-      { id: 201, question: "학번", type: "text", answer: applicant.confirmStudentId ?? "", placeholder: "학번 10자리를 입력해 주세요" },
-      { id: 202, question: "본인 확인용 비밀번호", type: "text", answer: applicant.confirmPassword ?? "", placeholder: "숫자 4자리를 입력해 주세요" },
+      {
+        id: 201,
+        question: "학번",
+        type: "text",
+        answer: "",
+        placeholder: "학번 10자리를 입력해 주세요",
+      },
     ],
-    [applicant]
+    []
   );
+
+  const displayName = detail?.name || applicantFromState?.name || code || "";
+
+  if (!responseId) {
+    return (
+      <div className="p-6">
+        <button onClick={() => navigate(-1)}>← 뒤로</button>
+        <p className="mt-4">유효하지 않은 지원 응답 ID 입니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-[1100px] min-h-full">
@@ -231,7 +262,7 @@ export default function AdminApplicationDetailPage() {
               <ChevronRight className="mx-2 w-6 h-6" />
 
               <span className="text-[16px] font-[500] text-[#1A1A1A]">
-                {applicant.name || applicant.code}
+                {displayName}
               </span>
             </div>
           </div>
@@ -256,37 +287,58 @@ export default function AdminApplicationDetailPage() {
       </div>
 
       <div className="px-[60px] pb-24 pt-10">
-        <ApplyForm mode="view" variant="result" title="필수 기본 정보" questions={requiredQuestions} enableConsent={false} enableNotice={false} enableActions={false} allQuestions={requiredQuestions} />
+        {loading ? (
+          <div className="py-20 text-center text-[13px] text-[#6B6B6B]">
+            불러오는 중…
+          </div>
+        ) : errorMsg ? (
+          <div className="py-20 text-center">
+            <p className="text-[13px] text-[#6B6B6B]">{errorMsg}</p>
+          </div>
+        ) : (
+          <>
+            <ApplyForm
+              mode="view"
+              variant="result"
+              title="필수 기본 정보"
+              questions={requiredQuestions}
+              enableConsent={false}
+              enableNotice={false}
+              enableActions={false}
+              allQuestions={requiredQuestions}
+            />
 
-        <div className="mt-16" />
+            <div className="mt-16" />
 
-        <ApplyForm
-          mode="view"
-          variant="result"
-          title="서류 공통 질문"
-          subtitle="모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다"
-          questions={commonQuestions}
-          enableConsent={false}
-          enableNotice={false}
-          enableActions={false}
-          allQuestions={commonQuestions}
-        />
+            <ApplyForm
+              mode="view"
+              variant="result"
+              title="서류 공통 질문"
+              subtitle="지원서에 작성한 답변 항목입니다"
+              questions={commonQuestions}
+              enableConsent={false}
+              enableNotice={false}
+              enableActions={false}
+              allQuestions={commonQuestions}
+            />
 
-        <div className="mt-16" />
+            <div className="mt-16" />
 
-        <ApplyForm
-          mode="view"
-          variant="result"
-          title="지원서 최종 제출을 위한 정보 확인"
-          subtitle="추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다"
-          questions={finalCheckQuestions}
-          enableConsent={true}
-          enableNotice={false}
-          enableActions={false}
-          consentChecked={consentChecked}
-          onConsentChange={setConsentChecked}
-          allQuestions={finalCheckQuestions}
-        />
+            <ApplyForm
+              mode="view"
+              variant="result"
+              title="지원서 최종 제출을 위한 정보 확인"
+              subtitle="추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다"
+              questions={finalCheckQuestions}
+              enableConsent={true}
+              enableNotice={false}
+              enableActions={false}
+              consentChecked={consentChecked}
+              onConsentChange={setConsentChecked}
+              allQuestions={finalCheckQuestions}
+            />
+          </>
+        )}
       </div>
     </div>
   );
