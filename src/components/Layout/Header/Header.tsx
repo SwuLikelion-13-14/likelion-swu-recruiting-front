@@ -11,6 +11,7 @@ import { useNavigationGuard } from '@/contexts/NavigationGuardContext'
 // Header 컴포넌트의 props 타입 정의
 type HeaderProps = {
   className?: string;
+  onNavigate?: (url: string) => void;
 };
 
 /* 왼쪽 메뉴 항목들 (현재는 사용되지 않는데 나중에 처리할게요)

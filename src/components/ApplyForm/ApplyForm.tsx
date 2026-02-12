@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./ApplyForm.module.css";
 import type { ApplyFormProps } from "./types";
 
@@ -13,6 +13,7 @@ import { useNavigationGuard } from "@/contexts/NavigationGuardContext";
 
 type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
 
+// ✅ 학번/비번 문항 ID (프로젝트에서 고정으로 쓰는 값)
 const STUDENT_ID = 15;
 const PASSWORD_ID = 16;
 
@@ -48,6 +49,8 @@ export default function ApplyForm({
   consentChecked,
   onConsentChange,
   allQuestions,
+  onSubmit,
+  onDraftSave,
 }: ApplyFormProps) {
   const isSurvey = variant === "survey";
   const isResult = variant === "result";
@@ -59,16 +62,37 @@ export default function ApplyForm({
   );
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"submitted" | "draft" | null>(null);
+  const [modalType, setModalType] = useState<
+    "submitted" | "draft" | "leave" | null
+  >(null);
+
+  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
+    {}
+  );
 
   const { setDirty, registerValidator } = useNavigationGuard();
 
-  const safeAllQuestions =
-    allQuestions && allQuestions.length ? allQuestions : questions;
+  // allQuestions 안전 보정
+  const safeAllQuestions = useMemo(
+    () => (allQuestions && allQuestions.length ? allQuestions : questions),
+    [allQuestions, questions]
+  );
 
   const passwordAnswer =
     safeAllQuestions.find((q) => q.id === PASSWORD_ID)?.answer ?? "";
 
+  // ✅ 입력 유무(파일 포함)로 dirty 판단
+  const hasAnyInput = useMemo(() => {
+    return questions.some((q) =>
+      q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""
+    );
+  }, [questions]);
+
+  useEffect(() => {
+    setDirty(hasAnyInput);
+  }, [hasAnyInput, setDirty]);
+
+  // ✅ submitted/draft-exists 상태면 3초 후 모달 오픈
   useEffect(() => {
     if (studentStatus === "submitted-exists") {
       const timer = setTimeout(() => {
@@ -87,6 +111,26 @@ export default function ApplyForm({
     }
   }, [studentStatus]);
 
+  // ✅ 뒤로가기(leave) 가드: 입력이 있을 때만
+  useEffect(() => {
+    const handleBack = (e: PopStateEvent) => {
+      if (!hasAnyInput) return;
+
+      e.preventDefault();
+      window.history.pushState(null, "", window.location.href);
+
+      setModalType("leave");
+      setModalOpen(true);
+    };
+
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handleBack);
+
+    return () => {
+      window.removeEventListener("popstate", handleBack);
+    };
+  }, [hasAnyInput]);
+
   const handleBlur = (currentId: number, allQ: Question[]) => {
     const newErrors: Record<number, string> = {};
     const newSuccess: Record<number, string> = {};
@@ -97,20 +141,47 @@ export default function ApplyForm({
     for (let i = 0; i <= currentIndex; i++) {
       const q = allQ[i];
 
+      // ✅ 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
       if (q.type === "file") {
-        if (q.required && !q.file) {
+        const hasFileOrLink = !!q.file || q.answer.trim() !== "";
+        if (q.required && !hasFileOrLink) {
           newErrors[q.id] = "기획디자인 트랙 지원자는 필수 답변 항목입니다.";
         }
         continue;
       }
 
-      if (q.id !== STUDENT_ID && q.required && !q.answer.trim()) {
+      // ✅ 필수 체크
+      if (q.required && !q.answer.trim()) {
         newErrors[q.id] = "필수 답변 항목입니다.";
-      } else if (q.pattern && !q.pattern.test(q.answer)) {
-        newErrors[q.id] =
-          q.errorMessage || "형식이 다릅니다. 숫자 4자리를 입력하세요.";
-      } else if (q.pattern && q.pattern.test(q.answer)) {
-        newSuccess[q.id] = "비밀번호가 설정되었습니다.";
+        continue;
+      }
+
+      // ✅ 학번 체크
+      if (q.id === STUDENT_ID && q.answer.trim()) {
+        const status = mockCheckStudentId(q.answer.trim());
+        setStudentStatus(status);
+
+        if (status !== "valid") {
+          newErrors[q.id] = studentMessages[status];
+        } else {
+          newSuccess[q.id] = studentMessages[status];
+        }
+        continue;
+      }
+
+      // ✅ 비밀번호 체크 (4자리 숫자)
+      if (q.id === PASSWORD_ID && q.answer.trim()) {
+        if (!/^\d{4}$/.test(q.answer.trim())) {
+          newErrors[q.id] = "형식이 다릅니다. 숫자 4자리를 입력하세요.";
+        } else {
+          newSuccess[q.id] = "비밀번호가 설정되었습니다.";
+        }
+        continue;
+      }
+
+      // ✅ 기타 pattern 기반 검증이 있는 경우
+      if (q.pattern && q.answer.trim() && !q.pattern.test(q.answer)) {
+        newErrors[q.id] = q.errorMessage || "형식이 다릅니다.";
       }
     }
 
@@ -143,6 +214,7 @@ export default function ApplyForm({
     input.click();
   };
 
+  // ✅ 네비게이션 가드가 필요로 하는 “정보 확인 섹션 검증”
   const validateInfoSection = () => {
     const studentOk = studentStatus === "valid";
     const passwordOk = /^\d{4}$/.test(passwordAnswer);
@@ -175,19 +247,10 @@ export default function ApplyForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentStatus, passwordAnswer]);
 
-  const hasAnyInput = questions.some((q) =>
-    q.type === "file"
-      ? !!q.file || q.answer.trim() !== ""
-      : q.answer.trim() !== ""
-  );
-
-  useEffect(() => {
-    setDirty(hasAnyInput);
-  }, [hasAnyInput, setDirty]);
-
+  // 버튼 상태 계산
   const requiredFilled = questions
     .filter((q) => q.required)
-    .every((q) => (q.type === "file" ? !!q.file : q.answer.trim() !== ""));
+    .every((q) => (q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""));
 
   const studentValid = studentStatus === "valid";
   const passwordValid = /^\d{4}$/.test(passwordAnswer);
@@ -195,19 +258,13 @@ export default function ApplyForm({
 
   const cancelState: ButtonState = "default";
   const draftState: ButtonState =
-    hasAnyInput && studentValid && passwordValid && consentOk
-      ? "default"
-      : "unactive";
+    hasAnyInput && studentValid && passwordValid && consentOk ? "default" : "unactive";
   const submitState: ButtonState =
-    requiredFilled && studentValid && passwordValid && consentOk
-      ? "default"
-      : "unactive";
+    requiredFilled && studentValid && passwordValid && consentOk ? "default" : "unactive";
 
   return (
     <section
-      className={[styles.wrapper, isSurvey ? styles.bgDark : styles.bgResult].join(
-        " "
-      )}
+      className={[styles.wrapper, isSurvey ? styles.bgDark : styles.bgResult].join(" ")}
       data-variant={variant}
     >
       <header className={styles.header}>
@@ -220,11 +277,7 @@ export default function ApplyForm({
           {title}
         </h1>
         {subtitle && (
-          <p
-            className={[styles.subtitle, isResult ? styles.subtitleBlack : ""].join(
-              " "
-            )}
-          >
+          <p className={[styles.subtitle, isResult ? styles.subtitleBlack : ""].join(" ")}>
             {subtitle}
           </p>
         )}
@@ -246,6 +299,10 @@ export default function ApplyForm({
             : success[item.id]
             ? styles.inputSuccess
             : "";
+
+          // ✅ view 모드: 텍스트 입력은 textarea 대신 input/textarea 그대로 두되 readOnly 처리
+          const placeholderText =
+            errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
 
           return (
             <div className={styles.item} key={item.id}>
@@ -274,28 +331,37 @@ export default function ApplyForm({
                     value={item.answer}
                     placeholder={item.placeholder}
                     readOnly={mode === "view"}
-                    onChange={(e) => onChange?.(item.id, e.target.value)}
-                    onBlur={() => handleBlur(item.id, safeAllQuestions)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      onChange?.(item.id, value);
+
+                      // 링크 입력 시 에러 제거
+                      if (value.trim() !== "") {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[item.id];
+                          return next;
+                        });
+                      }
+                    }}
+                    onFocus={() =>
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
+                    }
+                    onBlur={() => {
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
+                      handleBlur(item.id, safeAllQuestions);
+                    }}
                   />
 
                   <div className={styles.fileBottomRow}>
                     <div>
                       {errors[item.id] && (
-                        <div
-                          className={[styles.errorText, styles.fileErrorText].join(
-                            " "
-                          )}
-                        >
+                        <div className={[styles.errorText, styles.fileErrorText].join(" ")}>
                           {errors[item.id]}
                         </div>
                       )}
                       {success[item.id] && !errors[item.id] && (
-                        <div
-                          className={[
-                            styles.successText,
-                            styles.fileErrorText,
-                          ].join(" ")}
-                        >
+                        <div className={[styles.successText, styles.fileErrorText].join(" ")}>
                           {success[item.id]}
                         </div>
                       )}
@@ -319,28 +385,61 @@ export default function ApplyForm({
                 </div>
               ) : (
                 <>
-                  <input
+                  <textarea
                     id={`field-${item.id}`}
-                    type={item.type ?? "text"}
                     className={[
                       styles.input,
                       isSurvey ? styles.inputDark : styles.inputLight,
                       inputStateClass,
                     ].join(" ")}
                     value={item.answer}
-                    placeholder={item.placeholder}
+                    placeholder={placeholderText}
                     readOnly={mode === "view"}
+                    rows={1}
+                    style={{ resize: "none", overflow: "hidden" }}
+                    onFocus={() =>
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
+                    }
+                    onBlur={() => {
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
+                      handleBlur(item.id, safeAllQuestions);
+                    }}
                     onChange={(e) => {
                       const value = e.target.value;
                       onChange?.(item.id, value);
 
+                      // 자동 높이 조절
+                      const textarea = e.target;
+                      textarea.style.height = "auto";
+                      textarea.style.height = `${textarea.scrollHeight}px`;
+
                       if (isStudentField) {
+                        // 학번 입력 중이면 에러 초기화 + 상태 업데이트
                         setErrors((prev) => {
                           const next = { ...prev };
                           delete next[STUDENT_ID];
                           return next;
                         });
-                        setStudentStatus(mockCheckStudentId(value));
+
+                        const st = mockCheckStudentId(value.trim());
+                        setStudentStatus(st);
+
+                        if (st !== "valid") {
+                          setErrors((prev) => ({
+                            ...prev,
+                            [STUDENT_ID]: studentMessages[st],
+                          }));
+                          setSuccess((prev) => {
+                            const next = { ...prev };
+                            delete next[STUDENT_ID];
+                            return next;
+                          });
+                        } else {
+                          setSuccess((prev) => ({
+                            ...prev,
+                            [STUDENT_ID]: studentMessages[st],
+                          }));
+                        }
                         return;
                       }
 
@@ -351,7 +450,7 @@ export default function ApplyForm({
                           return next;
                         });
 
-                        if (!/^\d{4}$/.test(value)) {
+                        if (!/^\d{4}$/.test(value.trim())) {
                           setErrors((prev) => ({
                             ...prev,
                             [PASSWORD_ID]: "형식이 다릅니다. 숫자 4자리를 입력하세요.",
@@ -370,7 +469,6 @@ export default function ApplyForm({
                         return;
                       }
                     }}
-                    onBlur={() => handleBlur(item.id, safeAllQuestions)}
                   />
 
                   {isStudentField ? (
@@ -406,9 +504,10 @@ export default function ApplyForm({
       {enableConsent && (
         <section className={styles.consentSection}>
           <h2
-            className={[styles.consentTitle, isResult ? styles.consentTitleBlack : ""].join(
-              " "
-            )}
+            className={[
+              styles.consentTitle,
+              isResult ? styles.consentTitleBlack : "",
+            ].join(" ")}
           >
             지원서 제출을 위한
             <br />
@@ -423,16 +522,18 @@ export default function ApplyForm({
           >
             <li>
               <p
-                className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
               >
                 수집하는 개인정보 항목
               </p>
               <div
-                className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
               >
                 필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공), 본인확인용 비밀번호
               </div>
@@ -440,23 +541,26 @@ export default function ApplyForm({
 
             <li>
               <p
-                className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
               >
                 개인정보의 보유 및 이용 기간
               </p>
               <div
-                className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
               >
                 수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후 지체 없이 파기합니다.
               </div>
               <div
-                className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
               >
                 지원자가 개인정보 삭제를 요청할 경우 즉시 파기합니다.
               </div>
@@ -464,23 +568,26 @@ export default function ApplyForm({
 
             <li>
               <p
-                className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
               >
                 동의 거부 권리 및 불이익 안내
               </p>
               <div
-                className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
               >
                 귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
               </div>
               <div
-                className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(
-                  " "
-                )}
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
               >
                 필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수 있습니다.
               </div>
@@ -496,15 +603,17 @@ export default function ApplyForm({
             />
             <img
               src={consentChecked ? checkboxChecked : checkboxDefault}
-              className={[styles.checkboxIcon, isResult ? styles.checkboxIconResult : ""].join(
-                " "
-              )}
+              className={[
+                styles.checkboxIcon,
+                isResult ? styles.checkboxIconResult : "",
+              ].join(" ")}
               alt=""
             />
             <span
-              className={[styles.checkboxText, isResult ? styles.checkboxTextBlack : ""].join(
-                " "
-              )}
+              className={[
+                styles.checkboxText,
+                isResult ? styles.checkboxTextBlack : "",
+              ].join(" ")}
             >
               위 내용에 동의합니다.
             </span>
@@ -515,9 +624,10 @@ export default function ApplyForm({
       {enableNotice && (
         <section className={styles.noticeSection}>
           <h2
-            className={[styles.noticeTitle, isResult ? styles.noticeTitleBlack : ""].join(
-              " "
-            )}
+            className={[
+              styles.noticeTitle,
+              isResult ? styles.noticeTitleBlack : "",
+            ].join(" ")}
           >
             지원서 제출 시 유의 사항
           </h2>
@@ -527,9 +637,10 @@ export default function ApplyForm({
               <img src={noticeIcon} alt="" className={styles.noticeIcon} />
               <div className={styles.noticeTextGroup}>
                 <p
-                  className={[styles.noticeText, isResult ? styles.noticeTextBlack : ""].join(
-                    " "
-                  )}
+                  className={[
+                    styles.noticeText,
+                    isResult ? styles.noticeTextBlack : "",
+                  ].join(" ")}
                 >
                   지원 트랙을 변경하고 싶어요.
                 </p>
@@ -556,8 +667,9 @@ export default function ApplyForm({
               cancelState={cancelState}
               draftState={draftState}
               submitState={submitState}
-              onDraftSave={() => console.log("임시저장")}
-              onSubmit={() => console.log("최종제출")}
+              hasInput={hasAnyInput}
+              onDraftSave={() => onDraftSave?.()}
+              onSubmit={onSubmit}
               onCancelConfirmed={() => (window.location.href = "/")}
             />
           )}
@@ -619,6 +731,33 @@ export default function ApplyForm({
           }
           primaryButton={{
             text: "확인",
+            onClick: () => setModalOpen(false),
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {modalOpen && modalType === "leave" && (
+        <Modal
+          isOpen={modalOpen}
+          title="WARNING"
+          description={
+            <span>
+              페이지를 나가면
+              <br />
+              작성 중인 지원서는 저장되지 않습니다.
+            </span>
+          }
+          extraText="현재까지 작성한 내용을 임시 저장할까요?"
+          primaryButton={{
+            text: "뒤로 가기",
+            onClick: () => {
+              setModalOpen(false);
+              window.history.back();
+            },
+          }}
+          secondaryButton={{
+            text: "계속 작성",
             onClick: () => setModalOpen(false),
           }}
           onClose={() => setModalOpen(false)}

@@ -107,7 +107,16 @@ h1 {
   margin-top: -4px;
   padding-top: 16px;
   animation: fadeIn 0.3s ease-out;
+    white-space: pre-wrap; /* \n 태그 반영 */
+
 }
+
+/* 하이라이트 텍스트 스타일 */
+.highlight {
+  color: #FF7710; 
+  font-weight: 700;
+}
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }

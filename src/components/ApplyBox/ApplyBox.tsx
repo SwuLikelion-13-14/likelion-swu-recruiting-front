@@ -13,6 +13,8 @@ const ApplyBox = () => {
     const [password, setPassword] = useState('');
     const [studentError, setStudentError] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [studentFocused, setStudentFocused] = useState(false);
+    const [passwordFocused, setPasswordFocused] = useState(false);
 
     // 더미 DB
     const mockDB = [
@@ -36,7 +38,7 @@ const ApplyBox = () => {
 
         // 비밀번호 틀림
         if (record.password !== password) {
-            setPasswordError('비밀번호가 틀렸습니다.');
+            setPasswordError('비밀번호가 올바르지 않습니다.');
             return;
         }
 
@@ -67,8 +69,10 @@ const ApplyBox = () => {
                     <div className={styles.inputField}>
                         <label>학번</label>
                         <input
-                            placeholder="학번 10자리를 입력하세요"
+                            placeholder={studentFocused ? '' : '학번 10자리를 입력하세요'} // 포커스 시 placeholder 비움
                             value={studentId}
+                            onFocus={() => setStudentFocused(true)}  // 포커스 시작
+                            onBlur={() => setStudentFocused(false)}
                             onChange={e => {
                                 setStudentId(e.target.value);
                                 setStudentError('');
@@ -83,8 +87,10 @@ const ApplyBox = () => {
                         <label>비밀번호</label>
                         <input
                             type="password"
-                            placeholder="숫자 4자리를 입력하세요"
+                            placeholder={passwordFocused ? '' : '숫자 4자리를 입력하세요'}
                             value={password}
+                            onFocus={() => setPasswordFocused(true)}
+                            onBlur={() => setPasswordFocused(false)}
                             onChange={e => {
                                 setPassword(e.target.value);
                                 setPasswordError('');
