@@ -19,7 +19,7 @@ const NavigationGuardContext = createContext<NavigationGuardContextType>({
 export const NavigationGuardProvider = ({ children }: { children: React.ReactNode }) => {
   const [isDirty, setDirty] = useState(false)
 
-  // 🔥 ApplyForm이 등록하는 검증 함수 저장
+  //  ApplyForm이 등록하는 검증 함수 저장
   const [validator, setValidator] = useState<() => boolean>(() => () => true)
 
   const registerValidator = (fn: () => boolean) => {

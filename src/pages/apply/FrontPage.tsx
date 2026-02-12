@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { api } from '@/api/client'
+import type { Question } from '@/components/ApplyForm/types'
 import { Header } from '@/components/Layout/Header/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
@@ -7,30 +9,60 @@ import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS } from '@/consta
 import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
 
 
-// 각 세트 질문 더미
-const questionSets = [
-    {
-        title: '필수 기본 정보',
-        questions: BASIC_INFO_QUESTIONS,
-    },
-    {
-        title: '서류 공통 질문',
-        subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다',
-        questions: BASIC_QUESTIONS,
-    },
-    {
-        title: '지원서 최종 제출을 위한 정보 확인',
-        subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다',
-        questions: CHECK_QUESTIONS,
-    },
-
-]
-
 const FrontPage = () => {
     // 페이지 전체 상태 관리
-    const [sets, setSets] = useState(questionSets)
+    const [sets, setSets] = useState<
+        { title: string; subtitle?: string; questions: Question[] }[]
+    >([
+        { title: '필수 기본 정보', questions: [] },
+        { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: [] },
+        { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: [] },
+    ])
+
     const [consentChecked, setConsentChecked] = useState(false)
     const allQuestions = sets.flatMap(set => set.questions)
+
+
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            try {
+                const res = await api.get('/recruit/application/FRONT')
+
+                const apiQuestions: { id: number; questionText: string }[] =
+                    Array.isArray(res?.data?.result) ? res.data.result : []
+
+                const mapDummy = (dummy: Question[], ids: number[]) =>
+                    ids.map((id, idx) => {
+                        const apiQ = apiQuestions.find(q => q.id === id)
+                        if (!apiQ) return dummy[idx]
+                        return {
+                            ...dummy[idx],
+                            id: apiQ.id,
+                            question: apiQ.questionText,
+                        }
+                    })
+
+                setSets([
+                    { title: '필수 기본 정보', questions: mapDummy(BASIC_INFO_QUESTIONS, [1, 2, 3, 4, 5, 6, 7]) },
+                    { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: mapDummy(BASIC_QUESTIONS, [8, 9, 10, 11, 12, 13, 14]) },
+                    { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapDummy(CHECK_QUESTIONS, [15, 16]) },
+                ])
+
+            } catch (err) {
+                console.error('질문 불러오기 실패:', err)
+
+                // 실패하면 더미로 fallback
+                setSets([
+                    { title: '필수 기본 정보', questions: BASIC_INFO_QUESTIONS },
+                    { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: BASIC_QUESTIONS },
+                    { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: CHECK_QUESTIONS },
+                ])
+            }
+        }
+
+        fetchQuestions()
+    }, [])
+
 
     const handleChange = (setIndex: number, id: number, value: string) => {
         setSets(prev =>
@@ -62,6 +94,125 @@ const FrontPage = () => {
         )
     }
 
+    // ✅ 최종 제출
+    const handleFinalSubmit = async () => {
+        try {
+            const userInfoDTO = {
+                name: allQuestions.find(q => q.id === 1)?.answer || '',
+                studentId: allQuestions.find(q => q.id === 2)?.answer || '',
+                password: allQuestions.find(q => q.id === 16)?.answer || '',
+                major: allQuestions.find(q => q.id === 3)?.answer || '',
+                doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
+                schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
+                phone: allQuestions.find(q => q.id === 6)?.answer || '',
+                email: allQuestions.find(q => q.id === 7)?.answer || '',
+            }
+
+            const responses = allQuestions
+                .filter(q => q.id >= 8 && q.id <= 13)
+                .map(q => ({
+                    questionId: q.id,
+                    responseText: q.answer || '',
+                }))
+
+            const portfolioQuestion = allQuestions.find(q => q.id === 14)
+            const portfolioFile = portfolioQuestion?.file
+            const portfolioLink = portfolioQuestion?.answer || ''
+
+            const dtoPayload = {
+                applicationField2: 1, // 최종 제출
+                userInfoDTO,
+                responses,
+                portfolioLink: portfolioFile ? '' : portfolioLink,
+            }
+
+            const formData = new FormData()
+            formData.append(
+                'dto',
+                new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' })
+            )
+
+            if (portfolioFile) {
+                formData.append('portfolioFile', portfolioFile)
+            }
+
+            const res = await api.post('/recruit/application/FRONT/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            })
+
+            alert('지원서가 성공적으로 제출되었습니다!')
+            console.log(res.data)
+
+        } catch (err: any) {
+            console.error('제출 실패:', err)
+            alert('제출 중 오류가 발생했습니다.')
+        }
+    }
+
+    // ✅ 임시 저장
+    const handleDraftSave = async () => {
+        try {
+            const studentId = allQuestions.find(q => q.id === 15)?.answer || ''
+            const password = allQuestions.find(q => q.id === 16)?.answer || ''
+
+            if (!studentId || !password) {
+                alert('학번과 비밀번호를 입력해주세요!')
+                return
+            }
+
+            const userInfoDTO = {
+                name: allQuestions.find(q => q.id === 1)?.answer || '',
+                studentId,
+                password,
+                major: allQuestions.find(q => q.id === 3)?.answer || '',
+                doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
+                schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
+                phone: allQuestions.find(q => q.id === 6)?.answer || '',
+                email: allQuestions.find(q => q.id === 7)?.answer || '',
+            }
+
+            const responses = allQuestions
+                .filter(q => q.id >= 8 && q.id <= 13)
+                .map(q => ({
+                    questionId: q.id,
+                    responseText: q.answer || '',
+                }))
+
+            const portfolioQuestion = allQuestions.find(q => q.id === 14)
+            const portfolioFile = portfolioQuestion?.file
+            const portfolioLink = portfolioQuestion?.answer || ''
+
+            const dtoPayload = {
+                applicationField2: 2, // 임시 저장
+                userInfoDTO,
+                responses,
+                portfolioLink: portfolioFile ? '' : portfolioLink,
+            }
+
+            const formData = new FormData()
+            formData.append(
+                'dto',
+                new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' })
+            )
+
+            if (portfolioFile) {
+                formData.append('portfolioFile', portfolioFile)
+            }
+
+            const res = await api.post('/recruit/application/FRONT/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            })
+
+            alert('임시 저장되었습니다!')
+            console.log(res.data)
+
+        } catch (err: any) {
+            console.error('임시 저장 실패:', err)
+            alert('임시 저장 중 오류 발생')
+        }
+    }
+
+
 
 
     return (
@@ -88,6 +239,8 @@ const FrontPage = () => {
                     consentChecked={consentChecked}
                     onConsentChange={setConsentChecked}
                     onFileChange={(id, file) => handleFileChange(idx, id, file)}
+                    onSubmit={handleFinalSubmit}
+                    onDraftSave={handleDraftSave}
                 >
                 </ApplyForm>
             ))}
