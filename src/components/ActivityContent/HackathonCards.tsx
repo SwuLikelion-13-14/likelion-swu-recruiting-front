@@ -94,19 +94,27 @@ export default function HackathonCards({
   useEffect(() => {
     if (!enableReveal) return;
 
+    // wave delay 세팅
     cardsRef.current.forEach((el, idx) => {
       if (!el) return;
       const delay = waveReveal ? idx * waveStepMs : 0;
       el.style.setProperty('--reveal-delay', `${delay}ms`);
     });
 
+    // 모션 줄이기 -> 바로 보이기
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (mq?.matches) {
+      cardsRef.current.forEach((el) => el && el.classList.add(styles.isVisible));
+      return;
+    }
+
+    // 재진입마다 반복
     const observer = new IntersectionObserver(
-      (entries, obs) => {
+      (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
           const el = entry.target as HTMLElement;
-          el.classList.add(styles.isVisible);
-          obs.unobserve(el);
+          if (entry.isIntersecting) el.classList.add(styles.isVisible);
+          else el.classList.remove(styles.isVisible);
         });
       },
       { threshold }
