@@ -6,7 +6,7 @@ import iconDb from '../../assets/icon/tool_database.svg';
 type Member = {
   name: string;
   major: string;
-  roleLabel?: string;
+  roleLabel?: string; // 대표만 표시
   imageUrl?: string;
 };
 
@@ -15,8 +15,27 @@ type TrackCardProps = {
   iconSrc: string;
   members: Member[];
   variant?: 'half' | 'full';
-  className?: string; 
+  className?: string;
 };
+
+type LeaderDto = {
+  name: string;
+  major: string;
+  position?: string; // 대표만 허용
+  profile?: string;  // 이미지
+};
+
+type TrackDto = {
+  track: string; // (있으면 분류용으로만 사용)
+  leaders: LeaderDto[];
+};
+
+type LeadersCardSectionProps = {
+  tracks?: TrackDto[];
+};
+
+
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/?$/, '/');
 
 function MemberItem({ member }: { member: Member }) {
   return (
@@ -50,7 +69,7 @@ function TrackCard({ title, iconSrc, members, variant = 'half', className = '' }
       className={[
         styles.card,
         variant === 'full' ? styles.cardFull : styles.cardHalf,
-        className, 
+        className,
       ].join(' ')}
     >
       <div className={styles.trackBadge}>
@@ -67,43 +86,102 @@ function TrackCard({ title, iconSrc, members, variant = 'half', className = '' }
   );
 }
 
-export default function LeadersCardSection() {
+function resolveProfileUrl(profile?: string) {
+  if (!profile) return undefined;
+  if (/^https?:\/\//i.test(profile)) return profile;
+
+  if (!API_BASE_URL) return profile;
+
+  const path = profile.startsWith('/') ? profile.slice(1) : profile;
+  try {
+    return new URL(path, API_BASE_URL).toString();
+  } catch {
+    return profile;
+  }
+}
+
+// 대표만 뱃지 표시
+function normalizeRoleLabel(position?: string) {
+  const p = (position || '').trim();
+  return p === '대표' ? '대표' : undefined;
+}
+
+function mapTrackToMembers(track: TrackDto): Member[] {
+  return (track.leaders || []).map((l) => ({
+    name: l.name,
+    major: l.major,
+    roleLabel: normalizeRoleLabel(l.position),
+    imageUrl: resolveProfileUrl(l.profile),
+  }));
+}
+
+// API 트랙명은 “분류용으로만” 사용 (표시는 영문 고정)
+type TrackKind = 'PM_DESIGN' | 'FRONTEND' | 'BACKEND' | null;
+
+function classifyTrack(trackName?: string): TrackKind {
+  const t = (trackName || '').toLowerCase();
+
+  if (t.includes('front') || t.includes('프론트')) return 'FRONTEND';
+  if (t.includes('back') || t.includes('백') || t.includes('server')) return 'BACKEND';
+  if (t.includes('pm') || t.includes('design') || t.includes('기획') || t.includes('디자인')) return 'PM_DESIGN';
+
+  return null;
+}
+
+// API 실패/누락 대비 fallback (기존 값 유지)
+const FALLBACK_PM: Member[] = [
+  { name: '김주아', major: '첨단미디어디자인학과 23' },
+  { name: '신동현', major: '소프트웨어융합학과 22' },
+];
+
+const FALLBACK_FE: Member[] = [
+  { name: '김시원', major: '디지털미디어학과 22' },
+  { name: '손예원', major: '디지털미디어학과 21' },
+  { name: '정규은', major: '소프트웨어융합학과 22' },
+];
+
+const FALLBACK_BE: Member[] = [
+  { name: '김민서', major: '소프트웨어융합학과 22', roleLabel: '대표' },
+  { name: '우예빈', major: '소프트웨어융합학과 24' },
+  { name: '이다겸', major: '디지털미디어학과 22' },
+  { name: '임제영', major: '소프트웨어융합학과 22' },
+];
+
+export default function LeadersCardSection({ tracks }: LeadersCardSectionProps) {
+  const list = Array.isArray(tracks) ? tracks : [];
+
+  const pmTrack = list.find((t) => classifyTrack(t.track) === 'PM_DESIGN');
+  const feTrack = list.find((t) => classifyTrack(t.track) === 'FRONTEND');
+  const beTrack = list.find((t) => classifyTrack(t.track) === 'BACKEND');
+
+  const pmMembers = pmTrack ? mapTrackToMembers(pmTrack) : FALLBACK_PM;
+  const feMembers = feTrack ? mapTrackToMembers(feTrack) : FALLBACK_FE;
+  const beMembers = beTrack ? mapTrackToMembers(beTrack) : FALLBACK_BE;
+
   return (
     <div className={styles.wrap}>
       <div className={styles.topRow}>
         <TrackCard
-          title="PM & Design Track"
+          title="PM & Design Track"   
           iconSrc={iconFigma}
-          members={[
-            { name: '김주아', major: '첨단미디어디자인학과 23' },
-            { name: '신동현', major: '소프트웨어융합학과 22' },
-          ]}
+          members={pmMembers}
           variant="half"
-          className={styles.cardFixed} // 왼쪽 470 고정
+          className={styles.cardFixed}
         />
 
         <TrackCard
-          title="Frontend Track"
+          title="Frontend Track"     
           iconSrc={iconGit}
-          members={[
-            { name: '김시원', major: '디지털미디어학과 22' },
-            { name: '손예원', major: '디지털미디어학과 21' },
-            { name: '정규은', major: '소프트웨어융합학과 22' },
-          ]}
+          members={feMembers}
           variant="half"
-          className={styles.cardGrow} // 오른쪽 남는 폭 전부 사용
+          className={styles.cardGrow}
         />
       </div>
 
       <TrackCard
-        title="Backend Track"
+        title="Backend Track"        
         iconSrc={iconDb}
-        members={[
-          { name: '김민서', major: '소프트웨어융합학과 22', roleLabel: '대표' },
-          { name: '우예빈', major: '소프트웨어융합학과 24' },
-          { name: '이다겸', major: '디지털미디어학과 22' },
-          { name: '임제영', major: '소프트웨어융합학과 22' },
-        ]}
+        members={beMembers}
         variant="full"
       />
     </div>
