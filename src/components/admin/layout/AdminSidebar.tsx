@@ -57,7 +57,7 @@ export default function AdminSidebar({
     <aside
       className={`bg-white flex flex-col w-[272px] h-full p-6 items-start gap-[10px] ${className}`}
     >
-      <nav className="flex flex-col gap-6 w-full">
+      <nav className="flex flex-col gap-3 w-full">
         <NavItem
           active={active === "applications"}
           onClick={() => onChange("applications")}
