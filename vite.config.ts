@@ -5,7 +5,7 @@ import svgr from "vite-plugin-svgr";
 export default defineConfig({
   plugins: [
     react(),
-    svgr(), // ⭐ 이거 추가
+    svgr(), 
   ],
   resolve: {
     alias: {

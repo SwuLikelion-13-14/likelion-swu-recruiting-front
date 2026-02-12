@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import CalendarIcon from "@/assets/icon/admin_calendar.svg?react";
-import ScheduleDateTimePopup, { type DateTimeValue } from "@/components/admin/domain/schedule/ScheduleDateTimePopup";
+import ScheduleDateTimePopup, {
+  type DateTimeValue,
+} from "@/components/admin/domain/schedule/ScheduleDateTimePopup";
 
 type FieldKey = "docDeadline" | "docResult" | "finalResult";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
@@ -135,6 +139,12 @@ function DateField({
   );
 }
 
+type DeletePicResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+};
+
 export default function AdminSchedulePage() {
   const [values, setValues] = useState<Record<FieldKey, string>>({
     docDeadline: "2026.03.02 15:00",
@@ -246,9 +256,53 @@ export default function AdminSchedulePage() {
     fileInputRef.current?.click();
   };
 
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteSchedulePic = async () => {
+    const url = `${API_BASE}/api/admin/schedule/pic`;
+
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const raw = await res.text();
+    if (!raw) return;
+
+    if (raw.trim().startsWith("<")) {
+      throw new Error("API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요.");
+    }
+
+    const data: DeletePicResponse = JSON.parse(raw);
+    if (data.isSuccess === false) {
+      throw new Error(data.message ?? "삭제 실패");
+    }
+  };
+
+  const onDeleteImage = async () => {
+    if (deleting) return;
+
+    try {
+      setDeleting(true);
+      await deleteSchedulePic();
+      setImageFile(null); 
+    } catch (e: any) {
+      console.error("DELETE SCHEDULE PIC ERROR:", e);
+      alert(e?.message ?? "사진 삭제에 실패했어요.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="min-w-[980px]">
-      <div ref={pageRef} className="pl-[40px] pt-[80px] pb-20" style={{ position: "relative" }}>
+      <div
+        ref={pageRef}
+        className="pl-[40px] pt-[80px] pb-20"
+        style={{ position: "relative" }}
+      >
         <h1 style={{ ...TITLE_STYLE, marginBottom: 24 }}>일정</h1>
 
         <DateField
@@ -305,12 +359,15 @@ export default function AdminSchedulePage() {
 
                 <button
                   type="button"
-                  onClick={() => setImageFile(null)}
+                  onClick={onDeleteImage}
+                  disabled={deleting}
                   style={{
                     ...UPLOAD_BTN_STYLE,
                     background: "#D1D1D1",
                     border: "none",
                     color: "#1A1A1A",
+                    opacity: deleting ? 0.6 : 1,
+                    cursor: deleting ? "not-allowed" : "pointer",
                   }}
                 >
                   사진 삭제
