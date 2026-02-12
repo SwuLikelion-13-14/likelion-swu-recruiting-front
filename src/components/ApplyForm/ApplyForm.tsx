@@ -1,41 +1,41 @@
-import { useState, useEffect } from 'react'
-import styles from './ApplyForm.module.css'
-import type { ApplyFormProps } from './types'
-import checkboxDefault from '@/assets/icon/checkbox_default.svg'
-import checkboxChecked from '@/assets/icon/checkbox_checked.svg'
-import noticeIcon from '@/assets/icon/alert_octagon.svg'
-import type { Question } from '@/components/ApplyForm/types'
-import ApplyFormActions from './ApplyFormActions'
-import Modal from '@/components/Modal/Modal'
-import { useNavigationGuard } from '@/contexts/NavigationGuardContext'
+import { useEffect, useMemo, useState } from "react";
+import styles from "./ApplyForm.module.css";
+import type { ApplyFormProps } from "./types";
 
+import checkboxDefault from "@/assets/icon/checkbox_default.svg";
+import checkboxChecked from "@/assets/icon/checkbox_checked.svg";
+import noticeIcon from "@/assets/icon/alert_octagon.svg";
 
-type StudentStatus =
-  | 'invalid'
-  | 'draft-exists'
-  | 'submitted-exists'
-  | 'valid'
+import type { Question } from "@/components/ApplyForm/types";
+import ApplyFormActions from "./ApplyFormActions";
+import Modal from "@/components/Modal/Modal";
+import { useNavigationGuard } from "@/contexts/NavigationGuardContext";
 
-const STUDENT_ID = 15
-const PASSWORD_ID = 16
+type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
+
+// ✅ 학번/비번 문항 ID (프로젝트에서 고정으로 쓰는 값)
+const STUDENT_ID = 15;
+const PASSWORD_ID = 16;
 
 const studentMessages: Record<StudentStatus, string> = {
-  invalid: '형식이 다릅니다. 숫자 10자리를 입력하세요.',
-  'draft-exists': '임시저장 된 지원서가 이미 있습니다. 여러 개의 지원서를 임시저장할 수 없습니다.',
-  'submitted-exists': '이미 지원서를 최종 제출한 기록이 존재합니다. 중복 지원은 불가합니다.',
-  valid: '지원 가능한 학번입니다.'
-}
+  invalid: "형식이 다릅니다. 숫자 10자리를 입력하세요.",
+  "draft-exists":
+    "임시저장 된 지원서가 이미 있습니다. 여러 개의 지원서를 임시저장할 수 없습니다.",
+  "submitted-exists":
+    "이미 지원서를 최종 제출한 기록이 존재합니다. 중복 지원은 불가합니다.",
+  valid: "지원 가능한 학번입니다.",
+};
 
 const mockCheckStudentId = (id: string): StudentStatus => {
-  if (!/^\d{10}$/.test(id)) return 'invalid'
-  if (id === '1234567890') return 'draft-exists'
-  if (id === '2026000000') return 'submitted-exists'
-  return 'valid'
-}
+  if (!/^\d{10}$/.test(id)) return "invalid";
+  if (id === "1234567890") return "draft-exists";
+  if (id === "2026000000") return "submitted-exists";
+  return "valid";
+};
 
-type ButtonState = 'default' | 'unactive'
+type ButtonState = "default" | "unactive";
 
-const ApplyForm = ({
+export default function ApplyForm({
   mode,
   variant,
   title,
@@ -50,396 +50,545 @@ const ApplyForm = ({
   onConsentChange,
   allQuestions,
   onSubmit,
-  onDraftSave
-}: ApplyFormProps) => {
+  onDraftSave,
+}: ApplyFormProps) {
+  const isSurvey = variant === "survey";
+  const isResult = variant === "result";
 
-  const [errors, setErrors] = useState<{ [id: number]: string }>({})
-  const [success, setSuccess] = useState<{ [id: number]: string }>({})
-  const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(undefined)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalType, setModalType] =
-    useState<'submitted' | 'draft' | 'leave' | null>(null)
+  const [errors, setErrors] = useState<Record<number, string>>({});
+  const [success, setSuccess] = useState<Record<number, string>>({});
+  const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(
+    undefined
+  );
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<
+    "submitted" | "draft" | "leave" | null
+  >(null);
 
-  const [focusedFields, setFocusedFields] = useState<{ [id: number]: boolean }>({})
-  const { setDirty, registerValidator } = useNavigationGuard()
+  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
+    {}
+  );
+
+  const { setDirty, registerValidator } = useNavigationGuard();
+
+  // allQuestions 안전 보정
+  const safeAllQuestions = useMemo(
+    () => (allQuestions && allQuestions.length ? allQuestions : questions),
+    [allQuestions, questions]
+  );
 
   const passwordAnswer =
-    allQuestions.find(q => q.id === PASSWORD_ID)?.answer ?? ''
+    safeAllQuestions.find((q) => q.id === PASSWORD_ID)?.answer ?? "";
 
+  // ✅ 입력 유무(파일 포함)로 dirty 판단
+  const hasAnyInput = useMemo(() => {
+    return questions.some((q) =>
+      q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""
+    );
+  }, [questions]);
 
-  // 버튼 상태 계산
-  const hasAnyInput = questions.some(q => q.answer.trim() !== '')
   useEffect(() => {
-    setDirty(hasAnyInput)
-  }, [hasAnyInput])
+    setDirty(hasAnyInput);
+  }, [hasAnyInput, setDirty]);
 
+  // ✅ submitted/draft-exists 상태면 3초 후 모달 오픈
   useEffect(() => {
-    if (studentStatus === 'submitted-exists') {
+    if (studentStatus === "submitted-exists") {
       const timer = setTimeout(() => {
-        setModalType('submitted')
-        setModalOpen(true)
-      }, 3000)
-      return () => clearTimeout(timer)
+        setModalType("submitted");
+        setModalOpen(true);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
 
-    if (studentStatus === 'draft-exists') {
+    if (studentStatus === "draft-exists") {
       const timer = setTimeout(() => {
-        setModalType('draft')
-        setModalOpen(true)
-      }, 3000)
-      return () => clearTimeout(timer)
+        setModalType("draft");
+        setModalOpen(true);
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-  }, [studentStatus])
+  }, [studentStatus]);
 
-
-
-  const handleBlur = (currentId: number, allQuestions: Question[]) => {
-    const newErrors: { [id: number]: string } = {}
-    const newSuccess: { [id: number]: string } = {}
-
-    const currentIndex = allQuestions.findIndex(q => q.id === currentId)
-    if (currentIndex === -1) return
-
-    for (let i = 0; i <= currentIndex; i++) {
-      const q = allQuestions[i]
-
-      if (q.type === 'file') {
-        if (q.required && !q.file) {
-          newErrors[q.id] = '기획디자인 트랙 지원자는 필수 답변 항목입니다.'
-        } else if (q.file) {
-          delete newErrors[q.id]
-        }
-        continue
-      }
-
-      if (q.required && !q.answer.trim()) {
-        // 모든 필수 필드 체크, 학번 포함
-        newErrors[q.id] = '필수 답변 항목입니다.'
-        continue
-      }
-
-      // STUDENT_ID 특수 처리
-      if (q.id === STUDENT_ID && q.answer.trim()) {
-        const status = mockCheckStudentId(q.answer)
-        setStudentStatus(status)
-        if (status !== 'valid') {
-          newErrors[q.id] = studentMessages[status]
-        } else {
-          delete newErrors[q.id]
-        }
-      }
-
-      // 비밀번호 체크
-      if (q.id === PASSWORD_ID && q.answer.trim()) {
-        if (!/^\d{4}$/.test(q.answer)) {
-          newErrors[q.id] = '형식이 다릅니다. 숫자 4자리를 입력하세요.'
-        } else {
-          delete newErrors[q.id]
-          newSuccess[q.id] = '비밀번호가 설정되었습니다.'
-        }
-      }
-    }
-    setErrors(newErrors)
-    setSuccess(newSuccess)
-  }
-
-
-  const handleFileUpload = (id: number) => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.onchange = e => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-      onFileChange?.(id, file)
-      onChange?.(id, file.name)
-
-      setErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[id]
-        return newErrors
-      })
-
-
-    }
-    input.click()
-  }
-
-
-  const validateInfoSection = () => {
-    const studentOk = studentStatus === 'valid'
-    const passwordOk = /^\d{4}$/.test(passwordAnswer)
-
-    if (!studentOk || !passwordOk) {
-      const newErrors: { [id: number]: string } = {}
-
-      if (!studentOk) {
-        newErrors[STUDENT_ID] = '필수 답변 항목입니다.'
-      }
-
-
-      if (!passwordOk) {
-        newErrors[PASSWORD_ID] = '필수 답변 항목입니다.'
-      }
-
-      setErrors(prev => ({
-        ...prev,
-        ...newErrors
-      }))
-
-
-      const firstErrorId = !studentOk
-        ? STUDENT_ID
-        : PASSWORD_ID
-
-      requestAnimationFrame(() => {
-        document
-          .getElementById(`field-${firstErrorId}`)
-          ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      })
-
-      return false
-    }
-
-
-    return true
-  }
-
-  useEffect(() => {
-    registerValidator(validateInfoSection)
-  }, [studentStatus, passwordAnswer])
-
+  // ✅ 뒤로가기(leave) 가드: 입력이 있을 때만
   useEffect(() => {
     const handleBack = (e: PopStateEvent) => {
-      if (!hasAnyInput) return
+      if (!hasAnyInput) return;
 
-      e.preventDefault()
+      e.preventDefault();
+      window.history.pushState(null, "", window.location.href);
 
-      // 이동 막고 현재 페이지 유지
-      window.history.pushState(null, '', window.location.href)
+      setModalType("leave");
+      setModalOpen(true);
+    };
 
-      // 경고 모달 열기
-      setModalType('leave')
-      setModalOpen(true)
-    }
-
-    // 현재 페이지를 history에 다시 등록
-    window.history.pushState(null, '', window.location.href)
-    window.addEventListener('popstate', handleBack)
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handleBack);
 
     return () => {
-      window.removeEventListener('popstate', handleBack)
+      window.removeEventListener("popstate", handleBack);
+    };
+  }, [hasAnyInput]);
+
+  const handleBlur = (currentId: number, allQ: Question[]) => {
+    const newErrors: Record<number, string> = {};
+    const newSuccess: Record<number, string> = {};
+
+    const currentIndex = allQ.findIndex((q) => q.id === currentId);
+    if (currentIndex === -1) return;
+
+    for (let i = 0; i <= currentIndex; i++) {
+      const q = allQ[i];
+
+      // ✅ 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
+      if (q.type === "file") {
+        const hasFileOrLink = !!q.file || q.answer.trim() !== "";
+        if (q.required && !hasFileOrLink) {
+          newErrors[q.id] = "기획디자인 트랙 지원자는 필수 답변 항목입니다.";
+        }
+        continue;
+      }
+
+      // ✅ 필수 체크
+      if (q.required && !q.answer.trim()) {
+        newErrors[q.id] = "필수 답변 항목입니다.";
+        continue;
+      }
+
+      // ✅ 학번 체크
+      if (q.id === STUDENT_ID && q.answer.trim()) {
+        const status = mockCheckStudentId(q.answer.trim());
+        setStudentStatus(status);
+
+        if (status !== "valid") {
+          newErrors[q.id] = studentMessages[status];
+        } else {
+          newSuccess[q.id] = studentMessages[status];
+        }
+        continue;
+      }
+
+      // ✅ 비밀번호 체크 (4자리 숫자)
+      if (q.id === PASSWORD_ID && q.answer.trim()) {
+        if (!/^\d{4}$/.test(q.answer.trim())) {
+          newErrors[q.id] = "형식이 다릅니다. 숫자 4자리를 입력하세요.";
+        } else {
+          newSuccess[q.id] = "비밀번호가 설정되었습니다.";
+        }
+        continue;
+      }
+
+      // ✅ 기타 pattern 기반 검증이 있는 경우
+      if (q.pattern && q.answer.trim() && !q.pattern.test(q.answer)) {
+        newErrors[q.id] = q.errorMessage || "형식이 다릅니다.";
+      }
     }
-  }, [hasAnyInput])
 
+    setErrors(newErrors);
+    setSuccess(newSuccess);
+  };
 
+  const handleFileUpload = (id: number) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
 
+      onFileChange?.(id, file);
+      onChange?.(id, file.name);
+
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+
+      setSuccess((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    };
+    input.click();
+  };
+
+  // ✅ 네비게이션 가드가 필요로 하는 “정보 확인 섹션 검증”
+  const validateInfoSection = () => {
+    const studentOk = studentStatus === "valid";
+    const passwordOk = /^\d{4}$/.test(passwordAnswer);
+
+    if (!studentOk || !passwordOk) {
+      const newErrors: Record<number, string> = {};
+
+      if (!studentOk) newErrors[STUDENT_ID] = "필수 답변 항목입니다.";
+      if (!passwordOk) newErrors[PASSWORD_ID] = "필수 답변 항목입니다.";
+
+      setErrors((prev) => ({ ...prev, ...newErrors }));
+
+      const firstErrorId = !studentOk ? STUDENT_ID : PASSWORD_ID;
+
+      requestAnimationFrame(() => {
+        document.getElementById(`field-${firstErrorId}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      });
+
+      return false;
+    }
+
+    return true;
+  };
+
+  useEffect(() => {
+    registerValidator(validateInfoSection);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentStatus, passwordAnswer]);
+
+  // 버튼 상태 계산
   const requiredFilled = questions
-    .filter(q => q.required)
-    .every(q => (q.type === 'file' ? !!q.file : q.answer.trim() !== ''))
+    .filter((q) => q.required)
+    .every((q) => (q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""));
 
-  const studentValid = studentStatus === 'valid'
-  const passwordValid = /^\d{4}$/.test(passwordAnswer)
-  const consentOk = !!consentChecked
+  const studentValid = studentStatus === "valid";
+  const passwordValid = /^\d{4}$/.test(passwordAnswer);
+  const consentOk = !!consentChecked;
 
-  const cancelState: ButtonState = 'default'
+  const cancelState: ButtonState = "default";
   const draftState: ButtonState =
-    hasAnyInput && studentValid && passwordValid && consentOk
-      ? 'default'
-      : 'unactive'
+    hasAnyInput && studentValid && passwordValid && consentOk ? "default" : "unactive";
   const submitState: ButtonState =
-    requiredFilled && studentValid && passwordValid && consentOk
-      ? 'default'
-      : 'unactive'
+    requiredFilled && studentValid && passwordValid && consentOk ? "default" : "unactive";
 
   return (
-    <section className={`${styles.wrapper} ${variant === 'survey' ? styles.bgDark : styles.bgWhite}`}>
-      {/* 헤더 */}
+    <section
+      className={[styles.wrapper, isSurvey ? styles.bgDark : styles.bgResult].join(" ")}
+      data-variant={variant}
+    >
       <header className={styles.header}>
-        <h1 className={`${styles.title} ${variant === 'survey' ? styles.titleColored : styles.titleBlack}`}>
+        <h1
+          className={[
+            styles.title,
+            isSurvey ? styles.titleColored : styles.titleBlack,
+          ].join(" ")}
+        >
           {title}
         </h1>
-        {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
+        {subtitle && (
+          <p className={[styles.subtitle, isResult ? styles.subtitleBlack : ""].join(" ")}>
+            {subtitle}
+          </p>
+        )}
       </header>
 
-      {/* 폼 */}
       <div id="info-section" className={styles.form}>
-        {questions.map((item) => (
-          <div className={styles.item} key={item.id}>
-            <p className={`${styles.question} ${variant === 'survey' ? styles.colored : styles.blackinput}`}>
-              {item.question}
-            </p>
+        {questions.map((item) => {
+          const isStudentField = item.id === STUDENT_ID;
+          const isPasswordField = item.id === PASSWORD_ID;
 
-            {item.type === 'file' ? (
-              <div className={styles.fileInputWrapper}>
-                <input
-                  className={`${styles.input} ${errors[item.id] ? styles.inputError : success[item.id] ? styles.inputSuccess : ''}`}
-                  value={item.answer}
-                  placeholder={errors[item.id] || focusedFields[item.id] ? '' : item.placeholder}
+          const inputStateClass = isStudentField
+            ? errors[item.id]
+              ? styles.inputError
+              : studentStatus === "valid"
+              ? styles.inputSuccess
+              : ""
+            : errors[item.id]
+            ? styles.inputError
+            : success[item.id]
+            ? styles.inputSuccess
+            : "";
 
-                  onFocus={() => setFocusedFields(prev => ({ ...prev, [item.id]: true }))}
-                  onBlur={() => {
-                    setFocusedFields(prev => ({ ...prev, [item.id]: false }))
-                    handleBlur(item.id, allQuestions)
-                  }}
-                  onChange={e => {
-                    const value = e.target.value
-                    onChange?.(item.id, value) // 기존 onChange 호출
+          // ✅ view 모드: 텍스트 입력은 textarea 대신 input/textarea 그대로 두되 readOnly 처리
+          const placeholderText =
+            errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
 
-                    // 포트폴리오 링크가 들어오면 에러 제거
-                    if (item.type === 'file' && value.trim() !== '') {
-                      setErrors(prev => {
-                        const newErrors = { ...prev }
-                        delete newErrors[item.id]  // 링크가 들어오면 에러 제거
-                        return newErrors
-                      })
-                    }
-                  }}
+          return (
+            <div className={styles.item} key={item.id}>
+              <p
+                className={[
+                  styles.question,
+                  isSurvey ? styles.questionWhite : styles.questionBlack,
+                ].join(" ")}
+              >
+                {item.question}
+              </p>
 
-                />
-                <div className={styles.fileBottomRow}>
-                  <div>
-                    {errors[item.id] && <div className={`${styles.errorText} ${styles.fileErrorText}`}>{errors[item.id]}</div>}
-                    {success[item.id] && !errors[item.id] && <div className={`${styles.successText} ${styles.fileErrorText}`}>{success[item.id]}</div>}
-                  </div>
-                  <button
-                    className={styles.uploadButton}
-                    onClick={() => handleFileUpload(item.id)}
-                    disabled={mode === 'view'}
-                  >
-                    {mode === 'view' ? '파일 다운로드' : item.file ? '파일 변경하기' : '파일 업로드'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <textarea
-                  id={`field-${item.id}`}
-                  className={`${styles.input} ${errors[item.id]
-                    ? styles.inputError
-                    : success[item.id]
-                      ? styles.inputSuccess
-                      : ''
-                    }`}
-
-
-                  value={item.answer}
-                  placeholder={focusedFields[item.id] || errors[item.id] ? '' : item.placeholder}
-
-                  readOnly={mode === 'view'}
-                  rows={1} // 최소 높이
-                  style={{ resize: 'none', overflow: 'hidden' }} // 스크롤 제거, 자동 확장
-                  onFocus={() => setFocusedFields(prev => ({ ...prev, [item.id]: true }))}
-                  onBlur={() => {
-                    setFocusedFields(prev => ({ ...prev, [item.id]: false }))
-                    handleBlur(item.id, allQuestions)
-                  }}
-                  onChange={e => {
-                    const value = e.target.value
-                    onChange?.(item.id, value)
-
-                    // 자동 높이 조절
-                    const textarea = e.target
-                    textarea.style.height = 'auto' // 먼저 초기화
-                    textarea.style.height = `${textarea.scrollHeight}px` // 내용에 맞게 높이 설정
-
-                    // STUDENT_ID, PASSWORD_ID 로직 그대로 유지
-                    if (item.id === STUDENT_ID) {
-                      const status = mockCheckStudentId(value)
-                      const newErrors = { ...errors }
-                      const newSuccess = { ...success }
-
-                      setStudentStatus(status)
-
-                      if (status !== 'valid') {
-                        newErrors[STUDENT_ID] = studentMessages[status]
-                        delete newSuccess[STUDENT_ID]
-                      } else {
-                        delete newErrors[STUDENT_ID]
-                        newSuccess[STUDENT_ID] = 'valid'
-                      }
-
-                      setErrors(newErrors)
-                      setSuccess(newSuccess)
-                      return
-                    }
-
-
-                    if (item.id === PASSWORD_ID) {
-                      const newErrors = { ...errors }
-                      const newSuccess = { ...success }
-
-                      delete newErrors[PASSWORD_ID]
-
-                      if (!/^\d{4}$/.test(value)) {
-                        newErrors[PASSWORD_ID] = '형식이 다릅니다. 숫자 4자리를 입력하세요.'
-                        delete newSuccess[PASSWORD_ID]
-                      } else {
-                        newSuccess[PASSWORD_ID] = '비밀번호가 설정되었습니다.'
-                        delete newErrors[PASSWORD_ID]
-                      }
-
-                      setErrors(newErrors)
-                      setSuccess(newSuccess)
-                      return
-                    }
-                  }}
-                />
-
-                {item.id === STUDENT_ID ? (
-                  <div
-                    className={
+              {item.type === "file" ? (
+                <div className={styles.fileInputWrapper}>
+                  <input
+                    id={`field-${item.id}`}
+                    className={[
+                      styles.input,
+                      isSurvey ? styles.inputDark : styles.inputLight,
                       errors[item.id]
-                        ? styles.errorText
-                        : studentStatus === 'valid'
+                        ? styles.inputError
+                        : success[item.id]
+                        ? styles.inputSuccess
+                        : "",
+                    ].join(" ")}
+                    value={item.answer}
+                    placeholder={item.placeholder}
+                    readOnly={mode === "view"}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      onChange?.(item.id, value);
+
+                      // 링크 입력 시 에러 제거
+                      if (value.trim() !== "") {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[item.id];
+                          return next;
+                        });
+                      }
+                    }}
+                    onFocus={() =>
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
+                    }
+                    onBlur={() => {
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
+                      handleBlur(item.id, safeAllQuestions);
+                    }}
+                  />
+
+                  <div className={styles.fileBottomRow}>
+                    <div>
+                      {errors[item.id] && (
+                        <div className={[styles.errorText, styles.fileErrorText].join(" ")}>
+                          {errors[item.id]}
+                        </div>
+                      )}
+                      {success[item.id] && !errors[item.id] && (
+                        <div className={[styles.successText, styles.fileErrorText].join(" ")}>
+                          {success[item.id]}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.uploadButton}
+                      onClick={() =>
+                        mode === "view" ? undefined : handleFileUpload(item.id)
+                      }
+                      disabled={mode === "view"}
+                    >
+                      {mode === "view"
+                        ? "파일 다운로드"
+                        : item.file
+                        ? "파일 변경하기"
+                        : "파일 업로드"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <textarea
+                    id={`field-${item.id}`}
+                    className={[
+                      styles.input,
+                      isSurvey ? styles.inputDark : styles.inputLight,
+                      inputStateClass,
+                    ].join(" ")}
+                    value={item.answer}
+                    placeholder={placeholderText}
+                    readOnly={mode === "view"}
+                    rows={1}
+                    style={{ resize: "none", overflow: "hidden" }}
+                    onFocus={() =>
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
+                    }
+                    onBlur={() => {
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
+                      handleBlur(item.id, safeAllQuestions);
+                    }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      onChange?.(item.id, value);
+
+                      // 자동 높이 조절
+                      const textarea = e.target;
+                      textarea.style.height = "auto";
+                      textarea.style.height = `${textarea.scrollHeight}px`;
+
+                      if (isStudentField) {
+                        // 학번 입력 중이면 에러 초기화 + 상태 업데이트
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[STUDENT_ID];
+                          return next;
+                        });
+
+                        const st = mockCheckStudentId(value.trim());
+                        setStudentStatus(st);
+
+                        if (st !== "valid") {
+                          setErrors((prev) => ({
+                            ...prev,
+                            [STUDENT_ID]: studentMessages[st],
+                          }));
+                          setSuccess((prev) => {
+                            const next = { ...prev };
+                            delete next[STUDENT_ID];
+                            return next;
+                          });
+                        } else {
+                          setSuccess((prev) => ({
+                            ...prev,
+                            [STUDENT_ID]: studentMessages[st],
+                          }));
+                        }
+                        return;
+                      }
+
+                      if (isPasswordField) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[PASSWORD_ID];
+                          return next;
+                        });
+
+                        if (!/^\d{4}$/.test(value.trim())) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            [PASSWORD_ID]: "형식이 다릅니다. 숫자 4자리를 입력하세요.",
+                          }));
+                          setSuccess((prev) => {
+                            const next = { ...prev };
+                            delete next[PASSWORD_ID];
+                            return next;
+                          });
+                        } else {
+                          setSuccess((prev) => ({
+                            ...prev,
+                            [PASSWORD_ID]: "비밀번호가 설정되었습니다.",
+                          }));
+                        }
+                        return;
+                      }
+                    }}
+                  />
+
+                  {isStudentField ? (
+                    <div
+                      className={
+                        errors[item.id]
+                          ? styles.errorText
+                          : studentStatus === "valid"
                           ? styles.successText
                           : styles.errorText
-                    }
-                  >
-                    {errors[item.id] || (studentStatus ? studentMessages[studentStatus] : '')}
-                  </div>
-                ) : (
-                  <>
-                    {errors[item.id] && <div className={styles.errorText}>{errors[item.id]}</div>}
-                    {success[item.id] && !errors[item.id] && <div className={styles.successText}>{success[item.id]}</div>}
-                  </>
-                )}
-
-              </>
-            )}
-          </div>
-        ))}
+                      }
+                    >
+                      {errors[item.id] ||
+                        (studentStatus ? studentMessages[studentStatus] : "")}
+                    </div>
+                  ) : (
+                    <>
+                      {errors[item.id] && (
+                        <div className={styles.errorText}>{errors[item.id]}</div>
+                      )}
+                      {success[item.id] && !errors[item.id] && (
+                        <div className={styles.successText}>{success[item.id]}</div>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* 동의서*/}
       {enableConsent && (
         <section className={styles.consentSection}>
-          <h2 className={styles.consentTitle}>
-            지원서 제출을 위한<br />
+          <h2
+            className={[
+              styles.consentTitle,
+              isResult ? styles.consentTitleBlack : "",
+            ].join(" ")}
+          >
+            지원서 제출을 위한
+            <br />
             개인정보 수집 및 이용 동의서
           </h2>
-          <ol className={styles.consentList}>
+
+          <ol
+            className={[
+              styles.consentList,
+              isResult ? styles.consentListBlack : "",
+            ].join(" ")}
+          >
             <li>
-              <p className={styles.listTitle}>수집하는 개인정보 항목</p>
-              <div className={styles.consentBox}>
+              <p
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
+              >
+                수집하는 개인정보 항목
+              </p>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공), 본인확인용 비밀번호
               </div>
             </li>
+
             <li>
-              <p className={styles.listTitle}>개인정보의 보유 및 이용 기간</p>
-              <div className={styles.consentBox}>
+              <p
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
+              >
+                개인정보의 보유 및 이용 기간
+              </p>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후 지체 없이 파기합니다.
               </div>
-              <div className={styles.consentBox}>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 지원자가 개인정보 삭제를 요청할 경우 즉시 파기합니다.
               </div>
             </li>
+
             <li>
-              <p className={styles.listTitle}>동의 거부 권리 및 불이익 안내</p>
-              <div className={styles.consentBox}>
+              <p
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
+              >
+                동의 거부 권리 및 불이익 안내
+              </p>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
               </div>
-              <div className={styles.consentBox}>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수 있습니다.
               </div>
             </li>
@@ -448,40 +597,71 @@ const ApplyForm = ({
           <label className={styles.consentCheck}>
             <input
               type="checkbox"
-              checked={consentChecked}
-              disabled={mode === 'view'}
-              onChange={e => onConsentChange?.(e.target.checked)}
+              checked={!!consentChecked}
+              disabled={mode === "view"}
+              onChange={(e) => onConsentChange?.(e.target.checked)}
             />
             <img
               src={consentChecked ? checkboxChecked : checkboxDefault}
-              className={styles.checkboxIcon}
+              className={[
+                styles.checkboxIcon,
+                isResult ? styles.checkboxIconResult : "",
+              ].join(" ")}
               alt=""
             />
-            <span className={styles.checkboxText}>위 내용에 동의합니다.</span>
+            <span
+              className={[
+                styles.checkboxText,
+                isResult ? styles.checkboxTextBlack : "",
+              ].join(" ")}
+            >
+              위 내용에 동의합니다.
+            </span>
           </label>
         </section>
       )}
 
-      {/* 유의사항 */}
       {enableNotice && (
         <section className={styles.noticeSection}>
-          <h2 className={styles.noticeTitle}>지원서 제출 시 유의 사항</h2>
+          <h2
+            className={[
+              styles.noticeTitle,
+              isResult ? styles.noticeTitleBlack : "",
+            ].join(" ")}
+          >
+            지원서 제출 시 유의 사항
+          </h2>
+
           <div className={styles.noticeItems}>
             <div className={styles.noticeItem}>
               <img src={noticeIcon} alt="" className={styles.noticeIcon} />
               <div className={styles.noticeTextGroup}>
-                <p className={styles.noticeText}>지원 트랙을 변경하고 싶어요.</p>
-                <p className={styles.noticeTextDetail}>
-                  현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은 <span className={styles.highlight}>불가능</span> 합니다. <br />
-                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후, <br />
+                <p
+                  className={[
+                    styles.noticeText,
+                    isResult ? styles.noticeTextBlack : "",
+                  ].join(" ")}
+                >
+                  지원 트랙을 변경하고 싶어요.
+                </p>
+                <p
+                  className={[
+                    styles.noticeTextDetail,
+                    isResult ? styles.noticeTextDetailBlack : "",
+                  ].join(" ")}
+                >
+                  현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은{" "}
+                  <span className={styles.highlight}>불가능</span> 합니다. <br />
+                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,{" "}
+                  <br />
                   변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br />
-                  내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span> 복사/붙여넣기를 권장 드립니다.
+                  내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
+                  복사/붙여넣기를 권장 드립니다.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ApplyFormActions 컴포넌트 */}
           {enableActions && (
             <ApplyFormActions
               cancelState={cancelState}
@@ -490,92 +670,100 @@ const ApplyForm = ({
               hasInput={hasAnyInput}
               onDraftSave={() => onDraftSave?.()}
               onSubmit={onSubmit}
-              onCancelConfirmed={() => window.location.href = '/'} // 홈 이동
+              onCancelConfirmed={() => (window.location.href = "/")}
             />
           )}
         </section>
       )}
-      {modalOpen && modalType === 'submitted' && (
+
+      {modalOpen && modalType === "submitted" && (
         <Modal
           isOpen={modalOpen}
           title="이미 최종 제출한 지원서가 있습니다"
           description={
             <span>
-              중복 지원은 불가하므로,<br />
-              현재 작성 중인 지원서는 <span style={{ color: '#FF7710' }}>‘작성 취소’</span> 해주세요.
+              중복 지원은 불가하므로,
+              <br />
+              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span>{" "}
+              해주세요.
             </span>
           }
           extraText={
             <span>
-              최종 제출한 지원서는 해당 학번으로 로그인하여,<br />
-              <span style={{ color: '#FF7710' }}>3월 2일 23시 59분까지</span><br />
+              최종 제출한 지원서는 해당 학번으로 로그인하여,
+              <br />
+              <span style={{ color: "#FF7710" }}>3월 2일 23시 59분까지</span>
+              <br />
               열람 및 수정이 가능합니다.
             </span>
           }
           primaryButton={{
-            text: '확인',
-            onClick: () => setModalOpen(false)
+            text: "확인",
+            onClick: () => setModalOpen(false),
           }}
           onClose={() => setModalOpen(false)}
         />
       )}
 
-      {modalOpen && modalType === 'draft' && (
+      {modalOpen && modalType === "draft" && (
         <Modal
           isOpen={modalOpen}
           title="이미 임시저장된 지원서가 있습니다"
           description={
             <span>
-              여러 개의 지원서를 임시저장 할 수 없으므로,<br />
-              현재 작성 중인 지원서는 <span style={{ color: '#FF7710' }}>‘작성 취소’</span> 해주세요.
+              여러 개의 지원서를 임시저장 할 수 없으므로,
+              <br />
+              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span>{" "}
+              해주세요.
             </span>
           }
           extraText={
             <span>
-              해당 학번으로 다시 로그인하여,<br />
+              해당 학번으로 다시 로그인하여,
+              <br />
               기존에 임시 저장한 지원서를 다시 확인해 주세요.
-              <br /><br />
-              현재 작성 된 내용은 <span style={{ color: '#FF7710' }}>저장되지 않으니,</span><br />
-              <span style={{ color: '#FF7710' }}>복사/붙여넣기를 권장 드립니다.</span>
+              <br />
+              <br />
+              현재 작성 된 내용은 <span style={{ color: "#FF7710" }}>저장되지 않으니,</span>
+              <br />
+              <span style={{ color: "#FF7710" }}>복사/붙여넣기를 권장 드립니다.</span>
             </span>
           }
           primaryButton={{
-            text: '확인',
-            onClick: () => setModalOpen(false)
+            text: "확인",
+            onClick: () => setModalOpen(false),
           }}
           onClose={() => setModalOpen(false)}
         />
       )}
 
-      {modalOpen && modalType === 'leave' && (
+      {modalOpen && modalType === "leave" && (
         <Modal
           isOpen={modalOpen}
           title="WARNING"
           description={
             <span>
-              페이지를 나가면<br />
+              페이지를 나가면
+              <br />
               작성 중인 지원서는 저장되지 않습니다.
             </span>
           }
           extraText="현재까지 작성한 내용을 임시 저장할까요?"
           primaryButton={{
-            text: '뒤로 가기',
+            text: "뒤로 가기",
             onClick: () => {
-              setModalOpen(false)
-              window.history.back()
-            }
+              setModalOpen(false);
+              window.history.back();
+            },
           }}
           secondaryButton={{
-            text: '계속 작성',
-            onClick: () => setModalOpen(false)
+            text: "계속 작성",
+            onClick: () => setModalOpen(false),
           }}
           onClose={() => setModalOpen(false)}
         />
       )}
-
-
     </section>
-  )
+  );
 }
 
-export default ApplyForm
