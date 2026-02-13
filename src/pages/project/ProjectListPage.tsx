@@ -108,13 +108,14 @@ const ProjectListPage: React.FC = () => {
   }, []);
 
   return (
-    <div 
-      className={styles.container}
+    <div
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        minHeight: '100vh'
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+        width: '100%'
       }}
     >
       <Layout>
