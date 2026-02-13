@@ -52,11 +52,32 @@ export default function MobileGuardModal({ breakpoint = 768 }: Props) {
   }, [isMobile]);
 
   const onCopy = async () => {
+    const ua = navigator.userAgent || "";
+    const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(ua);
+
+    if (isMobileDevice && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "서울여대 멋쟁이사자처럼 14기",
+          text: "PC 환경으로 접속해 주세요.",
+          url,
+        });
+        return;
+      } catch {
+        return;
+      }
+    }
+
     try {
       await navigator.clipboard.writeText(url);
     } catch {
       const ta = document.createElement("textarea");
       ta.value = url;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "0";
+      ta.style.left = "0";
+      ta.style.opacity = "0";
       document.body.appendChild(ta);
       ta.select();
       document.execCommand("copy");
