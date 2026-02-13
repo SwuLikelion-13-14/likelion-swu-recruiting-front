@@ -11,8 +11,10 @@ import ApplyFormActions from "./ApplyFormActions";
 import Modal from "@/components/Modal/Modal";
 import { useNavigationGuard } from "@/contexts/NavigationGuardContext";
 
+
 type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
 
+// ✅ 학번/비번 문항 ID (프로젝트에서 고정으로 쓰는 값)
 const STUDENT_ID = 15;
 const PASSWORD_ID = 16;
 
@@ -69,11 +71,15 @@ export default function ApplyForm({
     {}
   );
 
+  const { allowNavigation } = useNavigationGuard();
+
   const { setDirty, registerValidator } = useNavigationGuard();
 
+  // ✅ 기존 답안/파일 반영을 위한 internal state
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [files, setFiles] = useState<Record<number, File | null>>({});
 
+  // allQuestions 안전 보정
   const safeAllQuestions = useMemo(
     () => (allQuestions && allQuestions.length ? allQuestions : questions),
     [allQuestions, questions]
@@ -82,55 +88,48 @@ export default function ApplyForm({
   const passwordAnswer = answers[PASSWORD_ID] ?? "";
 
 
+  // ✅ 질문 변경 시 internal state 초기화
+  // ✅ 질문 변경 시 internal state 초기화
   useEffect(() => {
     const initAnswers: Record<number, string> = {};
     const initFiles: Record<number, File | null> = {};
 
     questions.forEach((q) => {
-      initAnswers[q.id] = q.answer || "";
-      initFiles[q.id] = q.file || null;
+      initAnswers[q.id] = q.answer || ""; // ✅ props의 answer 반영
+      initFiles[q.id] = q.file || null;   // ✅ props의 file 반영
     });
 
     setAnswers(initAnswers);
     setFiles(initFiles);
 
-    const studentQ = questions.find((q) => q.id === STUDENT_ID);
+    // ✅ 학번 검증 상태도 초기화
+    const studentQ = questions.find(q => q.id === STUDENT_ID);
     if (studentQ?.answer) {
       setStudentStatus(mockCheckStudentId(studentQ.answer));
-    } else {
-      setStudentStatus(undefined);
     }
+  }, [questions]); // ✅ questions가 변경될 때마다 실행
 
-    setErrors({});
-    setSuccess({});
-    setForceLeave(false);
-    setModalOpen(false);
-    setModalType(null);
-  }, [questions]);
-
+  // ✅ 입력 유무(파일 포함)로 dirty 판단
   const hasAnyInput = useMemo(() => {
-    if (mode === "view") return false;
-
     return questions.some((q) =>
       q.type === "file"
         ? !!files[q.id] || answers[q.id]?.trim() !== ""
         : answers[q.id]?.trim() !== ""
     );
-  }, [mode, questions, answers, files]);
+  }, [questions, answers, files]);
 
+  // ✅ dirty 설정 + cleanup을 한 번에
   useEffect(() => {
-    if (mode === "view") {
-      setDirty(false);
-      return;
-    }
-
     setDirty(hasAnyInput);
 
     return () => {
-      setDirty(false);
+      setDirty(false); // cleanup: 컴포넌트 언마운트 시 초기화
     };
-  }, [mode, hasAnyInput, setDirty]);
+  }, [hasAnyInput, setDirty]);
 
+
+
+  // ✅ submitted/draft-exists 상태면 3초 후 모달 오픈
   useEffect(() => {
     if (studentStatus === "submitted-exists") {
       const timer = setTimeout(() => {
@@ -149,26 +148,7 @@ export default function ApplyForm({
     }
   }, [studentStatus]);
 
-  useEffect(() => {
-    if (mode === "view") return;
 
-    const handleBack = (e: PopStateEvent) => {
-      if (forceLeave || !hasAnyInput) return;
-
-      e.preventDefault();
-      window.history.pushState(null, "", window.location.href);
-
-      setModalType("leave");
-      setModalOpen(true);
-    };
-
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", handleBack);
-
-    return () => {
-      window.removeEventListener("popstate", handleBack);
-    };
-  }, [mode, hasAnyInput, forceLeave]);
 
   const handleBlur = (currentId: number, allQ: Question[]) => {
     const newErrors: Record<number, string> = {};
@@ -179,9 +159,10 @@ export default function ApplyForm({
 
     for (let i = 0; i <= currentIndex; i++) {
       const q = allQ[i];
+
       const answer = answers[q.id] || "";
 
-       if (q.id === STUDENT_ID || q.id === PASSWORD_ID) continue;
+      if (q.id === STUDENT_ID || q.id === PASSWORD_ID) continue;
 
       // ✅ 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
       if (q.type === "file") {
@@ -192,23 +173,26 @@ export default function ApplyForm({
         continue;
       }
 
+      // ✅ 필수 체크
       if (q.required && !answer.trim()) {
         newErrors[q.id] = "필수 답변 항목입니다.";
         continue;
       }
 
+      // ✅ 학번 체크
       if (q.id === STUDENT_ID && answer.trim()) {
-        const st = mockCheckStudentId(answer.trim());
-        setStudentStatus(st);
+        const status = mockCheckStudentId(answer.trim());
+        setStudentStatus(status);
 
-        if (st !== "valid") {
-          newErrors[q.id] = studentMessages[st];
+        if (status !== "valid") {
+          newErrors[q.id] = studentMessages[status];
         } else {
-          newSuccess[q.id] = studentMessages[st];
+          newSuccess[q.id] = studentMessages[status];
         }
         continue;
       }
 
+      // ✅ 비밀번호 체크 (4자리 숫자)
       if (q.id === PASSWORD_ID && answer.trim()) {
         if (!/^\d{4}$/.test(answer.trim())) {
           newErrors[q.id] = "형식이 다릅니다. 숫자 4자리를 입력하세요.";
@@ -218,6 +202,7 @@ export default function ApplyForm({
         continue;
       }
 
+      // ✅ 기타 pattern 기반 검증이 있는 경우
       if (q.pattern && answer.trim() && !q.pattern.test(answer)) {
         newErrors[q.id] = q.errorMessage || "형식이 다릅니다.";
       }
@@ -289,9 +274,9 @@ export default function ApplyForm({
   };
 
   useEffect(() => {
-    if (mode === "view") return;
     registerValidator(validateInfoSection);
-  }, [mode, registerValidator, studentStatus, passwordAnswer]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentStatus, passwordAnswer]);
 
   const requiredQuestions = safeAllQuestions.filter(
     (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
@@ -312,19 +297,13 @@ export default function ApplyForm({
 
   const cancelState: ButtonState = "default";
   const draftState: ButtonState =
-    hasAnyInput && studentValid && passwordValid && consentOk
-      ? "default"
-      : "unactive";
+    hasAnyInput && studentValid && passwordValid && consentOk ? "default" : "unactive";
   const submitState: ButtonState =
-    requiredFilled && studentValid && passwordValid && consentOk
-      ? "default"
-      : "unactive";
+    requiredFilled && studentValid && passwordValid && consentOk ? "default" : "unactive";
 
   return (
     <section
-      className={[styles.wrapper, isSurvey ? styles.bgDark : styles.bgResult].join(
-        " "
-      )}
+      className={[styles.wrapper, isSurvey ? styles.bgDark : styles.bgResult].join(" ")}
       data-variant={variant}
     >
       <header className={styles.header}>
@@ -337,12 +316,7 @@ export default function ApplyForm({
           {title}
         </h1>
         {subtitle && (
-          <p
-            className={[
-              styles.subtitle,
-              isResult ? styles.subtitleBlack : "",
-            ].join(" ")}
-          >
+          <p className={[styles.subtitle, isResult ? styles.subtitleBlack : ""].join(" ")}>
             {subtitle}
           </p>
         )}
@@ -357,13 +331,13 @@ export default function ApplyForm({
             ? errors[item.id]
               ? styles.inputError
               : studentStatus === "valid"
-              ? styles.inputSuccess
-              : ""
+                ? styles.inputSuccess
+                : ""
             : errors[item.id]
-            ? styles.inputError
-            : success[item.id]
-            ? styles.inputSuccess
-            : "";
+              ? styles.inputError
+              : success[item.id]
+                ? styles.inputSuccess
+                : "";
 
           const placeholderText =
             errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
@@ -389,8 +363,8 @@ export default function ApplyForm({
                       errors[item.id]
                         ? styles.inputError
                         : success[item.id]
-                        ? styles.inputSuccess
-                        : "",
+                          ? styles.inputSuccess
+                          : "",
                     ].join(" ")}
                     value={answers[item.id] || ""}
                     placeholder={item.placeholder}
@@ -420,22 +394,12 @@ export default function ApplyForm({
                   <div className={styles.fileBottomRow}>
                     <div>
                       {errors[item.id] && (
-                        <div
-                          className={[
-                            styles.errorText,
-                            styles.fileErrorText,
-                          ].join(" ")}
-                        >
+                        <div className={[styles.errorText, styles.fileErrorText].join(" ")}>
                           {errors[item.id]}
                         </div>
                       )}
                       {success[item.id] && !errors[item.id] && (
-                        <div
-                          className={[
-                            styles.successText,
-                            styles.fileErrorText,
-                          ].join(" ")}
-                        >
+                        <div className={[styles.successText, styles.fileErrorText].join(" ")}>
                           {success[item.id]}
                         </div>
                       )}
@@ -452,8 +416,8 @@ export default function ApplyForm({
                       {mode === "view"
                         ? "파일 다운로드"
                         : files[item.id]
-                        ? "파일 변경하기"
-                        : "파일 업로드"}
+                          ? "파일 변경하기"
+                          : "파일 업로드"}
                     </button>
                   </div>
                 </div>
@@ -526,8 +490,7 @@ export default function ApplyForm({
                         if (!/^\d{4}$/.test(value.trim())) {
                           setErrors((prev) => ({
                             ...prev,
-                            [PASSWORD_ID]:
-                              "형식이 다릅니다. 숫자 4자리를 입력하세요.",
+                            [PASSWORD_ID]: "형식이 다릅니다. 숫자 4자리를 입력하세요.",
                           }));
                           setSuccess((prev) => {
                             const next = { ...prev };
@@ -551,8 +514,8 @@ export default function ApplyForm({
                         errors[item.id]
                           ? styles.errorText
                           : studentStatus === "valid"
-                          ? styles.successText
-                          : styles.errorText
+                            ? styles.successText
+                            : styles.errorText
                       }
                     >
                       {errors[item.id] ||
@@ -564,9 +527,7 @@ export default function ApplyForm({
                         <div className={styles.errorText}>{errors[item.id]}</div>
                       )}
                       {success[item.id] && !errors[item.id] && (
-                        <div className={styles.successText}>
-                          {success[item.id]}
-                        </div>
+                        <div className={styles.successText}>{success[item.id]}</div>
                       )}
                     </>
                   )}
@@ -611,8 +572,7 @@ export default function ApplyForm({
                   isResult ? styles.consentBoxBlack : "",
                 ].join(" ")}
               >
-                필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공,
-                복수전공), 본인확인용 비밀번호
+                필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공), 본인확인용 비밀번호
               </div>
             </li>
 
@@ -631,8 +591,7 @@ export default function ApplyForm({
                   isResult ? styles.consentBoxBlack : "",
                 ].join(" ")}
               >
-                수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간
-                보관하며, 이후 지체 없이 파기합니다.
+                수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후 지체 없이 파기합니다.
               </div>
               <div
                 className={[
@@ -659,8 +618,7 @@ export default function ApplyForm({
                   isResult ? styles.consentBoxBlack : "",
                 ].join(" ")}
               >
-                귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가
-                있습니다.
+                귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
               </div>
               <div
                 className={[
@@ -668,8 +626,7 @@ export default function ApplyForm({
                   isResult ? styles.consentBoxBlack : "",
                 ].join(" ")}
               >
-                필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서
-                제외될 수 있습니다.
+                필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수 있습니다.
               </div>
             </li>
           </ol>
@@ -732,13 +689,10 @@ export default function ApplyForm({
                 >
                   현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은{" "}
                   <span className={styles.highlight}>불가능</span> 합니다. <br />
-                  작성 중인 지원서의{" "}
-                  <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,
+                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,{" "}
                   <br />
-                  변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요.
-                  <br />
-                  내용은{" "}
-                  <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
+                  변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br />
+                  내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
                   복사/붙여넣기를 권장 드립니다.
                 </p>
               </div>
@@ -767,8 +721,8 @@ export default function ApplyForm({
             <span>
               중복 지원은 불가하므로,
               <br />
-              현재 작성 중인 지원서는{" "}
-              <span style={{ color: "#FF7710" }}>‘작성 취소’</span> 해주세요.
+              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span>{" "}
+              해주세요.
             </span>
           }
           extraText={
@@ -796,8 +750,8 @@ export default function ApplyForm({
             <span>
               여러 개의 지원서를 임시저장 할 수 없으므로,
               <br />
-              현재 작성 중인 지원서는{" "}
-              <span style={{ color: "#FF7710" }}>‘작성 취소’</span> 해주세요.
+              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span>{" "}
+              해주세요.
             </span>
           }
           extraText={
@@ -807,8 +761,7 @@ export default function ApplyForm({
               기존에 임시 저장한 지원서를 다시 확인해 주세요.
               <br />
               <br />
-              현재 작성 된 내용은{" "}
-              <span style={{ color: "#FF7710" }}>저장되지 않으니,</span>
+              현재 작성 된 내용은 <span style={{ color: "#FF7710" }}>저장되지 않으니,</span>
               <br />
               <span style={{ color: "#FF7710" }}>복사/붙여넣기를 권장 드립니다.</span>
             </span>
@@ -834,19 +787,19 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              지원서 작성을 취소하고, 페이지를 나갈까요?
-              <br />
+              지원서 작성을 취소하고, 페이지를 나갈까요?<br />
               작성된 내용은 저장되지 않습니다.
             </span>
           }
           primaryButton={{
             text: "나가기",
             onClick: () => {
-            allowNavigation();   //  guard 해제
+              allowNavigation();   // ✅ guard 해제
               setModalOpen(false);
-              window.history.back(); //  이제 이동 가능
+              window.history.back(); // ✅ 이제 이동 가능
             },
           }}
+
           secondaryButton={{
             text: "지원서로 돌아가기",
             onClick: () => setModalOpen(false),
