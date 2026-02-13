@@ -73,6 +73,8 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 60px;
+  padding: 20px 50px;
+  box-sizing: border-box;
 }
 
 /* 프로젝트 섹션 */
@@ -92,11 +94,12 @@ h1 {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 20px 50px;
+  padding: 0 50px; /* 타이틀 컨테이너와 좌우 간격 */
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
   transition: height 0.3s ease;
+  min-height: 80px; /* Set a minimum height */
 }
 
 /* Collapsed state for project content */
@@ -104,14 +107,7 @@ h1 {
   padding-bottom: 0;
 }
 
-/* 프로젝트 타이틀 컨테이너 */
-.titleContainer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  padding: 20px 50px;
-}
+
 
 /* Filter Bar Styles */
 .filterBar {
@@ -177,7 +173,6 @@ h1 {
   font-family: 'Pretendard', sans-serif;
   font-weight: 500;
   font-size: 28px;
-  line-height: 120%;
   letter-spacing: -2%;
   margin: 0;
 }
@@ -188,14 +183,12 @@ h1 {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding: 20px 0;
+  padding: 20px 0; /* project 프로젝트 컨테이너와 상하 간격 */
   position: relative;
 }
 
 /* 셰브론 아이콘 컨테이너 */
 .chevronContainer {
-  width: 80px;
-  height: 80px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -207,9 +200,8 @@ h1 {
 
 /* 셰브론 아이콘 */
 .chevronIcon {
-  width: 40px;
+  width: 30px;
   height: 20px;
-  transition: transform 0.3s ease;
 }
 
 /* Rotated state for chevron */
@@ -239,7 +231,6 @@ h1 {
 .project13.collapsed,
 .project12.collapsed,
 .project11.collapsed {
-  height: 80px;
   padding-bottom: 0;
 }
 
@@ -398,17 +389,6 @@ h1 {
   line-height: 1;
   order: -1;
   transition: all 0.3s ease;
-}
-
-.projectCard:hover .projectHeader {
-  flex-direction: row;
-  align-items: center;
-}
-
-.projectCard:hover .projectCategory {
-  display: inline-block;
-  margin-left: 8px;
-  order: 1;
 }
 
 .projectName {

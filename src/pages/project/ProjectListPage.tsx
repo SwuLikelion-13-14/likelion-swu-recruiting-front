@@ -90,7 +90,8 @@ const ProjectListPage: React.FC = () => {
           setProjectData(response.data.result);
           const sections: {[key: string]: boolean} = {};
           response.data.result.projects.forEach(cohort => {
-            sections[`${cohort.cohort}th`] = true;
+            // 13기만 디폴트로 열려있기
+            sections[`${cohort.cohort}th`] = cohort.cohort === 13;
           });
           setExpandedSections(sections);
         } else {
