@@ -287,9 +287,9 @@ export default function ApplyForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentStatus, passwordAnswer]);
 
-  const requiredQuestions = safeAllQuestions.filter(
-    (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
-  );
+  const requiredQuestions = questions.filter(
+  (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
+);
 
   const requiredFilled =
     requiredQuestions.length > 0 &&

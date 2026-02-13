@@ -47,7 +47,7 @@ const FrontPage = () => {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const res = await api.get('/recruit/application/FRONT')
+                const res = await api.get('/api/recruit/application/FRONT')
 
                 const apiQuestions: { id: number; questionText: string }[] =
                     Array.isArray(res?.data?.result) ? res.data.result : []
@@ -157,7 +157,7 @@ const FrontPage = () => {
                 formData.append('portfolioFile', portfolioFile)
             }
 
-            const res = await api.post('/recruit/application/FRONT/', formData, {
+            const res = await api.post('/api/recruit/application/FRONT/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             })
 
@@ -220,7 +220,7 @@ const FrontPage = () => {
                 formData.append('portfolioFile', portfolioFile)
             }
 
-            const res = await api.post('/recruit/application/FRONT/', formData, {
+            const res = await api.post('/api/recruit/application/FRONT/', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             })
 
