@@ -46,7 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
   // 폼 페이지에서만 화면 이동 제한
   const requestNavigation = (url: string) => {
     if (isDirtyRef.current) {
-      setPendingUrl(url); 
+      setPendingUrl(url);
       setWarningOpen(true)
       return
     }
@@ -166,14 +166,19 @@ export const Header: React.FC<HeaderProps> = ({
           primaryButton={{
             text: '나가기',
             onClick: () => {
+              const url = pendingUrl; // 먼저 복사
               setWarningOpen(false);
+              setPendingUrl(null);
 
-              if (pendingUrl) {
-                navigate(pendingUrl); // 저장한 URL로 이동
-                setPendingUrl(null);  // 초기화
+              if (url) {
+                setTimeout(() => {
+                  navigate(url);
+                }, 0);
               }
             }
           }}
+
+
 
           secondaryButton={{
             text: '지원서로 돌아가기',
