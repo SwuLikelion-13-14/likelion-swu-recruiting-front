@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import Label from "@/components/admin/ui/Label";
 import ApplicationsSummaryBar, {
@@ -88,8 +88,13 @@ function statusToFinalResult(status: ResultStatus): 0 | 1 {
   return status === "pass" ? 1 : 0;
 }
 
+function isPart(v: string | null): v is Part {
+  return v === "frontend" || v === "backend" || v === "design";
+}
+
 export default function AdminApplicationsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [part, setPart] = useState<Part>("frontend");
   const [filter, setFilter] = useState<ResultFilter>("all");
@@ -97,6 +102,21 @@ export default function AdminApplicationsPage() {
   const [items, setItems] = useState<Applicant[]>([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const qs = new URLSearchParams(location.search);
+    const p = qs.get("part");
+    if (isPart(p)) setPart(p);
+  }, [location.search]);
+
+  useEffect(() => {
+    const qs = new URLSearchParams(location.search);
+    qs.set("part", part);
+    navigate(
+      { pathname: location.pathname, search: qs.toString() },
+      { replace: true }
+    );
+  }, [part, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -134,7 +154,9 @@ export default function AdminApplicationsPage() {
 
         if (raw.trim().startsWith("<")) {
           console.error("HTML 응답 감지:", raw);
-          throw new Error("API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요.");
+          throw new Error(
+            "API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요."
+          );
         }
 
         const data: ApiResponse = JSON.parse(raw);
@@ -193,11 +215,14 @@ export default function AdminApplicationsPage() {
     setFilter("all");
   };
 
-  const handleChangeStatus = async (applicationId: number, next: ResultStatus) => {
-
+  const handleChangeStatus = async (
+    applicationId: number,
+    next: ResultStatus
+  ) => {
     if (next === "pending") return;
 
     const prevStatus = items.find((x) => x.responseId === applicationId)?.status;
+
     setItems((prev) =>
       prev.map((x) =>
         x.responseId === applicationId ? { ...x, status: next } : x
@@ -224,14 +249,15 @@ export default function AdminApplicationsPage() {
       const raw = await res.text();
       if (raw.trim().startsWith("<")) {
         console.error("HTML 응답 감지:", raw);
-        throw new Error("API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요.");
+        throw new Error(
+          "API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요."
+        );
       }
 
       const data: PatchResponse = JSON.parse(raw);
       if (!data.isSuccess) {
         throw new Error(data.message ?? "요청 실패");
       }
-
     } catch (e: any) {
       console.error("ADMIN RESULT PATCH ERROR:", e);
 
@@ -299,11 +325,18 @@ export default function AdminApplicationsPage() {
                 part={partLabel[a.part]}
                 status={a.status}
                 onChangeStatus={(next) => handleChangeStatus(a.responseId, next)}
-                onOpen={() =>
+                onOpen={() => {
+                  const qs = new URLSearchParams(location.search);
+                  qs.set("part", part);
+
                   navigate(`/admin/applications/detail/${a.code}`, {
-                    state: { applicant: a, partLabel: partLabel[a.part] },
-                  })
-                }
+                    state: {
+                      applicant: a,
+                      partLabel: partLabel[a.part],
+                      from: `/admin/applications?${qs.toString()}`,
+                    },
+                  });
+                }}
               />
             ))
           )}
