@@ -45,7 +45,7 @@ export default function ActivityCards({
               </span>{' '}
               정기 세션이 진행 됩니다.
             </p>
-            <br></br>
+            <br />
             <p>
               각 트랙 별로 나뉘어 진행 되며, 장소 및 시간 등 자세한 일정은 디스코드 공지 채널에서 당일 안내 됩니다.
             </p>
@@ -65,7 +65,7 @@ export default function ActivityCards({
               </span>{' '}
               진행 합니다.
             </p>
-            <br></br>
+            <br />
             <p>
               <span className={styles.highlight}>정기 세션과 병행</span>하여 진행되며, 세션에서 배운 내용을 바탕으로 심화 학습하여
               자신의 지식과 스킬을 발전시킬 수 있습니다.
@@ -86,7 +86,7 @@ export default function ActivityCards({
               </span>{' '}
               프로젝트를 진행합니다.
             </p>
-            <br></br>
+            <br />
             <p>
               1학기는{' '}
               <span className={styles.nowrap}>
@@ -108,19 +108,27 @@ export default function ActivityCards({
   useEffect(() => {
     if (!enableReveal) return;
 
+    // wave delay 세팅
     cardsRef.current.forEach((el, idx) => {
       if (!el) return;
       const delay = waveReveal ? idx * waveStepMs : 0;
       el.style.setProperty('--reveal-delay', `${delay}ms`);
     });
 
+    // 모션 줄이기 -> 바로 보이기
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (mq?.matches) {
+      cardsRef.current.forEach((el) => el && el.classList.add(styles.isVisible));
+      return;
+    }
+
+    // 재진입마다 반복
     const observer = new IntersectionObserver(
-      (entries, obs) => {
+      (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
           const el = entry.target as HTMLElement;
-          el.classList.add(styles.isVisible);
-          obs.unobserve(el);
+          if (entry.isIntersecting) el.classList.add(styles.isVisible);
+          else el.classList.remove(styles.isVisible);
         });
       },
       { threshold }

@@ -47,9 +47,9 @@ const ApplyFormActions = ({
 
 
   const handleDraftSave = () => {
-    setIsDraftStep1Open(true)
-    onDraftSave?.({ skipValidation: false }) // 원하면 validation 호출 가능
-  }
+  setIsDraftStep1Open(true)
+}
+
 
   return (
     <>
@@ -215,12 +215,21 @@ const ApplyFormActions = ({
             </span>
           }
           primaryButton={{
-            text: '임시저장',
-            onClick: () => {
-              setIsDraftStep1Open(false)
-              setIsDraftStep2Open(true)
-            }
-          }}
+  text: '임시저장',
+  onClick: async () => {
+    try {
+      if(onDraftSave){
+        await onDraftSave({ skipValidation: false })
+      }
+      setIsDraftStep1Open(false)
+      setIsDraftStep2Open(true)
+    } catch(err) {
+      console.error('임시저장 실패:', err)
+      alert('임시저장 실패, 다시 시도해주세요.')
+    }
+  }
+}}
+
           secondaryButton={{
             text: '취소',
             onClick: () => setIsDraftStep1Open(false)

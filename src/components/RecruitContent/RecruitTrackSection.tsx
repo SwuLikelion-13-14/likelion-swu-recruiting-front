@@ -30,14 +30,14 @@ const TRACK_BULLETS: Record<TrackId, string[]> = {
     '서비스 기획자, 디자이너가 되기 위한 역량 키움',
   ],
   FE: [
-    '웹 프론트엔드 UI 구현 및 사용자 경험 개선',
-    'API 연동과 상태 관리 등 실전 개발 흐름 학습',
-    'Git 협업을 통해 팀 프로젝트를 완성',
+    '사용자의 눈에 보이는 레이아웃과 디자인 요소를 시각화',
+    '웹 클라이언트 개발을 위한 기초부터 심화까지의 스킬 학습',
+    'HTML, CSS, Javascript를 바탕으로 기초 개발 역량 학습',
   ],
   BE: [
-    '서버/DB 설계 및 API 구현 등 백엔드 개발 경험',
-    '데이터 모델링과 인증/인가 등 핵심 개념 학습',
-    '협업을 통해 서비스 운영 관점까지 경험',
+    '눈에 보이지 않는 서버를 전반적으로 담당',
+    '서비스 요구사항에 맞춰 API를 개발하고 서비스 배포 및 데이터 관리',
+    'Django, Spring 등 다양한 프레임워크 기반으로 전체적 인프라 구현',
   ],
 };
 
@@ -100,19 +100,26 @@ export default function RecruitTrackSection() {
         </motion.div>
 
         {/* descBox : 아래 -> 위 */}
-        <motion.div
-          ref={boxRef as any}
-          className={styles.descBox}
-          initial="hidden"
-          animate={boxControls}
-          variants={fadeUp}
+      <motion.div
+        ref={boxRef as any}
+        className={[
+            styles.descBox,
+            active === 'PD' ? styles.descBoxPD : '',
+            active === 'FE' ? styles.descBoxFE : '',
+            active === 'BE' ? styles.descBoxBE : '',
+        ].join(' ')}
+        initial="hidden"
+        animate={boxControls}
+        variants={fadeUp}
         >
-          {bullets.map((text) => (
+        <div className={styles.bulletList}>
+            {bullets.map((text) => (
             <div key={text} className={styles.bulletRow}>
-              <img src={checkRed} alt="" className={styles.checkIcon} />
-              <p className={styles.bulletText}>{text}</p>
+                <img src={checkRed} alt="" className={styles.checkIcon} />
+                <p className={styles.bulletText}>{text}</p>
             </div>
-          ))}
+            ))}
+        </div>
         </motion.div>
       </div>
     </section>

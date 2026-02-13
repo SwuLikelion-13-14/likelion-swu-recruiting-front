@@ -132,8 +132,8 @@ export default function ActivityContentPage() {
   const isRecruiting = true;
 
   // 배경 이미지 조절은 여기서만
-  const BG_ZOOM = 1.5;
-  const BG_POS_Y = 62;
+  const BG_ZOOM = 1;
+  const BG_POS_Y = 50;
 
   const goApply = () => navigate('/apply');
 
@@ -141,17 +141,17 @@ export default function ActivityContentPage() {
     <div className="relative w-full min-h-screen overflow-x-hidden bg-gray-black text-gray-white font-pretendard">
       {/* Background */}
       <div
-        className="pointer-events-none absolute inset-0 z-0"
+        className="pointer-events-none fixed inset-0 z-0"
         style={{
           backgroundImage: `url(${mainBg})`,
           backgroundRepeat: 'no-repeat',
-          backgroundSize: `${BG_ZOOM * 500}% auto`,
+          backgroundSize: `${BG_ZOOM * 100}% auto`,
           backgroundPosition: `50% ${BG_POS_Y}%`,
         }}
       />
 
       {/* Overlay */}
-      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-black to-black/50" />
+      <div className="pointer-events-none fixed inset-0 z-10 bg-gradient-to-b from-black to-black/50" />
 
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-[300]">
@@ -196,7 +196,7 @@ export default function ActivityContentPage() {
             />
           </Reveal>
           <Reveal delayMs={120}>
-            <SessionCurriculum />
+            <SessionCurriculum/>
           </Reveal>
         </section>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import qIcon from '../../assets/icon/q_svg.svg';
 import chevronDown from '../../assets/icon/chevron_down.svg';
 import chevronUp from '../../assets/icon/chevron_up.svg';
+import backgroundImage from '../../assets/img/14th_home_img.png';
 import Layout from '../../components/Layout/Layout';
 import styles from './FaqPage.module.css';
 import axios from 'axios';
@@ -89,7 +90,16 @@ const FaqPage: React.FC = () => {
   );
 };
   return (
-    <div className={styles.container}>
+    <div
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        minHeight: '100vh',
+        width: '100%'
+      }}
+    >
       <Layout>
         <div className={styles.content}>
           <div className={styles.titleSection}>

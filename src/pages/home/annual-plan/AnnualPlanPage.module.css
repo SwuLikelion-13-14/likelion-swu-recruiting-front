@@ -89,18 +89,14 @@ h1 {
   letter-spacing: -1px;
 }
 
-.scheduleList {
-  margin-top: 30px;
-}
-
 /* Timeline Container */
 .timelineContainer {
   position: relative;
   width: 100%;
   max-width: 1140px;
   margin: 0 auto;
-  padding: 0 20px;
-  overflow: hidden;
+  padding: 0; /* 패딩 제거로 날짜선 일치 */
+  overflow: visible;
 }
 
 /* Timeline Grid */
@@ -109,64 +105,83 @@ h1 {
   width: 100%;
   margin: 0 auto;
 }
+/* 1. 행(Row) 설정: 가로 점선 처리 */
+.gridRow {
+  display: flex;
+  width: 100%;
+  height: 250px;
+  position: relative;
+  
+  /* 1행 밑에만 가로 점선 */
+  background-image: linear-gradient(
+    to right, 
+    #8F8F8F 50%, 
+    transparent 50%
+  );
+  background-position: bottom;
+  background-size: 20px 1px; /* 가로로 긴 점선 (20px 마다 반복) */
+  background-repeat: repeat-x;
+}
 
-/* Date styles - now inside grid cells */
+/* 2행(마지막 행)은 바닥 선이 필요 없으므로 제거 */
+.gridRow:last-child {
+  background-image: none;
+}
+
+/* 2. 셀(Cell) 설정: 세로 점선 처리 */
+.gridCell {
+  width: 190px;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+  padding-top: 30px;
+
+  /* 세로 스티치 점선 */
+  background-image: linear-gradient(
+    to bottom, 
+    #8F8F8F 50%, 
+    transparent 50%
+  );
+  background-position: right;
+  background-size: 1px 20px; /* 세로로 긴 점선 (20px 마다 반복) */
+  background-repeat: repeat-y;
+}
+
+/* 3. 예외 처리: 겹침 방지 */
+.gridCell:last-child {
+  background-image: none; /* 각 행의 마지막 칸 오른쪽 선 제거 */
+}
+
+/* 4. 컨테이너 외곽선 */
+.gridContainer {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  /* 컨테이너 왼쪽 끝에 세로 점선 추가 */
+  background-image: linear-gradient(to bottom, #8F8F8F 50%, transparent 50%);
+  background-position: left;
+  background-size: 1px 20px;
+  background-repeat: repeat-y;
+}
+
 .dateText {
   position: absolute;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  width: 46.789px;
-  height: 15.984px;
   color: #DDD;
   font-family: 'Pretendard', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  line-height: 120%;
-  text-align: center;
 }
 
-/* Grid Container */
-.gridContainer {
-  position: relative;
-  width: 100%;
-  border-left: 1px dashed #8F8F8F;
-  border-right: 1px dashed #8F8F8F;
-  box-sizing: border-box;
-}
-
-/* Grid Rows */
-.gridRow {
-  display: flex;
-  width: 100%;
-  height: 250px;
-}
-
-.gridRow:first-child {
-  border-bottom: 1px dashed #8F8F8F;
-}
-
-/* Grid Cells */
-.gridCell {
-  width: 190px;
-  height: 100%;
-  border-right: 1px dashed #8F8F8F;
-  box-sizing: border-box;
-  position: relative;
-  padding-top: 30px;
-}
-
-.gridCell:last-child {
-  border-right: none;
-}
-
-/* Events Container */
-.eventsContainer {
+/* 행 내부 전용 이벤트 컨테이너 */
+.rowEventsContainer {
   position: absolute;
   top: 50px;
   left: 0;
   width: 100%;
-  height: calc(500px - 50px);
+  height: calc(100% - 50px);
   pointer-events: none;
 }
 
@@ -176,7 +191,6 @@ h1 {
   height: 30px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
   color: white;
   font-family: 'Pretendard', sans-serif;
   font-size: 14px;
@@ -186,36 +200,40 @@ h1 {
   cursor: pointer;
   transition: all 0.2s ease;
   box-sizing: border-box;
+  /* 텍스트가 잘리지 않도록 함 */
+  min-width: 120px; 
 }
 
 .eventBar:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-
+/* 오른쪽 화살표 설정 */
 .arrowRight {
   position: absolute;
   top: 0;
+  right: -6.5px; /* 화살표 너비만큼 밖으로 */
   width: 0;
   height: 0;
   border-style: solid;
-  border-width: 15px 8px 15px 0;
-  border-color: transparent var(--arrowColor) transparent transparent;
-}
-
-
-
-.arrowRight {
-  right: -8px;
-  transform: rotate(180deg);
-  border-right-color: var(--arrowColor);
+  border-width: 15px 0 15px 8px;
+  border-color: transparent transparent transparent var(--arrowColor);
+  
+  margin-left: -2px;
+  z-index: 1;
 }
 
 .eventTitle {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible; 
   flex-grow: 1;
-  text-align: center;
+  padding: 0 10px;
+}
+
+.notice {
+  color: #AAA;
+  font-size: 14px;
+  text-align: right;
+  margin-top: 20px;
 }
