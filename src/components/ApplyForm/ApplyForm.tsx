@@ -221,8 +221,16 @@ export default function ApplyForm({
       }
     }
 
-    setErrors(newErrors);
-    setSuccess(newSuccess);
+    setErrors(prev => ({
+      ...prev,
+      ...newErrors
+    }));
+
+    setSuccess(prev => ({
+      ...prev,
+      ...newSuccess
+    }));
+
   };
 
   const handleFileUpload = (id: number) => {
@@ -285,8 +293,8 @@ export default function ApplyForm({
   }, [mode, registerValidator, studentStatus, passwordAnswer]);
 
   const requiredQuestions = safeAllQuestions.filter(
-  (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
-);
+    (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
+  );
 
 
   const requiredFilled =
