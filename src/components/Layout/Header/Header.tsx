@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
 import logoWhite from '@/assets/icon/logo_white.svg';
@@ -31,22 +31,29 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState<string | null>(null);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const location = useLocation();
+  const isApplyPage = location.pathname.startsWith('/apply');
+
+  const { isDirty, validateDraft } = useNavigationGuard();
+  const [warningOpen, setWarningOpen] = useState(false);
+
+  // isDirty 최신 상태를 항상 참조하도록 ref 사용
+  const isDirtyRef = useRef(isDirty);
+  useEffect(() => {
+    isDirtyRef.current = isDirty;
+  }, [isDirty]);
 
   // 폼 페이지에서만 화면 이동 제한
   const requestNavigation = (url: string) => {
-    if (isDirty) {
+    if (isDirtyRef.current) {
+      setPendingUrl(url); 
       setWarningOpen(true)
       return
     }
 
     navigate(url)
   }
-
-  const { isDirty, validateDraft, setDirty } = useNavigationGuard()
-  const [warningOpen, setWarningOpen] = useState(false)
-  const [draftStep1Open, setDraftStep1Open] = useState(false)
-  const [draftStep2Open, setDraftStep2Open] = useState(false)
-
 
   // 메뉴 아이템 클릭 핸들러
   const handleItemClick = (itemId: string) => {
@@ -151,76 +158,31 @@ export const Header: React.FC<HeaderProps> = ({
               작성 중인 지원서는 저장되지 않습니다.
             </span>
           }
-          extraText="현재까지 작성한 내용을 임시 저장 할까요?"
+          extraText={
+            <span>
+              지원서 작성을 취소하고, 페이지를 나갈까요?<br />
+              작성된 내용은 저장되지 않습니다.
+            </span>
+          }
           primaryButton={{
-            text: '임시저장',
+            text: '나가기',
             onClick: () => {
-              const ok = validateDraft()
+              setWarningOpen(false);
 
-              if (!ok) {
-                setWarningOpen(false)
-                return
+              if (pendingUrl) {
+                navigate(pendingUrl); // 저장한 URL로 이동
+                setPendingUrl(null);  // 초기화
               }
-
-              setWarningOpen(false)
-              setDraftStep1Open(true)
             }
           }}
+
           secondaryButton={{
-            text: '돌아가기',
+            text: '지원서로 돌아가기',
             onClick: () => setWarningOpen(false)
           }}
           onClose={() => setWarningOpen(false)}
         />
       )}
-
-      {draftStep1Open && (
-        <Modal
-          isOpen={draftStep1Open}
-          title="임시 저장"
-          description="지원서를 임시 저장할까요?"
-          extraText={
-            <span>
-              3월 2일 23시 59분 까지 열람 및 수정이 가능합니다.<br /><br/>
-              ‘임시 저장’ 상태의 지원서는 검토 과정에서 인정되지 않습니다.<br/>
-              반드시 ‘최종 제출’을 눌러 지원서를 제출해 주세요.
-            </span>
-          }
-          primaryButton={{
-            text: '임시저장',
-            onClick: () => {
-              setDraftStep1Open(false)
-              setDraftStep2Open(true)
-            }
-          }}
-          secondaryButton={{
-            text: '취소',
-            onClick: () => setDraftStep1Open(false)
-          }}
-        />
-      )}
-      {draftStep2Open && (
-        <Modal
-          isOpen={draftStep2Open}
-          title="지원서가 임시 저장되었습니다"
-          extraText={
-            <span>
-              저장된 지원서는<br />
-              3월 2일 23시 59분 까지<br/>
-              열람 및 수정이 가능합니다.
-            </span>
-          }
-          primaryButton={{
-            text: '확인',
-            onClick: () => {
-              setDraftStep2Open(false)
-              setDirty(false)
-              navigate('/')
-            }
-          }}
-        />
-      )}
-
 
     </>
   )
