@@ -7,13 +7,15 @@ type NavigationGuardContextType = {
   // 🔥 추가
   validateDraft: () => boolean
   registerValidator: (fn: () => boolean) => void
+  allowNavigation: () => void
 }
 
 const NavigationGuardContext = createContext<NavigationGuardContextType>({
   isDirty: false,
   setDirty: () => {},
   validateDraft: () => true,
-  registerValidator: () => {}
+  registerValidator: () => {},
+  allowNavigation: () => {}
 })
 
 export const NavigationGuardProvider = ({ children }: { children: React.ReactNode }) => {
@@ -30,13 +32,19 @@ export const NavigationGuardProvider = ({ children }: { children: React.ReactNod
     return validator()
   }
 
+  const allowNavigation = () => {
+    setDirty(false)
+  }
+
+
   return (
     <NavigationGuardContext.Provider
       value={{
         isDirty,
         setDirty,
         validateDraft,
-        registerValidator
+        registerValidator,
+        allowNavigation
       }}
     >
       {children}
