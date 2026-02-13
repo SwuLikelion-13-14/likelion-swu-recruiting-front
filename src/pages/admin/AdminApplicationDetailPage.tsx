@@ -14,7 +14,7 @@ type Track = "FRONT" | "BACK" | "PND";
 
 type ApiAnswer = {
   questionId: number;
-  part: string; // "BASIC" | "FRONT" | "BACK" | "PND" 등 (서버 값 그대로)
+  part: string;
   no: number;
   question: string;
   responseText: string;
@@ -49,7 +49,7 @@ type ApplicantDetailFromState = {
 type LocationState = {
   applicant?: ApplicantDetailFromState;
   partLabel?: string;
-  from?: string; 
+  from?: string;
 };
 
 const TRACK_LABEL: Record<Track, string> = {
@@ -87,7 +87,7 @@ function toViewQuestion(a: ApiAnswer): Question {
 
 export default function AdminApplicationDetailPage() {
   const navigate = useNavigate();
-  const { code } = useParams<{ code: string }>(); // 여기 code = responseId (문자열)
+  const { code } = useParams<{ code: string }>();
   const { state } = useLocation() as { state: LocationState | null };
 
   const responseId = useMemo(() => {
@@ -128,7 +128,6 @@ export default function AdminApplicationDetailPage() {
 
       try {
         const url = `${API_BASE}/api/admin/response/${responseId}`;
-        console.log("ADMIN DETAIL URL:", url);
 
         const res = await fetch(url, {
           method: "GET",
@@ -149,7 +148,6 @@ export default function AdminApplicationDetailPage() {
         setDetail(data.result);
       } catch (e: any) {
         if (e?.name === "AbortError") return;
-        console.error("ADMIN DETAIL ERROR:", e);
         setDetail(null);
         setErrorMsg(e?.message ?? "상세 정보를 불러오지 못했어요.");
       } finally {
@@ -176,7 +174,6 @@ export default function AdminApplicationDetailPage() {
       .sort((a, b) => a.no - b.no)
       .map(toViewQuestion);
 
-    // BASIC이 비어있어도 이름 정도는 보여주기
     if (basics.length === 0) {
       return [
         {
@@ -195,17 +192,14 @@ export default function AdminApplicationDetailPage() {
   const commonQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
 
-    // BASIC 제외 나머지(공통+파트 질문 포함)
     const others = (detail.answers ?? [])
       .filter((a) => a.part !== "BASIC")
       .sort((a, b) => {
-        // part 그룹 정렬 + no 정렬
         if (a.part === b.part) return a.no - b.no;
         return String(a.part).localeCompare(String(b.part));
       })
       .map(toViewQuestion);
 
-    // 포트폴리오 파일이 있으면 마지막에 file 질문 추가
     const hasFile = !!detail.fileUrl;
     if (hasFile) {
       others.push({
@@ -220,7 +214,6 @@ export default function AdminApplicationDetailPage() {
     return others;
   }, [detail]);
 
-  // 최종 확인(현재 API에 없음) — UI 유지용 빈 섹션(원하면 숨겨도 됨)
   const finalCheckQuestions: Question[] = useMemo(
     () => [
       {
@@ -230,18 +223,10 @@ export default function AdminApplicationDetailPage() {
         answer: "",
         placeholder: "학번 10자리를 입력해 주세요",
       },
-      {
-        id: 202,
-        question: "본인 확인용 비밀번호",
-        type: "text",
-        answer: "",
-        placeholder: "숫자 4자리를 입력해 주세요",
-      },
     ],
     []
   );
 
-  // 상세 페이지 타이틀에 쓸 이름
   const displayName = detail?.name || applicantFromState?.name || code || "";
 
   if (!responseId) {
@@ -352,6 +337,38 @@ export default function AdminApplicationDetailPage() {
             />
 
             <div className="mt-16" />
+
+            {detail?.fileUrl && (
+              <div className="flex items-center justify-end mb-8">
+                <a
+                  href={detail.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  download
+                  className="
+                    flex
+                    h-[43px]
+                    min-w-[99px]
+                    px-[16px]
+                    py-[12px]
+                    justify-center
+                    items-center
+                    gap-[10px]
+                    rounded-[12px]
+                    border
+                    border-[rgba(255,255,255,0.20)]
+                    bg-[rgba(0,0,0,0.75)]
+                    text-[#F5F5F5]
+                    text-[16px]
+                    font-normal
+                    leading-[120%]
+                    whitespace-nowrap
+                  "
+                >
+                  파일 다운로드
+                </a>
+              </div>
+            )}
 
             <ApplyForm
               mode="view"
