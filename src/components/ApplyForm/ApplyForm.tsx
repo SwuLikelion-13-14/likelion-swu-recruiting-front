@@ -84,8 +84,8 @@ export default function ApplyForm({
     [allQuestions, questions]
   );
 
-  const passwordAnswer =
-    safeAllQuestions.find((q) => q.id === PASSWORD_ID)?.answer ?? "";
+  const passwordAnswer = answers[PASSWORD_ID] ?? "";
+
 
   // ✅ 질문 변경 시 internal state 초기화
   // ✅ 질문 변경 시 internal state 초기화
@@ -287,9 +287,10 @@ export default function ApplyForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentStatus, passwordAnswer]);
 
-  const requiredQuestions = questions.filter(
+  const requiredQuestions = safeAllQuestions.filter(
   (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
 );
+
 
   const requiredFilled =
     requiredQuestions.length > 0 &&
