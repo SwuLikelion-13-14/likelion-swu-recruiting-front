@@ -180,6 +180,8 @@ export default function ApplyForm({
 
       const answer = answers[q.id] || "";
 
+       if (q.id === STUDENT_ID || q.id === PASSWORD_ID) continue;
+
       // ✅ 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
       if (q.type === "file") {
         const hasFileOrLink = !!files[q.id] || answer.trim() !== "";
@@ -233,7 +235,6 @@ export default function ApplyForm({
       ...prev,
       ...newSuccess
     }));
-
   };
 
   const handleFileUpload = (id: number) => {
