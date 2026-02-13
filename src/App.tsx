@@ -31,7 +31,7 @@ const ProtectedAdmin = ({ children }: { children: React.ReactNode }) => {
 const App = () => {
   return (
     <>
-      <MobileGuardModal breakpoint={375} />
+      <MobileGuardModal breakpoint={768} />
 
       <Routes>
         <Route path="/" element={<HomePage />} />
