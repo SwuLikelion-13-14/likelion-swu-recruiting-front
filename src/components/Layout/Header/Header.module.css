@@ -13,11 +13,12 @@
   gap: 311px;
   justify-content: center;
   padding: 20px 0;
-  position: static;
+  position: sticky; /* 고정 위치로 변경 */
   top: 0;
   left: 0;
   right: 0;
   width: 100%;
+  z-index: 100; /* 다른 요소들 위에 표시되도록 z-index 설정 */
 }
 
 .header .home-header-btn-instance {
@@ -118,24 +119,6 @@
 /* 지원하기 버튼 스타일 */
 .apply-button {
   margin: 0;
-}
-
-/* 모바일 및 태블릿을 위한 반응형 디자인 */
-@media (max-width: 768px) {
-  .header-content {
-    padding: 0 20px;
-  }
-  
-  .nav-list {
-    gap: 8px;
-  }
-  
-  .home-header-btn-long,
-  .home-header-btn-short {
-    min-width: auto;
-    padding: 0 15px;
-    font-size: 14px;
-  }
 }
 
 .nav-item .home-header-btn:hover {
