@@ -15,17 +15,17 @@
   border-radius: 20px;
   position: relative;
 
-  /* ✅ backdrop-filter가 먹으려면 "투명한 픽셀"이 있어야 함 */
+ 
   background: rgba(0, 0, 0, 0.10);
 
-  /* ✅ 블러만 말고 채도/대비 같이 줘야 '굴절' 느낌이 살아남 */
+
   backdrop-filter: blur(30px) saturate(175%) contrast(112%);
   -webkit-backdrop-filter: blur(30px) saturate(175%) contrast(112%);
 
-  /* ✅ 기본 보더 (마스크 보더 안 먹는 환경 대비) */
+ 
   border: 1px solid rgba(255, 255, 255, 0.16);
 
-  /* ✅ 외곽 글로우 + 유리 인셋 하이라이트 */
+
   box-shadow:
     0 18px 50px rgba(0, 0, 0, 0.45),
     0 0 46px rgba(255, 119, 16, 0.20),
@@ -39,7 +39,7 @@
   justify-content: flex-start;
 }
 
-/* ✅ 유리 특유의 빛 번짐/굴절 하이라이트 */
+
 .outerBox::after {
   content: '';
   position: absolute;
@@ -72,7 +72,7 @@
   opacity: 0.95;
 }
 
-/* ✅ 유리 테두리(그라데이션 보더) */
+
 .outerBox::before {
   content: '';
   position: absolute;
@@ -173,7 +173,7 @@ mask-composite: exclude;
   padding: 30px 28px 46px 40px;
   box-sizing: border-box;
 
-  /* ✅ 여기 알파가 너무 진하면 "블러가 먹어도" 안 보임 → 살짝 올려줌 */
+
   background: rgba(0, 0, 0, 0.68);
 
   backdrop-filter: blur(14px) saturate(130%);
@@ -221,7 +221,7 @@ mask-composite: exclude;
   padding: 10px 12px;
   box-sizing: border-box;
 
-  /* ✅ 아이템도 너무 흐리면 덜 “층” 생김 */
+ 
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.06);
 
@@ -308,7 +308,7 @@ mask-composite: exclude;
   white-space: pre-line;
 }
 
-/* ✅ 지원 안 되는 환경(또는 시스템 설정) 대비 */
+/* 지원 안 되는 환경 대비 */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .outerBox {
     background: rgba(0, 0, 0, 0.22);

@@ -1,5 +1,6 @@
 export interface Question {
   id: number
+  apiId?: number 
   question: string
   answer: string
   placeholder?: string

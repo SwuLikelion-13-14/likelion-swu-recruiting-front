@@ -69,8 +69,14 @@ export default function ApplyForm({
   const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
     {}
   );
+  const [forceLeave, setForceLeave] = useState(false);
+
 
   const { setDirty, registerValidator } = useNavigationGuard();
+
+  // ✅ 기존 답안/파일 반영을 위한 internal state
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [files, setFiles] = useState<Record<number, File | null>>({});
 
   // allQuestions 안전 보정
   const safeAllQuestions = useMemo(
@@ -81,16 +87,46 @@ export default function ApplyForm({
   const passwordAnswer =
     safeAllQuestions.find((q) => q.id === PASSWORD_ID)?.answer ?? "";
 
+  // ✅ 질문 변경 시 internal state 초기화
+  // ✅ 질문 변경 시 internal state 초기화
+  useEffect(() => {
+    const initAnswers: Record<number, string> = {};
+    const initFiles: Record<number, File | null> = {};
+
+    questions.forEach((q) => {
+      initAnswers[q.id] = q.answer || ""; // ✅ props의 answer 반영
+      initFiles[q.id] = q.file || null;   // ✅ props의 file 반영
+    });
+
+    setAnswers(initAnswers);
+    setFiles(initFiles);
+
+    // ✅ 학번 검증 상태도 초기화
+    const studentQ = questions.find(q => q.id === STUDENT_ID);
+    if (studentQ?.answer) {
+      setStudentStatus(mockCheckStudentId(studentQ.answer));
+    }
+  }, [questions]); // ✅ questions가 변경될 때마다 실행
+
   // ✅ 입력 유무(파일 포함)로 dirty 판단
   const hasAnyInput = useMemo(() => {
     return questions.some((q) =>
-      q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""
+      q.type === "file"
+        ? !!files[q.id] || answers[q.id]?.trim() !== ""
+        : answers[q.id]?.trim() !== ""
     );
-  }, [questions]);
+  }, [questions, answers, files]);
 
+  // ✅ dirty 설정 + cleanup을 한 번에
   useEffect(() => {
     setDirty(hasAnyInput);
+
+    return () => {
+      setDirty(false); // cleanup: 컴포넌트 언마운트 시 초기화
+    };
   }, [hasAnyInput, setDirty]);
+
+
 
   // ✅ submitted/draft-exists 상태면 3초 후 모달 오픈
   useEffect(() => {
@@ -114,7 +150,7 @@ export default function ApplyForm({
   // ✅ 뒤로가기(leave) 가드: 입력이 있을 때만
   useEffect(() => {
     const handleBack = (e: PopStateEvent) => {
-      if (!hasAnyInput) return;
+      if (forceLeave || !hasAnyInput) return; // 강제 이동이면 막지 않음
 
       e.preventDefault();
       window.history.pushState(null, "", window.location.href);
@@ -129,7 +165,8 @@ export default function ApplyForm({
     return () => {
       window.removeEventListener("popstate", handleBack);
     };
-  }, [hasAnyInput]);
+  }, [hasAnyInput, forceLeave]);
+
 
   const handleBlur = (currentId: number, allQ: Question[]) => {
     const newErrors: Record<number, string> = {};
@@ -141,9 +178,11 @@ export default function ApplyForm({
     for (let i = 0; i <= currentIndex; i++) {
       const q = allQ[i];
 
+      const answer = answers[q.id] || "";
+
       // ✅ 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
       if (q.type === "file") {
-        const hasFileOrLink = !!q.file || q.answer.trim() !== "";
+        const hasFileOrLink = !!files[q.id] || answer.trim() !== "";
         if (q.required && !hasFileOrLink) {
           newErrors[q.id] = "기획디자인 트랙 지원자는 필수 답변 항목입니다.";
         }
@@ -151,14 +190,14 @@ export default function ApplyForm({
       }
 
       // ✅ 필수 체크
-      if (q.required && !q.answer.trim()) {
+      if (q.required && !answer.trim()) {
         newErrors[q.id] = "필수 답변 항목입니다.";
         continue;
       }
 
       // ✅ 학번 체크
-      if (q.id === STUDENT_ID && q.answer.trim()) {
-        const status = mockCheckStudentId(q.answer.trim());
+      if (q.id === STUDENT_ID && answer.trim()) {
+        const status = mockCheckStudentId(answer.trim());
         setStudentStatus(status);
 
         if (status !== "valid") {
@@ -170,8 +209,8 @@ export default function ApplyForm({
       }
 
       // ✅ 비밀번호 체크 (4자리 숫자)
-      if (q.id === PASSWORD_ID && q.answer.trim()) {
-        if (!/^\d{4}$/.test(q.answer.trim())) {
+      if (q.id === PASSWORD_ID && answer.trim()) {
+        if (!/^\d{4}$/.test(answer.trim())) {
           newErrors[q.id] = "형식이 다릅니다. 숫자 4자리를 입력하세요.";
         } else {
           newSuccess[q.id] = "비밀번호가 설정되었습니다.";
@@ -180,7 +219,7 @@ export default function ApplyForm({
       }
 
       // ✅ 기타 pattern 기반 검증이 있는 경우
-      if (q.pattern && q.answer.trim() && !q.pattern.test(q.answer)) {
+      if (q.pattern && answer.trim() && !q.pattern.test(answer)) {
         newErrors[q.id] = q.errorMessage || "형식이 다릅니다.";
       }
     }
@@ -196,6 +235,8 @@ export default function ApplyForm({
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
+      setFiles((prev) => ({ ...prev, [id]: file }));
+      setAnswers((prev) => ({ ...prev, [id]: file.name }));
       onFileChange?.(id, file);
       onChange?.(id, file.name);
 
@@ -214,7 +255,6 @@ export default function ApplyForm({
     input.click();
   };
 
-  // ✅ 네비게이션 가드가 필요로 하는 “정보 확인 섹션 검증”
   const validateInfoSection = () => {
     const studentOk = studentStatus === "valid";
     const passwordOk = /^\d{4}$/.test(passwordAnswer);
@@ -247,10 +287,17 @@ export default function ApplyForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentStatus, passwordAnswer]);
 
-  // 버튼 상태 계산
-  const requiredFilled = questions
-    .filter((q) => q.required)
-    .every((q) => (q.type === "file" ? !!q.file || q.answer.trim() !== "" : q.answer.trim() !== ""));
+  const requiredQuestions = questions.filter(
+  (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
+);
+
+  const requiredFilled =
+    requiredQuestions.length > 0 &&
+    requiredQuestions.every((q) =>
+      q.type === "file"
+        ? !!files[q.id] || answers[q.id]?.trim() !== ""
+        : answers[q.id]?.trim() !== ""
+    );
 
   const studentValid = studentStatus === "valid";
   const passwordValid = /^\d{4}$/.test(passwordAnswer);
@@ -292,15 +339,14 @@ export default function ApplyForm({
             ? errors[item.id]
               ? styles.inputError
               : studentStatus === "valid"
-              ? styles.inputSuccess
-              : ""
+                ? styles.inputSuccess
+                : ""
             : errors[item.id]
-            ? styles.inputError
-            : success[item.id]
-            ? styles.inputSuccess
-            : "";
+              ? styles.inputError
+              : success[item.id]
+                ? styles.inputSuccess
+                : "";
 
-          // ✅ view 모드: 텍스트 입력은 textarea 대신 input/textarea 그대로 두되 readOnly 처리
           const placeholderText =
             errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
 
@@ -325,17 +371,17 @@ export default function ApplyForm({
                       errors[item.id]
                         ? styles.inputError
                         : success[item.id]
-                        ? styles.inputSuccess
-                        : "",
+                          ? styles.inputSuccess
+                          : "",
                     ].join(" ")}
-                    value={item.answer}
+                    value={answers[item.id] || ""}
                     placeholder={item.placeholder}
                     readOnly={mode === "view"}
                     onChange={(e) => {
                       const value = e.target.value;
+                      setAnswers((prev) => ({ ...prev, [item.id]: value }));
                       onChange?.(item.id, value);
 
-                      // 링크 입력 시 에러 제거
                       if (value.trim() !== "") {
                         setErrors((prev) => {
                           const next = { ...prev };
@@ -377,9 +423,9 @@ export default function ApplyForm({
                     >
                       {mode === "view"
                         ? "파일 다운로드"
-                        : item.file
-                        ? "파일 변경하기"
-                        : "파일 업로드"}
+                        : files[item.id]
+                          ? "파일 변경하기"
+                          : "파일 업로드"}
                     </button>
                   </div>
                 </div>
@@ -392,7 +438,7 @@ export default function ApplyForm({
                       isSurvey ? styles.inputDark : styles.inputLight,
                       inputStateClass,
                     ].join(" ")}
-                    value={item.answer}
+                    value={answers[item.id] || ""}
                     placeholder={placeholderText}
                     readOnly={mode === "view"}
                     rows={1}
@@ -406,15 +452,14 @@ export default function ApplyForm({
                     }}
                     onChange={(e) => {
                       const value = e.target.value;
+                      setAnswers((prev) => ({ ...prev, [item.id]: value }));
                       onChange?.(item.id, value);
 
-                      // 자동 높이 조절
                       const textarea = e.target;
                       textarea.style.height = "auto";
                       textarea.style.height = `${textarea.scrollHeight}px`;
 
                       if (isStudentField) {
-                        // 학번 입력 중이면 에러 초기화 + 상태 업데이트
                         setErrors((prev) => {
                           const next = { ...prev };
                           delete next[STUDENT_ID];
@@ -477,8 +522,8 @@ export default function ApplyForm({
                         errors[item.id]
                           ? styles.errorText
                           : studentStatus === "valid"
-                          ? styles.successText
-                          : styles.errorText
+                            ? styles.successText
+                            : styles.errorText
                       }
                     >
                       {errors[item.id] ||
@@ -748,16 +793,22 @@ export default function ApplyForm({
               작성 중인 지원서는 저장되지 않습니다.
             </span>
           }
-          extraText="현재까지 작성한 내용을 임시 저장할까요?"
+          extraText={
+            <span>
+              지원서 작성을 취소하고, 페이지를 나갈까요?<br />
+              작성된 내용은 저장되지 않습니다.
+            </span>
+          }
           primaryButton={{
-            text: "뒤로 가기",
+            text: "나가기",
             onClick: () => {
+              setForceLeave(true); // 강제 이동 플래그 켬
               setModalOpen(false);
-              window.history.back();
+              window.history.back(); // 이제 실제로 이동
             },
           }}
           secondaryButton={{
-            text: "계속 작성",
+            text: "지원서로 돌아가기",
             onClick: () => setModalOpen(false),
           }}
           onClose={() => setModalOpen(false)}
@@ -766,4 +817,3 @@ export default function ApplyForm({
     </section>
   );
 }
-

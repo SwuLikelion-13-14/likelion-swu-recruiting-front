@@ -9,7 +9,7 @@
 }
 
 .bgDark {
-  background: rgb(var(--alpha-black-50));
+  background: rgb(var(--alpha-black-75));
 }
 
 .bgResult {

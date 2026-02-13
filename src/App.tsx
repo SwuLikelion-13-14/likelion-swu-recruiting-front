@@ -1,3 +1,4 @@
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./pages/home/HomePage";
@@ -12,7 +13,7 @@ import ApplyPage from "@/pages/apply/ApplyPage";
 import RecruitTrackPage from "./pages/apply/RecruitTrackPage";
 import FrontPage from "@/pages/apply/FrontPage";
 import DesignPage from "./pages/apply/DesignPage";
-import BackPage from "@/pages/apply/BackPage";
+import BackPage from "./pages/apply/BackPage";
 
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminApplicationsPage from "@/pages/admin/AdminApplicationsPage";
@@ -20,6 +21,12 @@ import AdminApplicationDetailPage from "@/pages/admin/AdminApplicationDetailPage
 import AdminSchedulePage from "@/pages/admin/AdminSchedulePage";
 
 import MobileGuardModal from "@/components/MobileGuardModal";
+
+const ProtectedAdmin = ({ children }: { children: React.ReactNode }) => {
+  const isAuth = localStorage.getItem("admin-auth") === "true";
+  if (!isAuth) return <Navigate to="/" replace />;
+  return <>{children}</>;
+};
 
 const App = () => {
   return (
@@ -40,7 +47,14 @@ const App = () => {
         <Route path="/design" element={<DesignPage />} />
         <Route path="/back" element={<BackPage />} />
 
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route
+          path="/admin"
+          element={
+            <ProtectedAdmin>
+              <AdminLayout />
+            </ProtectedAdmin>
+          }
+        >
           <Route index element={<Navigate to="applications" replace />} />
           <Route path="applications" element={<AdminApplicationsPage />} />
           <Route path="schedule" element={<AdminSchedulePage />} />

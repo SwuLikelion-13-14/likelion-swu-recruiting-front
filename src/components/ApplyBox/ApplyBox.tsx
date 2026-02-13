@@ -1,12 +1,11 @@
 import { useState } from 'react';
+import { api } from '@/api/client'
 import styles from './ApplyBox.module.css';
 import Logo from '@/assets/icon/logo_small_orange.svg';
 import OrIcon from '@/assets/icon/or_svg.svg';
 import { useNavigate } from 'react-router-dom';
 
-
 const ApplyBox = () => {
-
     const navigate = useNavigate();
 
     const [studentId, setStudentId] = useState('');
@@ -15,63 +14,86 @@ const ApplyBox = () => {
     const [passwordError, setPasswordError] = useState('');
     const [studentFocused, setStudentFocused] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    // 더미 DB
-    const mockDB = [
-        { studentId: '2025123456', password: '1234' },
-        { studentId: '2022123456', password: '0000' }
-    ];
-
-    // 검증 함수
-    const handleCheck = () => {
+    // 검증 함수 (API 호출)
+    const handleCheck = async () => {
         setStudentError('');
         setPasswordError('');
+        setLoading(true);
 
-        const record = mockDB.find(d => d.studentId === studentId);
+        try {
+            const res = await api.post('/api/users/me', {
+                student_id: studentId,
+                password: password
+            });
 
-        // 학번 없음
-        if (!record) {
-            setStudentError('지원한 기록이 없습니다. 새로운 지원서를 작성해주세요.');
-            setPassword('');
-            return;
+            const data = res.data;
+
+            console.log("🔹 서버 응답:", data); // ✅ 관리자 여부 포함 전체 응답 확인용
+
+            if (data.isSuccess) {
+                if (data.result.role === 'ADMIN') {
+                    console.log("관리자 계정 확인 완료! /admin 이동 가능");
+                    localStorage.setItem('admin-auth', 'true');
+                    navigate('/admin');
+                } else if (data.result.applicationRsDTO) {
+                    const field = data.result.applicationRsDTO.applicationField; // "FRONT" / "DESIGN" / "BACK" 등
+                    let path = '/front'; // 기본값
+
+                    if (field === 'FRONT') path = '/front';
+                    else if (field === 'PND') path = '/design';
+                    else if (field === 'BACK') path = '/back';
+                    else path = '/front'; // 그 외는 프론트로 fallback
+
+                    navigate(path, {
+                        state: { applicationData: data.result.applicationRsDTO } // 답안 데이터 전달
+                    });
+                } else {
+                    setStudentError('지원서 정보가 없습니다. 관리자에게 문의하세요.');
+                }
+            }
+        } catch (err: any) {
+            const errorData = err.response?.data;
+            const status = err.response?.status;
+
+            console.log("❌ 요청 실패", errorData, "상태 코드:", status); // ✅ 실패 응답 확인용
+
+            if (status === 400) {
+                // 지원서 없는 학번, 관리자 계정 등
+                setStudentError(errorData?.message || '지원한 기록이 없습니다. 새로운 지원서를 작성해주세요.');
+                setPassword('');
+            } else if (status === 401) {
+                // 비밀번호 틀림
+                setPasswordError(errorData?.message || '비밀번호가 일치하지 않습니다.');
+            } else if (!errorData) {
+                setStudentError('서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+            } else {
+                // 예상치 못한 오류
+                setStudentError(errorData.message || '알 수 없는 오류가 발생했습니다.');
+            }
+        } finally {
+            setLoading(false);
         }
-
-        // 비밀번호 틀림
-        if (record.password !== password) {
-            setPasswordError('비밀번호가 올바르지 않습니다.');
-            return;
-        }
-
-        // 성공
-        navigate('/my-application');
     };
-
 
     return (
         <div className={styles.wrapper}>
-            {/* 원형 그래디언트 배경 */}
             <div className={styles.gradientCircle1} />
             <div className={styles.gradientCircle2} />
 
-            {/* 콘텐츠 영역 */}
             <div className={styles.content}>
-                {/* 상단 로고 아이콘 */}
                 <img src={Logo} alt="Logo" className={styles.topIcon} />
-
-                {/* 타이틀 */}
                 <h2 className={styles.title}>지원서 작성</h2>
-
-                {/* 타이틀 아래 한 줄 텍스트 */}
                 <p className={styles.subText}>작성했던 지원서가 있나요?</p>
 
-                {/* 학번 & 비밀번호 입력 */}
                 <div className={styles.inputGroup}>
                     <div className={styles.inputField}>
                         <label>학번</label>
                         <input
-                            placeholder={studentFocused ? '' : '학번 10자리를 입력하세요'} // 포커스 시 placeholder 비움
+                            placeholder={studentFocused ? '' : '학번 10자리를 입력하세요'}
                             value={studentId}
-                            onFocus={() => setStudentFocused(true)}  // 포커스 시작
+                            onFocus={() => setStudentFocused(true)}
                             onBlur={() => setStudentFocused(false)}
                             onChange={e => {
                                 setStudentId(e.target.value);
@@ -79,9 +101,7 @@ const ApplyBox = () => {
                             }}
                             className={studentError ? styles.errorInput : ''}
                         />
-                        {studentError && (
-                            <div className={styles.errorText}>{studentError}</div>
-                        )}
+                        {studentError && <div className={styles.errorText}>{studentError}</div>}
                     </div>
                     <div className={styles.inputField}>
                         <label>비밀번호</label>
@@ -97,26 +117,31 @@ const ApplyBox = () => {
                             }}
                             className={passwordError ? styles.errorInput : ''}
                         />
-                        {passwordError && (
-                            <div className={styles.errorText}>{passwordError}</div>
-                        )}
+                        {passwordError && <div className={styles.errorText}>{passwordError}</div>}
                     </div>
                 </div>
 
-                {/* 버튼들 */}
-                <button className={styles.primaryButton} onClick={handleCheck}>내 지원서 보기</button>
+                <button
+                    className={styles.primaryButton}
+                    onClick={handleCheck}
+                    disabled={loading}
+                >
+                    {loading ? '확인 중...' : '내 지원서 보기'}
+                </button>
 
-                {/* 버튼 사이 라인 + or 아이콘 */}
                 <div className={styles.orWrapper}>
                     <div className={styles.orLine}></div>
                     <img src={OrIcon} alt="or" className={styles.orIcon} />
                     <div className={styles.orLine}></div>
                 </div>
 
-
                 <p className={styles.subText}>지원서를 처음 작성하시나요?</p>
-
-                <button className={styles.secondaryButton} onClick={() => navigate('/recruit-track')}>새 지원서 작성하기</button>
+                <button
+                    className={styles.secondaryButton}
+                    onClick={() => navigate('/recruit-track')}
+                >
+                    새 지원서 작성하기
+                </button>
             </div>
         </div>
     );

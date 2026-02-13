@@ -65,20 +65,34 @@ export default function SessionCurriculum({
   );
 
   const defaultFE: CurriculumItem[] = useMemo(
-    () =>
-      Array.from({ length: 10 }).map((_, i) => ({
-        week: i + 1,
-        title: '커리큘럼 준비중',
-      })),
+    () => [
+      { week: 1, title: 'HTML & CSS 핵심' },
+      { week: 2, title: 'CSS 레이아웃 & 반응형 설계' },
+      { week: 3, title: 'JavaScript 기초 & DOM 조작' },
+      { week: 4, title: 'JavaScript 비동기 & 데이터 흐름' },
+      { week: 5, title: 'React 시작하기 - 컴포넌트 사고' },
+      { week: 6, title: '상태(State)와 Effect' },
+      { week: 7, title: 'React Router와 동적 라우팅' },
+      { week: 8, title: 'TypeScript 기본' },
+      { week: 9, title: 'Supabase 연동' },
+      { week: 10, title: '최종 서비스 완성' },
+    ],
     []
   );
 
   const defaultBE: CurriculumItem[] = useMemo(
-    () =>
-      Array.from({ length: 10 }).map((_, i) => ({
-        week: i + 1,
-        title: '커리큘럼 준비중',
-      })),
+    () => [
+      { week: 1, title: 'Java 핵심 문법' },
+      { week: 2, title: '객체지향 프로그래밍 I - 클래스와 캡슐화' },
+      { week: 3, title: '객체지향 프로그래밍 II - 상속/다형성/추상화' },
+      { week: 4, title: 'Java Collections' },
+      { week: 5, title: 'Java로 배우는 IoC/DI' },
+      { week: 6, title: 'Spring Boot 전환' },
+      { week: 7, title: 'REST API 설계(CRUD)' },
+      { week: 8, title: 'JPA 기초 & 영속성 컨텍스트' },
+      { week: 9, title: '연관관계 & 트랜잭션' },
+      { week: 10, title: '프로젝트 완성' },
+    ],
     []
   );
 
