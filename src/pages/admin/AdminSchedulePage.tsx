@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import CalendarIcon from "@/assets/icon/admin_calendar.svg?react";
 import ScheduleDateTimePopup, {
@@ -6,20 +6,19 @@ import ScheduleDateTimePopup, {
 } from "@/components/admin/domain/schedule/ScheduleDateTimePopup";
 
 type FieldKey = "docDeadline" | "docResult" | "finalResult";
-
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
-
 function formatValue(v: DateTimeValue) {
   return `${v.y}.${pad2(v.m)}.${pad2(v.d)} ${v.hh}:${v.mm}`;
 }
 
-function parseOrNow(str: string): DateTimeValue {
-  const m = str.match(/^(\d{4})\.(\d{2})\.(\d{2})\s(\d{2}):(\d{2})$/);
+function parseOrNow(str?: string | null): DateTimeValue {
   const now = new Date();
+  const s = (str ?? "").trim();
+  const m = s.match(/^(\d{4})\.(\d{2})\.(\d{2})\s(\d{2}):(\d{2})$/);
   if (!m) {
     return {
       y: now.getFullYear(),
@@ -36,6 +35,16 @@ function parseOrNow(str: string): DateTimeValue {
     hh: m[4],
     mm: m[5],
   };
+}
+
+function isoToDisplay(iso: string) {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = pad2(d.getMonth() + 1);
+  const day = pad2(d.getDate());
+  const hh = pad2(d.getHours());
+  const mm = pad2(d.getMinutes());
+  return `${y}.${m}.${day} ${hh}:${mm}`;
 }
 
 function clampMonth(y: number, m: number) {
@@ -145,6 +154,44 @@ type DeletePicResponse = {
   message: string;
 };
 
+type GetPicResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: string | null; 
+};
+
+type UploadPicResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: string | null; 
+};
+
+type ScheduleItem = {
+  scheduleId: number;
+  scheduleTitle: string;
+  scheduleAt: string;
+};
+
+type GetScheduleResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: ScheduleItem[];
+};
+
+function safeJsonParse<T>(raw: string): T {
+  const t = raw.trim();
+  if (!t) throw new Error("빈 응답(바디 없음)");
+  if (t.startsWith("<")) throw new Error("API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요.");
+  return JSON.parse(t) as T;
+}
+
+function pickScheduleAt(list: ScheduleItem[], keyword: string) {
+  return list.find((x) => x.scheduleTitle.includes(keyword))?.scheduleAt;
+}
+
 export default function AdminSchedulePage() {
   const [values, setValues] = useState<Record<FieldKey, string>>({
     docDeadline: "2026.03.02 15:00",
@@ -186,7 +233,6 @@ export default function AdminSchedulePage() {
     if (wrap && page) {
       const r = wrap.getBoundingClientRect();
       const p = page.getBoundingClientRect();
-
       setAnchor({
         left: r.left - p.left + r.width + 16,
         top: r.top - p.top,
@@ -228,20 +274,13 @@ export default function AdminSchedulePage() {
     setViewY(next.y);
     setViewM(next.m);
   };
-
   const onNextMonth = () => {
     const next = clampMonth(viewY, viewM + 1);
     setViewY(next.y);
     setViewM(next.m);
   };
-
-  const onPickDay = (day: number) => {
-    setTemp((p) => ({ ...p, y: viewY, m: viewM, d: day }));
-  };
-
-  const onPickTime = (hh: string, mm: string) => {
-    setTemp((p) => ({ ...p, hh, mm }));
-  };
+  const onPickDay = (day: number) => setTemp((p) => ({ ...p, y: viewY, m: viewM, d: day }));
+  const onPickTime = (hh: string, mm: string) => setTemp((p) => ({ ...p, hh, mm }));
 
   const onDone = () => {
     if (!openKey) return;
@@ -249,36 +288,133 @@ export default function AdminSchedulePage() {
     closePopup();
   };
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const getSchedule = async () => {
+    const url = `${API_BASE}/api/admin/schedule`;
+    console.log("ADMIN SCHEDULE GET:", url);
 
-  const onPickImage = () => {
-    fileInputRef.current?.click();
+    const res = await fetch(url, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const raw = await res.text();
+    const data = safeJsonParse<GetScheduleResponse>(raw);
+    if (!data.isSuccess) throw new Error(data.message ?? "일정 조회 실패");
+
+    return data.result;
   };
 
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const list = await getSchedule();
+        if (!alive) return;
+
+        const docDeadlineAt = pickScheduleAt(list, "서류모집") ?? pickScheduleAt(list, "서류 모집");
+        const docResultAt = pickScheduleAt(list, "서류 합격 발표") ?? pickScheduleAt(list, "서류합격");
+        const finalResultAt = pickScheduleAt(list, "최종 합격 발표") ?? pickScheduleAt(list, "최종합격");
+
+        setValues((prev) => ({
+          docDeadline: docDeadlineAt ? isoToDisplay(docDeadlineAt) : prev.docDeadline,
+          docResult: docResultAt ? isoToDisplay(docResultAt) : prev.docResult,
+          finalResult: finalResultAt ? isoToDisplay(finalResultAt) : prev.finalResult,
+        }));
+
+        const base = parseOrNow(docDeadlineAt ? isoToDisplay(docDeadlineAt) : null);
+        setTemp(base);
+        setViewY(base.y);
+        setViewM(base.m);
+      } catch (e) {
+        console.error("ADMIN SCHEDULE GET ERROR:", e);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const [imageFile, setImageFile] = useState<File | null>(null); 
+  const [serverPicUrl, setServerPicUrl] = useState<string | null>(null); 
+  const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const onPickImage = () => fileInputRef.current?.click();
+
+  const getSchedulePic = async () => {
+    const url = `${API_BASE}/api/admin/schedule/pic`;
+    console.log("ADMIN SCHEDULE PIC GET:", url);
+
+    const res = await fetch(url, { method: "GET" });
+    if (!res.ok) return null;
+
+    const raw = await res.text();
+    const data = safeJsonParse<GetPicResponse>(raw);
+    if (!data.isSuccess) return null;
+
+    const v = (data.result ?? "").trim();
+    return v ? v : null;
+  };
+
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const v = await getSchedulePic();
+        if (!alive) return;
+        setServerPicUrl(v);
+      } catch (e) {
+        console.error("ADMIN SCHEDULE PIC GET ERROR:", e);
+        if (!alive) return;
+        setServerPicUrl(null);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const uploadSchedulePic = async (file: File) => {
+    const url = `${API_BASE}/api/admin/schedule/pic`;
+    console.log("ADMIN SCHEDULE PIC POST:", url);
+
+    const form = new FormData();
+    form.append("image", file);
+
+    const res = await fetch(url, { method: "POST", body: form });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.error("[UPLOAD FAIL]", res.status, errText);
+      throw new Error(`HTTP ${res.status}${errText ? ` - ${errText}` : ""}`);
+    }
+
+    const raw = await res.text();
+    const data = safeJsonParse<UploadPicResponse>(raw);
+
+    if (!data.isSuccess) {
+      throw new Error(data.message ?? "사진 업로드 실패");
+    }
+
+    const urlValue = (data.result ?? "").trim();
+    return urlValue ? urlValue : null;
+  };
 
   const deleteSchedulePic = async () => {
     const url = `${API_BASE}/api/admin/schedule/pic`;
+    console.log("ADMIN SCHEDULE PIC DELETE:", url);
 
-    const res = await fetch(url, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-    });
-
+    const res = await fetch(url, { method: "DELETE" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const raw = await res.text();
     if (!raw) return;
 
-    if (raw.trim().startsWith("<")) {
-      throw new Error("API 대신 HTML을 받았습니다. URL 또는 서버 설정 확인 필요.");
-    }
-
-    const data: DeletePicResponse = JSON.parse(raw);
-    if (data.isSuccess === false) {
-      throw new Error(data.message ?? "삭제 실패");
-    }
+    const data: DeletePicResponse = safeJsonParse(raw);
+    if (data.isSuccess === false) throw new Error(data.message ?? "삭제 실패");
   };
 
   const onDeleteImage = async () => {
@@ -287,7 +423,8 @@ export default function AdminSchedulePage() {
     try {
       setDeleting(true);
       await deleteSchedulePic();
-      setImageFile(null); 
+      setImageFile(null);
+      setServerPicUrl(null);
     } catch (e: any) {
       console.error("DELETE SCHEDULE PIC ERROR:", e);
       alert(e?.message ?? "사진 삭제에 실패했어요.");
@@ -296,13 +433,14 @@ export default function AdminSchedulePage() {
     }
   };
 
+  const hasServerPic = Boolean(serverPicUrl);
+  const displayText =
+    imageFile?.name ??
+    (serverPicUrl ? serverPicUrl.split("/").pop() ?? serverPicUrl : null);
+
   return (
     <div className="min-w-[980px]">
-      <div
-        ref={pageRef}
-        className="pl-[40px] pt-[80px] pb-20"
-        style={{ position: "relative" }}
-      >
+      <div ref={pageRef} className="pl-[40px] pt-[80px] pb-20" style={{ position: "relative" }}>
         <h1 style={{ ...TITLE_STYLE, marginBottom: 24 }}>일정</h1>
 
         <DateField
@@ -327,15 +465,38 @@ export default function AdminSchedulePage() {
             type="file"
             accept="image/*"
             style={{ display: "none" }}
-            onChange={(e) => {
+            onChange={async (e) => {
               const f = e.target.files?.[0] ?? null;
-              setImageFile(f);
               e.currentTarget.value = "";
+              if (!f) return;
+
+              setImageFile(f);
+
+              if (uploading) return;
+              try {
+                setUploading(true);
+                const uploadedUrl = await uploadSchedulePic(f);
+                if (uploadedUrl) setServerPicUrl(uploadedUrl);
+              } catch (err: any) {
+                console.error("UPLOAD SCHEDULE PIC ERROR:", err);
+                alert(err?.message ?? "사진 업로드에 실패했어요.");
+              } finally {
+                setUploading(false);
+              }
             }}
           />
 
-          {!imageFile ? (
-            <button type="button" style={UPLOAD_BTN_STYLE} onClick={onPickImage}>
+          {!hasServerPic && !imageFile ? (
+            <button
+              type="button"
+              style={{
+                ...UPLOAD_BTN_STYLE,
+                opacity: uploading ? 0.6 : 1,
+                cursor: uploading ? "not-allowed" : "pointer",
+              }}
+              onClick={onPickImage}
+              disabled={uploading}
+            >
               사진 등록
             </button>
           ) : (
@@ -349,25 +510,34 @@ export default function AdminSchedulePage() {
                   lineHeight: "normal",
                 }}
               >
-                {imageFile.name}
+                {displayText ?? "사진"}
               </span>
 
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <button type="button" onClick={onPickImage} style={UPLOAD_BTN_STYLE}>
+                <button
+                  type="button"
+                  onClick={onPickImage}
+                  style={{
+                    ...UPLOAD_BTN_STYLE,
+                    opacity: uploading ? 0.6 : 1,
+                    cursor: uploading ? "not-allowed" : "pointer",
+                  }}
+                  disabled={uploading}
+                >
                   사진 수정
                 </button>
 
                 <button
                   type="button"
                   onClick={onDeleteImage}
-                  disabled={deleting}
+                  disabled={deleting || uploading}
                   style={{
                     ...UPLOAD_BTN_STYLE,
                     background: "#D1D1D1",
                     border: "none",
                     color: "#1A1A1A",
-                    opacity: deleting ? 0.6 : 1,
-                    cursor: deleting ? "not-allowed" : "pointer",
+                    opacity: deleting || uploading ? 0.6 : 1,
+                    cursor: deleting || uploading ? "not-allowed" : "pointer",
                   }}
                 >
                   사진 삭제
