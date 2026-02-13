@@ -400,17 +400,6 @@ h1 {
   transition: all 0.3s ease;
 }
 
-.projectCard:hover .projectHeader {
-  flex-direction: row;
-  align-items: center;
-}
-
-.projectCard:hover .projectCategory {
-  display: inline-block;
-  margin-left: 8px;
-  order: 1;
-}
-
 .projectName {
   margin: 0;
   font-size: 20px;
