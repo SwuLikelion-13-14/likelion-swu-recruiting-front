@@ -7,7 +7,7 @@ import Banner from '@/components/ActivityContent/Banner'
 import styles from './TrackApplyPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS, BACKEND_QUESTIONS } from '@/constants/applyQuestions'
 import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
-import { useLocation } from 'react-router-dom'
+
 
 type ApiQuestion = {
     id: number
@@ -28,8 +28,6 @@ const mergeQuestions = (dummy: Question[], api: ApiQuestion[]) => {
 }
 
 const BackPage = () => {
-    const location = useLocation();
-    const applicationData = location.state?.applicationData; 
 
     const [sets, setSets] = useState<
         { title: string; subtitle?: string; questions: Question[] }[]

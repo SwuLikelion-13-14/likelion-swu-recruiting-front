@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
 import logoWhite from '@/assets/icon/logo_white.svg';
@@ -32,10 +32,9 @@ export const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
-  const location = useLocation();
-  const isApplyPage = location.pathname.startsWith('/apply');
 
-  const { isDirty, validateDraft } = useNavigationGuard();
+
+  const { isDirty } = useNavigationGuard();
   const [warningOpen, setWarningOpen] = useState(false);
 
   // isDirty 최신 상태를 항상 참조하도록 ref 사용
