@@ -35,7 +35,7 @@ const DesignPage = () => {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const res = await api.get('/recruit/application/PND')
+                const res = await api.get('/api/recruit/application/PND')
 
                 const apiQuestions: { id: number; questionText: string }[] =
                     Array.isArray(res?.data?.result) ? res.data.result : []
@@ -234,7 +234,7 @@ const DesignPage = () => {
             }
 
             // 7️⃣ API 호출
-            const res = await api.post('/recruit/application/PND/', formData, {
+            const res = await api.post('/api/recruit/application/PND/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -317,7 +317,7 @@ const DesignPage = () => {
                 formData.append('portfolioFile', portfolioFile)
             }
 
-            const res = await api.post('/recruit/application/PND/', formData, {
+            const res = await api.post('/api/recruit/application/PND/', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

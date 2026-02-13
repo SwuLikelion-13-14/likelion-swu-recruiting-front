@@ -44,7 +44,7 @@ const BackPage = () => {
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
-                const res = await api.get('/recruit/application/BACK')
+                const res = await api.get('/api/recruit/application/BACK')
                 const apiQuestions: ApiQuestion[] =
                     Array.isArray(res?.data?.result) ? res.data.result : []
 
@@ -92,67 +92,94 @@ const BackPage = () => {
         )
     }
 
-    const buildPayload = (applicationField2: number) => {
-        const studentId = allQuestions.find(q => q.id === 15)?.answer || ''
-        const password = allQuestions.find(q => q.id === 16)?.answer || ''
-        if (!studentId || !password) {
-            alert('학번과 비밀번호를 입력해주세요!')
-            return null
-        }
+  const buildPayload = (applicationField2: number) => {
+    // ✅ CHECK_QUESTIONS의 학번/비밀번호 (15, 16번)
+    const checkStudentId = allQuestions.find(q => q.id === 15)?.answer || ''
+    const password = allQuestions.find(q => q.id === 16)?.answer || ''
 
-        const userInfoDTO = {
-            name: allQuestions.find(q => q.id === 1)?.answer || '',
-            studentId,
-            password,
-            major: allQuestions.find(q => q.id === 3)?.answer || '',
-            doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
-            schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
-            phone: allQuestions.find(q => q.id === 6)?.answer || '',
-            email: allQuestions.find(q => q.id === 7)?.answer || '',
-        }
-
-        const responses = allQuestions.map(q => ({ questionId: q.id, responseText: q.answer || '' }))
-
-        const portfolioQuestion = allQuestions.find(q => q.type === 'file')
-        const portfolioFile = portfolioQuestion?.file
-        const portfolioLink = portfolioQuestion?.answer || ''
-
-        const dtoPayload = { applicationField2, userInfoDTO, responses, portfolioLink: portfolioFile ? '' : portfolioLink }
-
-        const formData = new FormData()
-        formData.append('dto', new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' }))
-        if (portfolioFile) formData.append('portfolioFile', portfolioFile)
-
-        return formData
+    if (!checkStudentId || !password) {
+        alert('학번과 비밀번호를 입력해주세요!')
+        return null
     }
 
-    const handleFinalSubmit = async () => {
-        try {
-            const formData = buildPayload(1)
-            if (!formData) return
-
-            const res = await api.post('/recruit/application/BACK/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-            alert('지원서가 성공적으로 제출되었습니다!')
-            console.log(res.data)
-        } catch (err) {
-            console.error('제출 실패:', err)
-            alert('제출 실패')
-        }
+    // ✅ userInfoDTO는 기본정보(1~7번) 사용
+    const userInfoDTO = {
+        name: allQuestions.find(q => q.id === 1)?.answer || '',
+        studentId: allQuestions.find(q => q.id === 2)?.answer || '',
+        password: password,
+        major: allQuestions.find(q => q.id === 3)?.answer || '',
+        doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
+        schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
+        phone: allQuestions.find(q => q.id === 6)?.answer || '',
+        email: allQuestions.find(q => q.id === 7)?.answer || '',
     }
 
-    const handleDraftSave = async () => {
-        try {
-            const formData = buildPayload(2)
-            if (!formData) return
+    // ✅ responses는 공통질문(8~14) + 백엔드질문(17~19)
+    const responses = allQuestions
+        .filter(q => (q.id >= 8 && q.id <= 14) || (q.id >= 17 && q.id <= 19))
+        .map(q => ({
+            questionId: q.id,
+            responseText: q.answer || '',
+        }))
 
-            const res = await api.post('/recruit/application/BACK/', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-            alert('임시 저장되었습니다!')
-            console.log(res.data)
-        } catch (err) {
-            console.error('임시 저장 실패:', err)
-            alert('임시 저장 실패')
-        }
+    // ✅ 포트폴리오 처리
+    const portfolioQuestion = allQuestions.find(q => q.id === 14)
+    const portfolioFile = portfolioQuestion?.file
+    const portfolioLink = portfolioQuestion?.answer || ''
+
+    const dtoPayload = {
+        applicationField2,
+        userInfoDTO,
+        responses,
+        portfolioLink: portfolioFile ? '' : portfolioLink,
     }
+
+    console.log('=== 전송 데이터 확인 ===')
+    console.log('userInfoDTO:', userInfoDTO)
+    console.log('responses:', responses)
+    console.log('portfolioFile:', portfolioFile)
+
+    const formData = new FormData()
+    formData.append('dto', new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' }))
+    // ✅ portfolioFile 없으면 빈 파일로 append
+    formData.append('portfolioFile', portfolioFile || new File([], 'empty.txt'))
+
+    // ✅ 디버깅용 FormData 확인
+    for (let pair of formData.entries()) {
+        console.log('FormData', pair[0], pair[1])
+    }
+
+    return formData
+}
+
+const handleFinalSubmit = async () => {
+    try {
+        const formData = buildPayload(1)
+        if (!formData) return
+
+        // ✅ headers 제거하고 기본 multipart/form-data 사용
+        const res = await api.post('/api/recruit/application/BACK/', formData)
+        alert('지원서가 성공적으로 제출되었습니다!')
+        console.log(res.data)
+    } catch (err) {
+        console.error('제출 실패:', err)
+        alert('제출 실패')
+    }
+}
+
+const handleDraftSave = async () => {
+    try {
+        const formData = buildPayload(2)
+        if (!formData) return
+
+        const res = await api.post('/api/recruit/application/BACK/', formData)
+        alert('임시 저장되었습니다!')
+        console.log(res.data)
+    } catch (err) {
+        console.error('임시 저장 실패:', err)
+        alert('임시 저장 실패')
+    }
+}
 
     return (
         <div className={styles.page}>

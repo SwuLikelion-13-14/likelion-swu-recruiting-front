@@ -62,6 +62,7 @@ const ApplyBox = () => {
             if (status === 400) {
                 // 지원서 없는 학번, 관리자 계정 등
                 setStudentError(errorData?.message || '지원한 기록이 없습니다. 새로운 지원서를 작성해주세요.');
+                setPassword('');
             } else if (status === 401) {
                 // 비밀번호 틀림
                 setPasswordError(errorData?.message || '비밀번호가 일치하지 않습니다.');
