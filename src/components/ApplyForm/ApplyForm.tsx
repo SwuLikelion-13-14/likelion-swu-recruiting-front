@@ -69,7 +69,6 @@ export default function ApplyForm({
   const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
     {}
   );
-  const [forceLeave, setForceLeave] = useState(false);
 
 
   const { setDirty, registerValidator } = useNavigationGuard();
@@ -147,25 +146,6 @@ export default function ApplyForm({
     }
   }, [studentStatus]);
 
-  // ✅ 뒤로가기(leave) 가드: 입력이 있을 때만
-  useEffect(() => {
-    const handleBack = (e: PopStateEvent) => {
-      if (forceLeave || !hasAnyInput) return; // 강제 이동이면 막지 않음
-
-      e.preventDefault();
-      window.history.pushState(null, "", window.location.href);
-
-      setModalType("leave");
-      setModalOpen(true);
-    };
-
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", handleBack);
-
-    return () => {
-      window.removeEventListener("popstate", handleBack);
-    };
-  }, [hasAnyInput, forceLeave]);
 
 
   const handleBlur = (currentId: number, allQ: Question[]) => {
@@ -812,7 +792,7 @@ export default function ApplyForm({
           primaryButton={{
             text: "나가기",
             onClick: () => {
-              setForceLeave(true); // 강제 이동 플래그 켬
+            
               setModalOpen(false);
               window.history.back(); // 이제 실제로 이동
             },
