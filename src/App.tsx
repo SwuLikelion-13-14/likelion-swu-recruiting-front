@@ -1,3 +1,4 @@
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "./pages/home/HomePage";
@@ -19,51 +20,51 @@ import AdminApplicationsPage from "@/pages/admin/AdminApplicationsPage";
 import AdminApplicationDetailPage from "@/pages/admin/AdminApplicationDetailPage";
 import AdminSchedulePage from "@/pages/admin/AdminSchedulePage";
 
+import MobileGuardModal from "@/components/MobileGuardModal";
+
 const ProtectedAdmin = ({ children }: { children: React.ReactNode }) => {
-  const isAuth = localStorage.getItem('admin-auth') === 'true';
-
-  if (!isAuth) {
-    return <Navigate to="/" replace />;
-  }
-
+  const isAuth = localStorage.getItem("admin-auth") === "true";
+  if (!isAuth) return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
-
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/annual-plan" element={<AnnualPlanPage />} />
-      <Route path="/project-list" element={<ProjectListPage />} />
-      <Route path="/faq" element={<FaqPage />} />
-      <Route path="/apply" element={<ApplyPage />} />
-      <Route path="/activity-content" element={<ActivityContentPage />} />
-      <Route path="/leaders" element={<LeadersPage />} />
-      <Route path="/recruit" element={<RecruitPage />} />
-      <Route path="/recruit-track" element={<RecruitTrackPage />} />
-      <Route path="/front" element={<FrontPage />} />
-      <Route path="/design" element={<DesignPage />} />
-      <Route path="/back" element={<BackPage />} />
+    <>
+      <MobileGuardModal breakpoint={375} />
 
-      <Route
-        path="/admin"
-        element={
-          <ProtectedAdmin>
-            <AdminLayout />
-          </ProtectedAdmin>
-        }
-      >
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/annual-plan" element={<AnnualPlanPage />} />
+        <Route path="/project-list" element={<ProjectListPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/apply" element={<ApplyPage />} />
+        <Route path="/activity-content" element={<ActivityContentPage />} />
+        <Route path="/leaders" element={<LeadersPage />} />
+        <Route path="/recruit" element={<RecruitPage />} />
+        <Route path="/recruit-track" element={<RecruitTrackPage />} />
+        <Route path="/front" element={<FrontPage />} />
+        <Route path="/design" element={<DesignPage />} />
+        <Route path="/back" element={<BackPage />} />
 
-        <Route index element={<Navigate to="applications" replace />} />
-        <Route path="applications" element={<AdminApplicationsPage />} />
-        <Route path="schedule" element={<AdminSchedulePage />} />
         <Route
-          path="applications/detail/:code"
-          element={<AdminApplicationDetailPage />}
-        />
-      </Route>
-    </Routes>
+          path="/admin"
+          element={
+            <ProtectedAdmin>
+              <AdminLayout />
+            </ProtectedAdmin>
+          }
+        >
+          <Route index element={<Navigate to="applications" replace />} />
+          <Route path="applications" element={<AdminApplicationsPage />} />
+          <Route path="schedule" element={<AdminSchedulePage />} />
+          <Route
+            path="applications/detail/:code"
+            element={<AdminApplicationDetailPage />}
+          />
+        </Route>
+      </Routes>
+    </>
   );
 };
 
