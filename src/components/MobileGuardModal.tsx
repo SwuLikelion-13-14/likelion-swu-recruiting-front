@@ -57,11 +57,7 @@ export default function MobileGuardModal({ breakpoint = 768 }: Props) {
 
     if (isMobileDevice && typeof navigator.share === "function") {
       try {
-        await navigator.share({
-          title: "서울여대 멋쟁이사자처럼 14기",
-          text: "PC 환경으로 접속해 주세요.",
-          url,
-        });
+        await navigator.share({ url });
         return;
       } catch {
         return;
