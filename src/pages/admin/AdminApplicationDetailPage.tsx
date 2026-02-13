@@ -14,7 +14,7 @@ type Track = "FRONT" | "BACK" | "PND";
 
 type ApiAnswer = {
   questionId: number;
-  part: string; 
+  part: string; // "BASIC" | "FRONT" | "BACK" | "PND" 등 (서버 값 그대로)
   no: number;
   question: string;
   responseText: string;
@@ -49,6 +49,7 @@ type ApplicantDetailFromState = {
 type LocationState = {
   applicant?: ApplicantDetailFromState;
   partLabel?: string;
+  from?: string; 
 };
 
 const TRACK_LABEL: Record<Track, string> = {
@@ -86,7 +87,7 @@ function toViewQuestion(a: ApiAnswer): Question {
 
 export default function AdminApplicationDetailPage() {
   const navigate = useNavigate();
-  const { code } = useParams<{ code: string }>(); 
+  const { code } = useParams<{ code: string }>(); // 여기 code = responseId (문자열)
   const { state } = useLocation() as { state: LocationState | null };
 
   const responseId = useMemo(() => {
@@ -106,6 +107,12 @@ export default function AdminApplicationDetailPage() {
   );
 
   const [consentChecked, setConsentChecked] = useState<boolean>(true);
+
+  const goBackToList = () => {
+    const fallback = "/admin/applications";
+    const to = state?.from || fallback;
+    navigate(to, { replace: true });
+  };
 
   useEffect(() => {
     if (!responseId) {
@@ -169,6 +176,7 @@ export default function AdminApplicationDetailPage() {
       .sort((a, b) => a.no - b.no)
       .map(toViewQuestion);
 
+    // BASIC이 비어있어도 이름 정도는 보여주기
     if (basics.length === 0) {
       return [
         {
@@ -187,14 +195,17 @@ export default function AdminApplicationDetailPage() {
   const commonQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
 
+    // BASIC 제외 나머지(공통+파트 질문 포함)
     const others = (detail.answers ?? [])
       .filter((a) => a.part !== "BASIC")
       .sort((a, b) => {
+        // part 그룹 정렬 + no 정렬
         if (a.part === b.part) return a.no - b.no;
         return String(a.part).localeCompare(String(b.part));
       })
       .map(toViewQuestion);
 
+    // 포트폴리오 파일이 있으면 마지막에 file 질문 추가
     const hasFile = !!detail.fileUrl;
     if (hasFile) {
       others.push({
@@ -209,6 +220,7 @@ export default function AdminApplicationDetailPage() {
     return others;
   }, [detail]);
 
+  // 최종 확인(현재 API에 없음) — UI 유지용 빈 섹션(원하면 숨겨도 됨)
   const finalCheckQuestions: Question[] = useMemo(
     () => [
       {
@@ -218,16 +230,24 @@ export default function AdminApplicationDetailPage() {
         answer: "",
         placeholder: "학번 10자리를 입력해 주세요",
       },
+      {
+        id: 202,
+        question: "본인 확인용 비밀번호",
+        type: "text",
+        answer: "",
+        placeholder: "숫자 4자리를 입력해 주세요",
+      },
     ],
     []
   );
 
+  // 상세 페이지 타이틀에 쓸 이름
   const displayName = detail?.name || applicantFromState?.name || code || "";
 
   if (!responseId) {
     return (
       <div className="p-6">
-        <button onClick={() => navigate(-1)}>← 뒤로</button>
+        <button onClick={goBackToList}>← 목록으로</button>
         <p className="mt-4">유효하지 않은 지원 응답 ID 입니다.</p>
       </div>
     );
@@ -246,7 +266,7 @@ export default function AdminApplicationDetailPage() {
           <div className="flex items-center pl-[32px]">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={goBackToList}
               className="text-[14px] font-[500] text-[#FF7710]"
             >
               ← 목록으로
@@ -294,6 +314,15 @@ export default function AdminApplicationDetailPage() {
         ) : errorMsg ? (
           <div className="py-20 text-center">
             <p className="text-[13px] text-[#6B6B6B]">{errorMsg}</p>
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={goBackToList}
+                className="text-[13px] font-[500] text-[#FF7710]"
+              >
+                목록으로 이동
+              </button>
+            </div>
           </div>
         ) : (
           <>
