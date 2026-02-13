@@ -448,41 +448,6 @@ h1 {
   justify-self: end;
 }
 
-@media (max-width: 1024px) {
-  .projectGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .projectGrid {
-    grid-template-columns: 1fr;
-  }
-  
-  .content {
-    padding: 40px 20px;
-  }
-  
-  .projectContent {
-    padding: 0 20px;
-  }
-  
-  .titleContainer {
-    padding: 15px 0;
-  }
-  
-  .projectName {
-    font-size: 18px;
-  }
-  
-  .projectDescription {
-    font-size: 13px;
-    color: #FFFFFF;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
 
 /* 12th Projects */
 .project12 {

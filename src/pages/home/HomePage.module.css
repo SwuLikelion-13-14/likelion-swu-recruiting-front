@@ -78,14 +78,6 @@ html, body {
   box-sizing: border-box;
 }
 
-/* For smaller screens */
-@media (max-width: 1200px) {
-  .cardsSection {
-    margin-left: 2rem;
-    padding-right: 2rem;
-  }
-}
-
 /* 카드 스타일 */
 .card {
   width: 580px;               
@@ -182,13 +174,6 @@ html, body {
   opacity: 1;
 }
 
-/* GIF Container Styles */
-
-@media (max-width: 1200px) {
-  .gifContainer {
-    display: none; 
-  }
-}
 
 .glassFrame {
   position: relative;
