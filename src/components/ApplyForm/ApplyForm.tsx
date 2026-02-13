@@ -794,7 +794,7 @@ export default function ApplyForm({
             onClick: () => {
             
               setModalOpen(false);
-              window.history.back(); // 이제 실제로 이동
+              window.history.back(); 
             },
           }}
           secondaryButton={{
