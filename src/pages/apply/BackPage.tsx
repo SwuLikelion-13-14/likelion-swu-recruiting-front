@@ -101,6 +101,11 @@ const BackPage = () => {
         alert('학번과 비밀번호를 입력해주세요!')
         return null
     }
+    console.log('=== 질문 전체 상태 ===')
+allQuestions.forEach(q => {
+  console.log('ID:', q.id, '| 질문:', q.question, '| 답:', q.answer)
+})
+
 
     // ✅ userInfoDTO는 기본정보(1~7번) 사용
     const userInfoDTO = {
@@ -142,7 +147,10 @@ const BackPage = () => {
     const formData = new FormData()
     formData.append('dto', new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' }))
     // ✅ portfolioFile 없으면 빈 파일로 append
-    formData.append('portfolioFile', portfolioFile || new File([], 'empty.txt'))
+    if (portfolioFile) {
+  formData.append('portfolioFile', portfolioFile)
+}
+
 
     // ✅ 디버깅용 FormData 확인
     for (let pair of formData.entries()) {

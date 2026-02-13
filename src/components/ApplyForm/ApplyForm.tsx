@@ -80,8 +80,8 @@ export default function ApplyForm({
     [allQuestions, questions]
   );
 
-  const passwordAnswer =
-    safeAllQuestions.find((q) => q.id === PASSWORD_ID)?.answer ?? "";
+  const passwordAnswer = answers[PASSWORD_ID] ?? "";
+
 
   useEffect(() => {
     const initAnswers: Record<number, string> = {};
@@ -284,9 +284,10 @@ export default function ApplyForm({
     registerValidator(validateInfoSection);
   }, [mode, registerValidator, studentStatus, passwordAnswer]);
 
-  const requiredQuestions = questions.filter(
-    (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
-  );
+  const requiredQuestions = safeAllQuestions.filter(
+  (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
+);
+
 
   const requiredFilled =
     requiredQuestions.length > 0 &&
