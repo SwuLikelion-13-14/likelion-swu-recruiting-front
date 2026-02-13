@@ -24,7 +24,7 @@ import MobileGuardModal from "@/components/MobileGuardModal";
 const App = () => {
   return (
     <>
-      <MobileGuardModal breakpoint={375} />
+      <MobileGuardModal breakpoint={768} />
 
       <Routes>
         <Route path="/" element={<HomePage />} />
