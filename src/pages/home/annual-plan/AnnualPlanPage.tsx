@@ -23,32 +23,32 @@ interface ApiResponse {
   };
 }
 
-// 타임라인 데이터
 const months = [
-  { id: 1, date: '26.01' },
-  { id: 2, date: '26.02' },
-  { id: 3, date: '26.03' },
-  { id: 4, date: '26.04' },
-  { id: 5, date: '26.05' },
-  { id: 6, date: '26.06' },
-  { id: 7, date: '26.07' },
-  { id: 8, date: '26.08' },
-  { id: 9, date: '26.09' },
-  { id: 10, date: '26.10' },
-  { id: 11, date: '26.11' },
-  { id: 12, date: '26.12' },
+  { id: 1, date: '26.01' }, { id: 2, date: '26.02' }, { id: 3, date: '26.03' },
+  { id: 4, date: '26.04' }, { id: 5, date: '26.05' }, { id: 6, date: '26.06' },
+  { id: 7, date: '26.07' }, { id: 8, date: '26.08' }, { id: 9, date: '26.09' },
+  { id: 10, date: '26.10' }, { id: 11, date: '26.11' }, { id: 12, date: '26.12' },
 ];
 
-// 날짜 문자열을 월 번호(1-12)로 변환하는 기능
-const getMonthFromDate = (dateString: string): number => {
+const getPreciseMonth = (dateString: string): number => {
   const date = new Date(dateString);
-  return date.getMonth() + 1; // getMonth()가 0-11을 반환하기 때문에 1을 더함
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const daysInMonth = new Date(date.getFullYear(), month, 0).getDate();
+  return month + (day - 1) / daysInMonth;
 };
 
-// 이벤트 유형 및 인덱스를 기반으로 상위 위치를 계산하는 기능
+const getPreciseEndMonth = (dateString: string): number => {
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const daysInMonth = new Date(date.getFullYear(), month, 0).getDate();
+  return month + (day / daysInMonth);
+};
+
 const getTopPosition = (type: string, index: number): number => {
-  const baseTop = type === 'HACKATHON' ? 70 : 20;
-  return baseTop + (index % 3) * 50; // 이벤트 수직 분배
+  const baseTop = type.toLowerCase() === 'hackathon' ? 80 : 25;
+  return baseTop + (index % 3) * 45;
 };
 
 const AnnualPlanPage = () => {
@@ -68,62 +68,88 @@ const AnnualPlanPage = () => {
       try {
         const response = await api.get<ApiResponse>('/api/annual-plan');
         if (response.data.isSuccess && response.data.result) {
-          // 구성 요소의 예상 형식에 맞게 API 데이터 변환
-          const transformedEvents = response.data.result.events.map((event, index) => {
-            const monthStart = getMonthFromDate(event.startDate);
-            const monthEnd = getMonthFromDate(event.endDate);
-            const isHackathon = event.type.toLowerCase() === 'hackathon';
-            
-            return {
-              id: event.eventId,
-              title: event.title,
-              monthStart,
-              monthEnd,
-              color: isHackathon ? '#FF7710' : '#840500',
-              top: getTopPosition(event.type, index)
-            };
-          });
+          const sortedEvents = [...response.data.result.events].sort(
+            (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          );
+
+          const transformedEvents = sortedEvents.map((event, index) => ({
+            id: event.eventId,
+            title: event.title,
+            monthStart: getPreciseMonth(event.startDate),
+            monthEnd: getPreciseEndMonth(event.endDate),
+            color: event.type.toLowerCase() === 'hackathon' ? '#FF7710' : '#840500',
+            top: getTopPosition(event.type, index)
+          }));
           setEvents(transformedEvents);
         } else {
-          setError('Failed to load annual plan data');
+          setError('데이터를 불러오는 데 실패했습니다.');
         }
       } catch (err) {
-        console.error('Error fetching annual plan:', err);
         setError('연간 계획을 불러오는 중 오류가 발생했습니다.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchAnnualPlan();
   }, []);
 
-  if (loading) {
-    return (
-      <div className={styles.container} style={{ backgroundImage: `url(${backgroundImage})` }}>
-        <Layout>
-          <div className={styles.content}>
-            <div className={styles.titleSection}>
-              <h1>Annual Plan</h1>
-              <p className={styles.subtitle}>서울여대 멋쟁이사자처럼 연간 일정</p>
-            </div>
-            <div className={styles.loading}>로딩 중...</div>
-          </div>
-        </Layout>
-      </div>
-    );
-  }
+  // 행별로 이벤트를 렌더링하는 함수
+  const renderEventsInRow = (rowStartMonth: number, rowEndMonth: number) => {
+  const CELL_WIDTH = 190;
 
-  if (error) {
+  return events
+    .filter(event => {
+      // 해당 행의 시작(예: 1)과 끝(예: 6) 사이에 걸쳐 있는지 체크
+      const isOverlapping = event.monthStart <= (rowEndMonth + 0.99) && event.monthEnd >= rowStartMonth;
+      return isOverlapping;
+    })
+    .map(event => {
+      // 현재 행의 범위 내에서만 시작과 끝점 잡기
+      // 1행이면 1.0 ~ 7.0(7월 1일 00시) 사이로 제한
+      const displayStart = Math.max(event.monthStart, rowStartMonth);
+      const displayEnd = Math.min(event.monthEnd, rowEndMonth + 1);
+
+      // 만약 계산된 종료지점이 시작지점보다 작거나 같으면 그리지 않음
+      if (displayEnd <= displayStart) return null;
+
+      const left = (displayStart - rowStartMonth) * CELL_WIDTH;
+      const widthVal = (displayEnd - displayStart) * CELL_WIDTH;
+      
+      // 막대기 너비가 0보다 클 때만 렌더링
+      if (widthVal <= 0) return null;
+
+      const width = widthVal < 120 ? '120px' : `${widthVal}px`;
+
+      return (
+        <div
+          key={`${event.id}-${rowStartMonth}`}
+          className={styles.eventBar}
+          style={{
+            left: `${left}px`,
+            width,
+            top: `${event.top}px`,
+            backgroundColor: event.color,
+            ['--arrowColor' as string]: event.color,
+            zIndex: widthVal < 120 ? 10 : 1
+          } as React.CSSProperties}
+        >
+          
+          {/* 실제 종료일이 현재 행 범위 안에 있을 때만 오른쪽 화살표 */}
+          {event.monthEnd > rowStartMonth && event.monthEnd <= rowEndMonth + 1 && (
+            <div className={styles.arrowRight}></div>
+          )}
+          <span className={styles.eventTitle}>{event.title}</span>
+        </div>
+      );
+    });
+};
+
+  if (loading || error) {
     return (
       <div className={styles.container} style={{ backgroundImage: `url(${backgroundImage})` }}>
         <Layout>
           <div className={styles.content}>
-            <div className={styles.titleSection}>
-              <h1>Annual Plan</h1>
-              <p className={styles.subtitle}>서울여대 멋쟁이사자처럼 연간 일정</p>
-            </div>
-            <div className={styles.error}>{error}</div>
+            <div className={styles.loading}>{loading ? '로딩 중...' : error}</div>
           </div>
         </Layout>
       </div>
@@ -131,19 +157,14 @@ const AnnualPlanPage = () => {
   }
 
   return (
-    <div 
-      className={styles.container}
-      style={{
-        backgroundImage: `url(${backgroundImage})`
-      }}
-    >
+    <div className={styles.container} style={{ backgroundImage: `url(${backgroundImage})` }}>
       <Layout>
         <div className={styles.content}>
           <div className={styles.titleSection}>
             <h1>Annual Plan</h1>
             <p className={styles.subtitle}>서울여대 멋쟁이사자처럼 연간 일정</p>
           </div>
-          
+
           <div className={styles.scheduleLegend}>
             <div className={styles.legendItem}>
               <div className={styles.colorBox} style={{ backgroundColor: '#840500' }}></div>
@@ -157,77 +178,34 @@ const AnnualPlanPage = () => {
 
           <div className={styles.timelineContainer}>
             <div className={styles.timelineGrid}>
-              {/* Grid with two rows */}
               <div className={styles.gridContainer}>
-                {/* First row with dates */}
+                {/* 상반기 행 */}
                 <div className={styles.gridRow}>
-                  {months.slice(0, 6).map((month, index) => (
-                    <div key={`cell-0-${index}`} className={styles.gridCell}>
-                      <span className={styles.dateText}>{month.date}</span>
+                  {months.slice(0, 6).map((m) => (
+                    <div key={m.id} className={styles.gridCell}>
+                      <span className={styles.dateText}>{m.date}</span>
                     </div>
                   ))}
-                </div>
-                
-                {/* Second row with dates */}
-                <div className={styles.gridRow}>
-                  {months.slice(6).map((month, index) => (
-                    <div key={`cell-1-${index}`} className={styles.gridCell}>
-                      <span className={styles.dateText}>{month.date}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Event bars */}
-              <div className={styles.eventsContainer}>
-                {events.length > 0 ? (
-                  events.map((event) => {
-                    // 행 계산 (6개월 단위로 나누기)
-                    const row = Math.floor((event.monthStart - 1) / 6);
-                    // 행 내에서의 상대적 위치 계산
-                    const colInRow = (event.monthStart - 1) % 6;
-                    const left = (colInRow * 190) + 'px';
-                    const width = ((event.monthEnd - event.monthStart + 1) * 190 - 10) + 'px';
-                    // 행에 따른 top 값 조정 (기존 top + 행 높이 * 행 번호)
-                    const top = (event.top + (row * 250)) + 'px';
-                    
-                    return (
-                      <div 
-                        key={event.id}
-                        className={styles.eventBar}
-                        style={{
-                          left,
-                          width,
-                          top,
-                          backgroundColor: event.color,
-                          ['--arrowColor' as string]: event.color
-                        } as React.CSSProperties}
-                      >
-                        <div className={styles.arrowLeft}></div>
-                        <div className={styles.arrowRight}></div>
-                        <span className={styles.eventTitle} style={{ textAlign: 'left', display: 'block', paddingLeft: '10px' }}>{event.title}</span>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className={styles.noEvents}>
-                    등록된 일정이 없습니다.
+                  <div className={styles.rowEventsContainer}>
+                    {renderEventsInRow(1, 6)}
                   </div>
-                )}
+                </div>
+
+                {/* 하반기 행 */}
+                <div className={styles.gridRow}>
+                  {months.slice(6).map((m) => (
+                    <div key={m.id} className={styles.gridCell}>
+                      <span className={styles.dateText}>{m.date}</span>
+                    </div>
+                  ))}
+                  <div className={styles.rowEventsContainer}>
+                    {renderEventsInRow(7, 12)}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div style={{
-              color: '#FFF',
-              textAlign: 'right',
-              fontFamily: 'Pretendard',
-              fontSize: '18px',
-              fontWeight: 300,
-              marginTop: '20px',
-              paddingRight: '190px'
-            }}>
-              * 일부 일정은 변경될 수 있습니다.
-            </div>
+          <p className={styles.notice}>* 일부 일정은 변경될 수 있습니다.</p>
         </div>
       </Layout>
     </div>
