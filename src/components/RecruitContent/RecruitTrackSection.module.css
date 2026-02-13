@@ -155,8 +155,9 @@
 .descBox {
   width: 916px;
   box-sizing: border-box;
-  padding: 28px 140px;
-  padding-left: 215px;
+
+  /* 좌우 대칭으로 */
+  padding: 28px 100px;
 
   border-radius: 20px;
   background: var(--Alpha-black-50, rgba(0, 0, 0, 0.5));
@@ -164,10 +165,29 @@
     2px 2px 8.1px rgba(255, 255, 255, 0.5) inset,
     -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
 
+  /* 묶음(bulletList)을 박스 중앙에 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 체크+텍스트 ‘묶음’ 자체 */
+.bulletList {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 20px;
+  gap: 28px;
+}
+
+/* 트랙별로 묶음 폭을 다르게 (위치 안맞으면 여기서 세부 조정) */
+.descBoxPD .bulletList {
+  max-width: 520px;
+}
+.descBoxFE .bulletList {
+  max-width: 600px;
+}
+.descBoxBE .bulletList {
+  max-width: 700px;
 }
 
 .bulletRow {
