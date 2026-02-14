@@ -24,7 +24,7 @@ export interface ApplyFormProps {
   subtitle?: string
   questions: Question[]
   onChange?: (id: number, value: string) => void
-  onFileChange?: (id: number, file: File) => void
+  onFileChange?: (id: number, file: File | null) => void;
   enableConsent?: boolean
   enableNotice?: boolean
   enableActions?: boolean

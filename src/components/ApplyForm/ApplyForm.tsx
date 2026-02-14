@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./ApplyForm.module.css";
-import type { ApplyFormProps } from "./types";
+import type { ApplyFormProps, Question } from "./types";
+
 
 import checkboxDefault from "@/assets/icon/checkbox_default.svg";
 import checkboxChecked from "@/assets/icon/checkbox_checked.svg";
 import noticeIcon from "@/assets/icon/alert_octagon.svg";
 
-import type { Question } from "@/components/ApplyForm/types";
 import ApplyFormActions from "./ApplyFormActions";
 import Modal from "@/components/Modal/Modal";
 import { useNavigationGuard } from "@/contexts/NavigationGuardContext";

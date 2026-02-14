@@ -1,3 +1,4 @@
+import React from 'react'
 import { createContext, useContext, useState } from 'react'
 
 type NavigationGuardContextType = {
@@ -20,7 +21,7 @@ const NavigationGuardContext = createContext<NavigationGuardContextType>({
 
 export const NavigationGuardProvider = ({ children }: { children: React.ReactNode }) => {
   const [isDirty, setDirty] = useState(false)
-  const [_initialState, setInitialState] = useState<any>(null)
+  const [setInitialState] = useState<any>(null)
 
   const resetDirty = (state: any) => {
     setInitialState(state) // 초기값 저장
