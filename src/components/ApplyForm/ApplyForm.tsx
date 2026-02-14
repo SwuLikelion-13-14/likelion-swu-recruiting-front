@@ -208,10 +208,7 @@ export default function ApplyForm({
       }
     }
 
-    setErrors(prev => ({
-      ...prev,
-      ...newErrors
-    }));
+    setErrors(newErrors);
 
     setSuccess(prev => ({
       ...prev,
@@ -278,18 +275,21 @@ export default function ApplyForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentStatus, passwordAnswer]);
 
+  // 수정
   const requiredQuestions = safeAllQuestions.filter(
     (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
   );
 
-
   const requiredFilled =
     requiredQuestions.length > 0 &&
-    requiredQuestions.every((q) =>
-      q.type === "file"
-        ? !!files[q.id] || answers[q.id]?.trim() !== ""
-        : answers[q.id]?.trim() !== ""
-    );
+    requiredQuestions.every((q) => {
+      const question = safeAllQuestions.find(item => item.id === q.id);
+      if (!question) return false;
+
+      return q.type === "file"
+        ? !!question.file || question.answer?.trim() !== ""
+        : question.answer?.trim() !== "";
+    });
 
   const studentValid = studentStatus === "valid";
   const passwordValid = /^\d{4}$/.test(passwordAnswer);
@@ -297,9 +297,13 @@ export default function ApplyForm({
 
   const cancelState: ButtonState = "default";
   const draftState: ButtonState =
-    hasAnyInput && studentValid && passwordValid && consentOk ? "default" : "unactive";
+    hasAnyInput && studentValid && passwordValid && consentOk
+      ? "default"
+      : "unactive";
   const submitState: ButtonState =
-    requiredFilled && studentValid && passwordValid && consentOk ? "default" : "unactive";
+    requiredFilled && studentValid && passwordValid && consentOk
+      ? "default"
+      : "unactive";
 
   return (
     <section
@@ -450,6 +454,15 @@ export default function ApplyForm({
                       const textarea = e.target;
                       textarea.style.height = "auto";
                       textarea.style.height = `${textarea.scrollHeight}px`;
+
+                      if (!isStudentField && !isPasswordField && value.trim() !== "") {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next[item.id];
+                          return next;
+                        });
+                      }
+
 
                       if (isStudentField) {
                         setErrors((prev) => {
