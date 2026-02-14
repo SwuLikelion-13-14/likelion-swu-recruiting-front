@@ -230,6 +230,7 @@ export default function ApplyForm({
   };
 
   const handleFileUpload = (id: number) => {
+    if (typeof window === "undefined") return; 
     const input = document.createElement("input");
     input.type = "file";
     input.onchange = (e) => {
@@ -292,12 +293,13 @@ export default function ApplyForm({
       const firstErrorId = !studentOk ? STUDENT_ID : PASSWORD_ID;
 
       requestAnimationFrame(() => {
+        if (typeof document !== "undefined") {
         document.getElementById(`field-${firstErrorId}`)?.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
-      });
-
+      }
+    });
       return false;
     }
 
@@ -861,9 +863,9 @@ export default function ApplyForm({
             primaryButton={{
               text: "나가기",
               onClick: () => {
-                allowNavigation();   // ✅ guard 해제
+                allowNavigation();   // guard 해제
                 setModalOpen(false);
-                window.history.back(); // ✅ 이제 이동 가능
+                window.history.back(); // 이제 이동 가능
               },
             }}
 
