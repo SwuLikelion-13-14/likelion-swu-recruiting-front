@@ -266,3 +266,80 @@ h1 {
   text-align: right;
   margin-top: 20px;
 }
+
+/* Skeleton Loader Styles */
+.container .skeletonContainer {
+  width: 100%;
+  max-width: 1143px;
+  margin: 0 auto;
+  padding: 60px 140px;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+  overflow: visible;
+  color: #333;
+}
+
+.container .skeletonTitle {
+  width: 200px;
+  height: 48px;
+  background-color: #242424;
+  margin: 0 auto 20px;
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.container .skeletonSubtitle {
+  width: 300px;
+  height: 28px;
+  background-color: #242424;
+  margin: 0 auto 60px;
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.container .skeletonLegend {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+  margin-left: 0;
+}
+
+.container .skeletonLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.container .skeletonColorBox {
+  width: 24px;
+  height: 24px;
+  background-color: #242424;
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.container .skeletonLegendText {
+  width: 150px;
+  height: 20px;
+  background-color: #242424;
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.container .skeletonTimeline {
+  background-color: #242424;
+  border-radius: 12px;
+  height: 500px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+  margin: 20px 0 0 0;
+  width: 100%;
+}
+
+@keyframes skeletonPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
