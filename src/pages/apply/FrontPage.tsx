@@ -175,20 +175,21 @@ const FrontPage = () => {
 }
 
 
-    const handleFileChange = (setIndex: number, id: number, file: File) => {
-        setSets(prev =>
-            prev.map((set, i) =>
-                i === setIndex
-                    ? {
-                        ...set,
-                        questions: set.questions.map(q =>
-                            q.id === id ? { ...q, file, answer: file.name } : q
-                        ),
-                    }
-                    : set
-            )
+    const handleFileChange = (setIndex: number, id: number, file: File | null) => {
+    setSets(prev =>
+        prev.map((set, i) =>
+            i === setIndex
+                ? {
+                    ...set,
+                    questions: set.questions.map(q =>
+                        q.id === id ? { ...q, file, answer: file?.name || '' } : q
+                    ),
+                }
+                : set
         )
-    }
+    )
+}
+
 
     // ✅ 최종 제출
     const handleFinalSubmit = async () => {

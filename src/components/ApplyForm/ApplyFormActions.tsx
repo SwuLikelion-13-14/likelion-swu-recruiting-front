@@ -143,7 +143,6 @@ const ApplyFormActions = ({
       setIsSubmitStep2Open(true);
     } catch(err) {
       console.error('제출 실패:', err);
-      alert('제출 실패, 다시 시도해주세요.');
     }
   }
 }}
@@ -225,7 +224,6 @@ const ApplyFormActions = ({
       setIsDraftStep2Open(true)
     } catch(err) {
       console.error('임시저장 실패:', err)
-      alert('임시저장 실패, 다시 시도해주세요.')
     }
   }
 }}

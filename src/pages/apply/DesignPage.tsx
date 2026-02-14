@@ -250,7 +250,6 @@ const DesignPage = () => {
             })
 
             console.log('최종 제출 성공:', res.data)
-            alert('지원서가 성공적으로 제출되었습니다!')
 
         } catch (err: any) {
             console.error('❌ 제출 실패:', err)
@@ -259,7 +258,6 @@ const DesignPage = () => {
 
             // 백엔드 에러 메시지 표시
             if (err.response?.data?.message) {
-                alert(`제출 실패: ${err.response.data.message}`)
             } else if (err.response?.data?.result) {
                 const errors = err.response.data.result
                 const errorMsg = Object.entries(errors)
@@ -333,16 +331,13 @@ const DesignPage = () => {
             })
 
             console.log('✅ 임시저장 성공:', res.data)
-            alert('지원서가 임시저장되었습니다!')
 
         } catch (err: any) {
             console.error('❌ 임시저장 실패:', err)
             console.error('에러 응답:', err.response?.data)
 
             if (err.response?.data?.message) {
-                alert(`임시저장 실패: ${err.response.data.message}`)
             } else {
-                alert('임시저장 중 오류가 발생했습니다.')
             }
         }
     }
