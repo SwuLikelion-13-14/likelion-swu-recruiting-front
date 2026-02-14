@@ -63,12 +63,7 @@ const FaqPage: React.FC = () => {
       }
     };
     
-    // Simulate loading for demo purposes
-    const timer = setTimeout(() => {
-      fetchFaqs();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    fetchFaqs();
   }, []);
 
   const toggleFaq = (question: string) => {
