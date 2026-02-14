@@ -144,12 +144,40 @@ const AnnualPlanPage = () => {
     });
 };
 
-  if (loading || error) {
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.backgroundImage} style={{ backgroundImage: `url(${backgroundImage})` }} />
+        <div className={styles.overlay} />
+        <Layout>
+          <div className={styles.skeletonContainer}>
+            <div className={styles.skeletonTitle}></div>
+            <div className={styles.skeletonSubtitle}></div>
+            
+            <div className={styles.skeletonLegend}>
+              <div className={styles.skeletonLegendItem}>
+                <div className={styles.skeletonColorBox}></div>
+                <div className={styles.skeletonLegendText}></div>
+              </div>
+              <div className={styles.skeletonLegendItem}>
+                <div className={styles.skeletonColorBox}></div>
+                <div className={styles.skeletonLegendText}></div>
+              </div>
+            </div>
+            
+            <div className={styles.skeletonTimeline}></div>
+          </div>
+        </Layout>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className={styles.container} style={{ backgroundImage: `url(${backgroundImage})` }}>
         <Layout>
           <div className={styles.content}>
-            <div className={styles.loading}>{loading ? '로딩 중...' : error}</div>
+            <div className={styles.loading}>{error}</div>
           </div>
         </Layout>
       </div>
