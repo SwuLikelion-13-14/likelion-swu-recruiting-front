@@ -22,11 +22,20 @@ html, body {
 .content {
   width: 100%;                
   max-width: 100%;            
-  padding: 107.5px 140px 0 140px;
+  padding: 107.5px 5% 0;  /* Changed to percentage-based padding */
   position: relative;         /* 상대적 위치 설정 */
   z-index: 10;              
   box-sizing: border-box;     /* 패딩을 너비에 포함 */
   overflow: visible;          /* 넘치는 콘텐츠 표시 */
+  
+  /* Add responsive padding */
+  @media (max-width: 1024px) {
+    padding: 80px 5% 0;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 60px 20px 0;
+  }
 }
 
 /* 로고 섹션 스타일 */
@@ -66,21 +75,36 @@ html, body {
   width: 100%;               
   justify-content: space-between; /* 자식 요소들을 양쪽 정렬 */
   position: relative;         /* 상대적 위치 설정 */
-  z-index: 10;              
+  z-index: 10; 
+  flex-wrap: wrap;            /* Allow items to wrap on small screens */
+  gap: 40px;                  /* Add gap between items */
+  
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .cardsSection {
-  width: 45%;
+  width: 100%;  /* Changed from 45% to 100% */
+  max-width: 580px;  /* Match card width */
   padding-top: 29px;
   display: flex;
   flex-direction: column;
   gap: 34px;
   box-sizing: border-box;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 20px 0;
+    gap: 20px;
+  }
 }
 
 /* 카드 스타일 */
 .card {
-  width: 580px;               
+  width: 100%;               /* Changed from fixed 580px to 100% */
+  max-width: 580px;          /* Added max-width */
   height: 123px;            
   border-radius: 60px;       
   position: relative;         /* 상대적 위치 설정 */
@@ -92,6 +116,12 @@ html, body {
   outline: 1px solid rgba(255, 255, 255, 0.20);  /* 외곽선 설정 */
   outline-offset: -1px;       /* 외곽선 오프셋 */
   transition: background-color 0.3s ease;  /* 부드러운 색상 전환 효과 */
+  
+  @media (max-width: 768px) {
+    height: auto;
+    min-height: 100px;
+    border-radius: 30px;
+  }
 }
 
 .card:hover {
@@ -134,8 +164,15 @@ html, body {
   padding: 1.5rem;
   padding-top: 25px;
   padding-left: 45px;
+  padding-right: 20px;
   backdrop-filter: blur(4px);
   transition: background-color 200ms;
+  box-sizing: border-box;
+  
+  @media (max-width: 768px) {
+    padding: 15px 20px;
+    padding-left: 30px;
+  }
 }
 
 .cardContent:hover {
