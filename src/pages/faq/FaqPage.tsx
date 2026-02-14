@@ -90,17 +90,11 @@ const FaqPage: React.FC = () => {
   );
 };
   return (
-    <div
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        minHeight: '100vh',
-        width: '100%'
-      }}
-    >
+    <div className={styles.container}>
+      <div className={styles.backgroundImage} style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed', minHeight: '100vh', width: '100%' }} />
+      <div className={styles.overlay} />
       <Layout>
+        
         <div className={styles.content}>
           <div className={styles.titleSection}>
             <h1>{section.title}</h1>

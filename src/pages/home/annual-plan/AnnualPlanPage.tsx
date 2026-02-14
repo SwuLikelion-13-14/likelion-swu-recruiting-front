@@ -157,7 +157,9 @@ const AnnualPlanPage = () => {
   }
 
   return (
-    <div className={styles.container} style={{ backgroundImage: `url(${backgroundImage})` }}>
+    <div className={styles.container}>
+      <div className={styles.backgroundImage} style={{ backgroundImage: `url(${backgroundImage})` }} />
+      <div className={styles.overlay} />
       <Layout>
         <div className={styles.content}>
           <div className={styles.titleSection}>
