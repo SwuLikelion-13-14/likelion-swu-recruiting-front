@@ -44,7 +44,7 @@ const ProjectListPage: React.FC = () => {
     setHoveredCard(index);
   };
 
-    const getCardStyle = (_index: number) => {
+  const getCardStyle = (_index: number) => {
     return {};
   };
   
@@ -94,6 +94,29 @@ const ProjectListPage: React.FC = () => {
     }));
   };
 
+  const renderSkeleton = () => (
+    <div className={styles.skeletonContainer}>
+      <div className={styles.skeletonTitle}></div>
+      <div className={styles.skeletonSubtitle}></div>
+      {[1, 2, 3].map((cohort) => (
+        <div key={cohort} className={styles.skeletonCohort}>
+          <div className={styles.skeletonCohortHeader}></div>
+          <div className={styles.skeletonProjects}>
+            {[1, 2, 3].map((item) => (
+              <div key={item} className={styles.skeletonProjectCard}>
+                <div className={styles.skeletonImage}></div>
+                <div className={styles.skeletonContent}>
+                  <div className={styles.skeletonText}></div>
+                  <div className={styles.skeletonText}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -132,7 +155,7 @@ const ProjectListPage: React.FC = () => {
       <Layout>
         <div className={styles.content}>
           {loading ? (
-            <div className={styles.loading}>로딩 중...</div>
+            renderSkeleton()
           ) : error ? (
             <div className={styles.error}>{error}</div>
           ) : projectData ? (
