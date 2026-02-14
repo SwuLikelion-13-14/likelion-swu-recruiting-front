@@ -53,15 +53,47 @@ const FrontPage = () => {
                     Array.isArray(res?.data?.result) ? res.data.result : []
 
                 const mapDummy = (dummy: Question[], ids: number[]) =>
-                    ids.map((id, idx) => {
-                        const apiQ = apiQuestions.find(q => q.id === id)
-                        if (!apiQ) return dummy[idx]
-                        return {
-                            ...dummy[idx],
-                            id: apiQ.id,
-                            question: apiQ.questionText,
-                        }
-                    })
+                ids.map((id, idx) => {
+                    const apiQ = apiQuestions.find(q => q.id === id);
+
+                    // 기본정보에서 답변 가져오기
+                    let answerFromState = '';
+                    if (applicationData?.userInfo) {
+                        const userInfo = applicationData.userInfo;
+                        if (id === 1) answerFromState = userInfo.name || '';
+                        else if (id === 2) answerFromState = userInfo.studentId || '';
+                        else if (id === 3) answerFromState = userInfo.major || '';
+                        else if (id === 4) answerFromState = userInfo.doubleMajor || '';
+                        else if (id === 5) answerFromState = userInfo.schoolStatus || '';
+                        else if (id === 6) answerFromState = userInfo.phone || '';
+                        else if (id === 7) answerFromState = userInfo.email || '';
+                    }
+
+                    // 질문 답변에서 가져오기
+                    const existingAnswer = (applicationData?.responses as any[] | undefined)
+                        ?.find(r => r.questionId === id);
+
+                    if (existingAnswer) {
+                        answerFromState = existingAnswer.responseText || '';
+                    }
+
+                    // 포트폴리오 처리 (id=14)
+                    let fileLink = '';
+                    if (id === 14 && applicationData?.portfolioLink) {
+                        fileLink = applicationData.portfolioLink;
+                        answerFromState = applicationData.portfolioLink;
+                    }
+
+                    return {
+                        ...dummy[idx],
+                        id: apiQ?.id || dummy[idx].id,
+                        question: apiQ?.questionText || dummy[idx].question,
+                        answer: answerFromState,
+                        file: undefined,
+                        fileLink: fileLink,
+                    };
+                });
+
 
                 setSets([
                     { title: '필수 기본 정보', questions: mapDummy(BASIC_INFO_QUESTIONS, [1, 2, 3, 4, 5, 6, 7]) },
@@ -72,17 +104,51 @@ const FrontPage = () => {
             } catch (err) {
                 console.error('질문 불러오기 실패:', err)
 
-                // 실패하면 더미로 fallback
-                setSets([
-                    { title: '필수 기본 정보', questions: BASIC_INFO_QUESTIONS },
-                    { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: BASIC_QUESTIONS },
-                    { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: CHECK_QUESTIONS },
-                ])
-            }
-        }
+                const mapDummyWithData = (dummy: Question[], ids: number[]) =>
+                ids.map((id, idx) => {
+                    let answerFromState = '';
 
-        fetchQuestions()
-    }, [])
+                    if (applicationData?.userInfo) {
+                        const userInfo = applicationData.userInfo;
+                        if (id === 1) answerFromState = userInfo.name || '';
+                        else if (id === 2) answerFromState = userInfo.studentId || '';
+                        else if (id === 3) answerFromState = userInfo.major || '';
+                        else if (id === 4) answerFromState = userInfo.doubleMajor || '';
+                        else if (id === 5) answerFromState = userInfo.schoolStatus || '';
+                        else if (id === 6) answerFromState = userInfo.phone || '';
+                        else if (id === 7) answerFromState = userInfo.email || '';
+                    }
+
+                    const existingAnswer = (applicationData?.responses as any[] | undefined)
+                        ?.find(r => r.questionId === id);
+                    if (existingAnswer) {
+                        answerFromState = existingAnswer.responseText || '';
+                    }
+
+                    let fileLink = '';
+                    if (id === 14 && applicationData?.portfolioLink) {
+                        fileLink = applicationData.portfolioLink;
+                        answerFromState = applicationData.portfolioLink;
+                    }
+
+                    return {
+                        ...dummy[idx],
+                        answer: answerFromState,
+                        file: undefined,
+                        fileLink: fileLink,
+                    };
+                });
+
+            setSets([
+                { title: '필수 기본 정보', questions: mapDummyWithData(BASIC_INFO_QUESTIONS, [1, 2, 3, 4, 5, 6, 7]) },
+                { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: mapDummyWithData(BASIC_QUESTIONS, [8, 9, 10, 11, 12, 13, 14]) },
+                { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapDummyWithData(CHECK_QUESTIONS, [15, 16]) },
+            ]);
+        }
+    };
+
+    fetchQuestions();
+}, [applicationData]);
 
 
     const handleChange = (_setIndex: number, id: number, value: string) => {
