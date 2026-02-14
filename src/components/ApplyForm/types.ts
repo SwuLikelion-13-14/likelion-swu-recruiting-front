@@ -9,6 +9,7 @@ export interface Question {
   required?: boolean
   pattern?: RegExp;
   errorMessage?: string;
+  serverId?: number 
 }
 
 export type Mode = 'edit' | 'view'

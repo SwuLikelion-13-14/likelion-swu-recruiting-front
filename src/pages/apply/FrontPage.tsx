@@ -85,20 +85,29 @@ const FrontPage = () => {
     }, [])
 
 
-    const handleChange = (setIndex: number, id: number, value: string) => {
-        setSets(prev =>
-            prev.map((set, i) =>
-                i === setIndex
-                    ? {
-                        ...set,
-                        questions: set.questions.map(q =>
-                            q.id === id ? { ...q, answer: value } : q
-                        ),
-                    }
-                    : set
-            )
-        )
-    }
+    const handleChange = (_setIndex: number, id: number, value: string) => {
+    setSets(prev =>
+        prev.map((set, _i) => ({
+            ...set,
+            questions: set.questions.map(q => {
+                let newQ = q.id === id ? { ...q, answer: value } : q
+
+                // 체크 학번(id === 15) 입력 시 BASIC_INFO_QUESTIONS 학번(id === 2)도 자동 업데이트
+                if (id === 15 && q.id === 2) {
+                    newQ = { ...newQ, answer: value }
+                }
+
+                // BASIC_INFO_QUESTIONS 학번(id === 2) 입력 시 CHECK_QUESTIONS 학번(id === 15)도 자동 업데이트
+                if (id === 2 && q.id === 15) {
+                    newQ = { ...newQ, answer: value }
+                }
+
+                return newQ
+            })
+        }))
+    )
+}
+
 
     const handleFileChange = (setIndex: number, id: number, file: File) => {
         setSets(prev =>
