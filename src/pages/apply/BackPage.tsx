@@ -19,7 +19,7 @@ type ResponseDTO = {
 type MergedQuestion = Question & {
   serverId?: number
   fileLink?: string
-  file?: File
+  file?: File | null;
 }
 
 
@@ -160,22 +160,27 @@ const BackPage = () => {
     )
   }
 
-  const handleFileChange = (setIndex: number, id: number, file: File) => {
-    setSets((prev) =>
-      prev.map((set, i) =>
-        i === setIndex
-          ? { ...set, questions: set.questions.map((q) => (q.id === id ? { ...q, file, answer: file.name } : q)) }
-          : set
-      )
+  const handleFileChange = (setIndex: number, id: number, file: File | null) => {
+    setSets(prev =>
+        prev.map((set, i) =>
+            i === setIndex
+                ? {
+                    ...set,
+                    questions: set.questions.map(q =>
+                        q.id === id ? { ...q, file, answer: file?.name || '' } : q
+                    ),
+                }
+                : set
+        )
     )
-  }
+}
+
 
   const buildPayload = (applicationField2: number) => {
     const checkStudentId = allQuestions.find((q) => q.id === 15)?.answer || ''
     const password = allQuestions.find((q) => q.id === 16)?.answer || ''
 
     if (!checkStudentId || !password) {
-      alert('학번과 비밀번호를 입력해주세요!')
       return null
     }
 
@@ -220,11 +225,9 @@ const BackPage = () => {
       const formData = buildPayload(1)
       if (!formData) return
       const res = await api.post('/api/recruit/application/BACK/', formData)
-      alert('지원서가 성공적으로 제출되었습니다!')
       console.log(res.data)
     } catch (err) {
       console.error('제출 실패:', err)
-      alert('제출 실패')
     }
   }
 
@@ -233,11 +236,9 @@ const BackPage = () => {
       const formData = buildPayload(2)
       if (!formData) return
       const res = await api.post('/api/recruit/application/BACK/', formData)
-      alert('임시 저장되었습니다!')
       console.log(res.data)
     } catch (err) {
       console.error('임시 저장 실패:', err)
-      alert('임시 저장 실패')
     }
   }
 
