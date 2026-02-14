@@ -14,21 +14,37 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-image: url('../../assets/img/long_background.png');
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  background-position: top center;
+  background-attachment: scroll;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+}
+
+/* 배경 오버레이 */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #00000080; /* #000000 with 50% opacity */
+  z-index: 1;
 }
 
 /* 콘텐츠 영역 스타일 */
 .content {
+  position: relative;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 80px 20px;
-  position: relative;
   z-index: 10;
   box-sizing: border-box;
-  background-color: rgba(0, 0, 0, 0.5);
-
 }
 
 /* 제목 섹션 스타일 */
@@ -64,7 +80,7 @@ h1 {
 }
 
 .faqItem {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.5);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
