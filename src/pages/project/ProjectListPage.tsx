@@ -44,25 +44,7 @@ const ProjectListPage: React.FC = () => {
     setHoveredCard(index);
   };
 
-  const getCardStyle = (index: number) => {
-    if (hoveredCard === null) return {};
-    
-    const hoveredIndexInRow = hoveredCard % 3;
-    const currentIndexInRow = index % 3;
-    
-    // 같은 행에 있는 카드인지 확인
-    if (Math.floor(hoveredCard / 3) === Math.floor(index / 3)) {
-      // 왼쪽 카드가 호버된 경우 (가운데 카드를 오른쪽으로 이동)
-      if (hoveredIndexInRow === 0 && currentIndexInRow === 1) {
-        return { transform: 'translateX(20%)' };
-      }
-      // 오른쪽 카드가 호버된 경우 (가운데 카드를 왼쪽으로 이동)
-      if (hoveredIndexInRow === 2 && currentIndexInRow === 1) {
-        return { transform: 'translateX(-20%)' };
-      }
-      
-    }
-    
+    const getCardStyle = (_index: number) => {
     return {};
   };
   
