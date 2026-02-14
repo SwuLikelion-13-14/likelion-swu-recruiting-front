@@ -412,10 +412,6 @@ export default function ApplyForm({
                       setAnswers((prev) => ({ ...prev, [item.id]: value }));
                       onChange?.(item.id, value);
 
-                      if (value.trim() !== "" && files[item.id]) {
-                        handleFileDelete(item.id);
-                      }
-
                       if (value.trim() !== "") {
                         setErrors((prev) => {
                           const next = { ...prev };
