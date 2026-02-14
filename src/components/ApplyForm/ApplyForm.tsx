@@ -14,9 +14,6 @@ import { useNavigationGuard } from "@/contexts/NavigationGuardContext";
 
 type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
 
-// ✅ 학번/비번 문항 ID (프로젝트에서 고정으로 쓰는 값)
-const STUDENT_ID = 15;
-const PASSWORD_ID = 16;
 
 const studentMessages: Record<StudentStatus, string> = {
   invalid: "형식이 다릅니다. 숫자 10자리를 입력하세요.",
@@ -52,6 +49,8 @@ export default function ApplyForm({
   allQuestions,
   onSubmit,
   onDraftSave,
+  studentIdField,
+  passwordField,
 }: ApplyFormProps) {
   const isSurvey = variant === "survey";
   const isResult = variant === "result";
@@ -61,6 +60,8 @@ export default function ApplyForm({
   const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(
     undefined
   );
+  const STUDENT_ID = studentIdField ?? 15;   // props 없으면 기본 15
+  const PASSWORD_ID = passwordField ?? 16;  
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<

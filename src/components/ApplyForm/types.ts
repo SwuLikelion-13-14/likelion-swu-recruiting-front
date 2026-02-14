@@ -9,7 +9,8 @@ export interface Question {
   required?: boolean
   pattern?: RegExp;
   errorMessage?: string;
-  serverId?: number 
+  serverId?: number
+  fileLink?: string 
 }
 
 export type Mode = 'edit' | 'view'
@@ -32,5 +33,6 @@ export interface ApplyFormProps {
   allQuestions: Question[]
   onSubmit?: () => void
   onDraftSave?: () => void
-
+  studentIdField?: number;  
+  passwordField?: number;   
 }
