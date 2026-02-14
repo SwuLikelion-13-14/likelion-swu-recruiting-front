@@ -30,6 +30,7 @@ interface ApiResponse {
 
 const ProjectListPage: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>({});
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [projectData, setProjectData] = useState<{
     title: string;
     subtitle: string;
@@ -38,6 +39,40 @@ const ProjectListPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<{[cohort: number]: string[]}>({});
+
+  const handleCardHover = (index: number | null) => {
+    setHoveredCard(index);
+  };
+
+  const getCardStyle = (index: number) => {
+    if (hoveredCard === null) return {};
+    
+    const hoveredIndexInRow = hoveredCard % 3;
+    const currentIndexInRow = index % 3;
+    
+    // 같은 행에 있는 카드인지 확인
+    if (Math.floor(hoveredCard / 3) === Math.floor(index / 3)) {
+      // 왼쪽 카드가 호버된 경우 (가운데 카드를 오른쪽으로 이동)
+      if (hoveredIndexInRow === 0 && currentIndexInRow === 1) {
+        return { transform: 'translateX(20%)' };
+      }
+      // 오른쪽 카드가 호버된 경우 (가운데 카드를 왼쪽으로 이동)
+      if (hoveredIndexInRow === 2 && currentIndexInRow === 1) {
+        return { transform: 'translateX(-20%)' };
+      }
+      
+    }
+    
+    return {};
+  };
+  
+  const getCardClassName = (index: number) => {
+    let className = styles.projectCard;
+    if (hoveredCard === index) {
+      className += ` ${styles.hoveredCard}`;
+    }
+    return className;
+  };
 
   // 프로젝트 카테고리 목록 (11기에는 '여기톤 대비 토이 프로젝트'가 없음)
   const getProjectCategories = (cohort: number) => {
@@ -176,7 +211,13 @@ const ProjectListPage: React.FC = () => {
                             </div>
                             <div className={styles.projectGrid}>
                               {filterProjects(cohort.cohort, cohort.projects).map((project, index) => (
-                                <div key={`${sectionKey}-${index}`} className={styles.projectCard}>
+                                <div 
+                                  key={`${sectionKey}-${index}`} 
+                                  className={getCardClassName(index)}
+                                  style={getCardStyle(index)}
+                                  onMouseEnter={() => handleCardHover(index)}
+                                  onMouseLeave={() => handleCardHover(null)}
+                                >
                                   <div className={styles.projectImage}>
                                     {project.thumbnail ? (
                                       <img src={project.thumbnail} alt={project.name} className={styles.thumbnailImage} />
