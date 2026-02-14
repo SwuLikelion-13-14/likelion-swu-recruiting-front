@@ -23,6 +23,7 @@ const mergeQuestions = (dummy: Question[], api: ApiQuestion[]) => {
         return {
             ...d,
             question: apiQ.questionText,
+            serverId: apiQ.id,
         }
     })
 }
@@ -72,13 +73,26 @@ const BackPage = () => {
         fetchQuestions()
     }, [])
 
-    const handleChange = (setIndex: number, id: number, value: string) => {
+    const handleChange = (_setIndex: number, id: number, value: string) => {
         setSets(prev =>
-            prev.map((set, i) =>
-                i === setIndex
-                    ? { ...set, questions: set.questions.map(q => q.id === id ? { ...q, answer: value } : q) }
-                    : set
-            )
+            prev.map((set, _i) => ({
+                ...set,
+                questions: set.questions.map(q => {
+                    let newQ = q.id === id ? { ...q, answer: value } : q
+
+                    // 체크 학번(id === 15) 입력 시 BASIC_INFO_QUESTIONS 학번(id === 2)도 자동 업데이트
+                    if (id === 15 && q.id === 2) {
+                        newQ = { ...newQ, answer: value }
+                    }
+
+                    // 반대로 BASIC_INFO_QUESTIONS 학번(id === 2) 입력 시 CHECK_QUESTIONS 학번(id === 15)도 자동 업데이트
+                    if (id === 2 && q.id === 15) {
+                        newQ = { ...newQ, answer: value }
+                    }
+
+                    return newQ
+                })
+            }))
         )
     }
 
@@ -92,131 +106,126 @@ const BackPage = () => {
         )
     }
 
-  const buildPayload = (applicationField2: number) => {
-    // ✅ CHECK_QUESTIONS의 학번/비밀번호 (15, 16번)
-    const checkStudentId = allQuestions.find(q => q.id === 15)?.answer || ''
-    const password = allQuestions.find(q => q.id === 16)?.answer || ''
+    const buildPayload = (applicationField2: number) => {
+        const checkStudentId = allQuestions.find(q => q.id === 15)?.answer || ''
+        const password = allQuestions.find(q => q.id === 16)?.answer || ''
 
-    if (!checkStudentId || !password) {
-        alert('학번과 비밀번호를 입력해주세요!')
-        return null
-    }
-    console.log('=== 질문 전체 상태 ===')
-allQuestions.forEach(q => {
-  console.log('ID:', q.id, '| 질문:', q.question, '| 답:', q.answer)
-})
+        if (!checkStudentId || !password) {
+            alert('학번과 비밀번호를 입력해주세요!')
+            return null
+        }
 
+        console.log('=== 질문 전체 상태 ===')
+        allQuestions.forEach(q => {
+            console.log('ID:', q.id, '| 질문:', q.question, '| 답:', q.answer)
+        })
 
-    // ✅ userInfoDTO는 기본정보(1~7번) 사용
-    const userInfoDTO = {
-        name: allQuestions.find(q => q.id === 1)?.answer || '',
-        studentId: allQuestions.find(q => q.id === 2)?.answer || '',
-        password: password,
-        major: allQuestions.find(q => q.id === 3)?.answer || '',
-        doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
-        schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
-        phone: allQuestions.find(q => q.id === 6)?.answer || '',
-        email: allQuestions.find(q => q.id === 7)?.answer || '',
-    }
+        const userInfoDTO = {
+            name: allQuestions.find(q => q.id === 1)?.answer || '',
+            studentId: allQuestions.find(q => q.id === 2)?.answer || '',
+            password: password,
+            major: allQuestions.find(q => q.id === 3)?.answer || '',
+            doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
+            schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
+            phone: allQuestions.find(q => q.id === 6)?.answer || '',
+            email: allQuestions.find(q => q.id === 7)?.answer || '',
+        }
 
-    // ✅ responses는 공통질문(8~14) + 백엔드질문(17~19)
-    const responses = allQuestions
-        .filter(q => (q.id >= 8 && q.id <= 14) || (q.id >= 17 && q.id <= 19))
-        .map(q => ({
-            questionId: q.id,
-            responseText: q.answer || '',
-        }))
+        // ✅ 서버 questionId 사용
+        const responses = allQuestions
+            .filter(q => (q.id >= 8 && q.id <= 14) || (q.id >= 17 && q.id <= 19))
+            .map(q => ({
+                questionId: q.serverId || q.id, // 서버 ID가 없으면 기존 id fallback
+                responseText: q.answer || '',
+            }))
 
-    // ✅ 포트폴리오 처리
-    const portfolioQuestion = allQuestions.find(q => q.id === 14)
-    const portfolioFile = portfolioQuestion?.file
-    const portfolioLink = portfolioQuestion?.answer || ''
+        const portfolioQuestion = allQuestions.find(q => q.id === 14)
+        const portfolioFile = portfolioQuestion?.file
+        const portfolioLink = portfolioQuestion?.answer || ''
 
-    const dtoPayload = {
-        applicationField2,
-        userInfoDTO,
-        responses,
-        portfolioLink: portfolioFile ? '' : portfolioLink,
-    }
+        const dtoPayload = {
+            applicationField2,
+            userInfoDTO,
+            responses,
+            portfolioLink: portfolioFile ? '' : portfolioLink,
+        }
 
-    console.log('=== 전송 데이터 확인 ===')
-    console.log('userInfoDTO:', userInfoDTO)
-    console.log('responses:', responses)
-    console.log('portfolioFile:', portfolioFile)
+        console.log('=== 전송 데이터 확인 ===')
+        console.log('userInfoDTO:', userInfoDTO)
+        console.log('responses:', responses)
+        console.log('portfolioFile:', portfolioFile)
 
-    const formData = new FormData()
-    formData.append('dto', new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' }))
-    // ✅ portfolioFile 없으면 빈 파일로 append
-    if (portfolioFile) {
-  formData.append('portfolioFile', portfolioFile)
-}
+        const formData = new FormData()
+        formData.append('dto', new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' }))
+        if (portfolioFile) {
+            formData.append('portfolioFile', portfolioFile)
+        }
 
+        for (let pair of formData.entries()) {
+            console.log('FormData', pair[0], pair[1])
+        }
 
-    // ✅ 디버깅용 FormData 확인
-    for (let pair of formData.entries()) {
-        console.log('FormData', pair[0], pair[1])
+        return formData
     }
 
-    return formData
-}
 
-const handleFinalSubmit = async () => {
-    try {
-        const formData = buildPayload(1)
-        if (!formData) return
+    const handleFinalSubmit = async () => {
+        try {
+            const formData = buildPayload(1)
+            if (!formData) return
 
-        // ✅ headers 제거하고 기본 multipart/form-data 사용
-        const res = await api.post('/api/recruit/application/BACK/', formData)
-        alert('지원서가 성공적으로 제출되었습니다!')
-        console.log(res.data)
-    } catch (err) {
-        console.error('제출 실패:', err)
-        alert('제출 실패')
+            // ✅ headers 제거하고 기본 multipart/form-data 사용
+            const res = await api.post('/api/recruit/application/BACK/', formData)
+            alert('지원서가 성공적으로 제출되었습니다!')
+            console.log(res.data)
+        } catch (err) {
+            console.error('제출 실패:', err)
+            alert('제출 실패')
+        }
     }
-}
 
-const handleDraftSave = async () => {
-    try {
-        const formData = buildPayload(2)
-        if (!formData) return
+    const handleDraftSave = async () => {
+        try {
+            const formData = buildPayload(2)
+            if (!formData) return
 
-        const res = await api.post('/api/recruit/application/BACK/', formData)
-        alert('임시 저장되었습니다!')
-        console.log(res.data)
-    } catch (err) {
-        console.error('임시 저장 실패:', err)
-        alert('임시 저장 실패')
+            const res = await api.post('/api/recruit/application/BACK/', formData)
+            alert('임시 저장되었습니다!')
+            console.log(res.data)
+        } catch (err) {
+            console.error('임시 저장 실패:', err)
+            alert('임시 저장 실패')
+        }
     }
-}
 
     return (
         <div className={styles.page}>
             <div className={styles['page-content']}>
-            <Header />
-            <Banner line1="백엔드 개발" line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서" />
+                <Header />
+                <Banner line1="백엔드 개발" line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서" />
 
-            {sets.map((set, idx) => (
-                <ApplyForm
-                    key={idx}
-                    mode="edit"
-                    variant="survey"
-                    title={set.title}
-                    subtitle={set.subtitle}
-                    questions={set.questions}
-                    allQuestions={allQuestions}
-                    onChange={(id, value) => handleChange(idx, id, value)}
-                    enableConsent={idx === sets.length - 1}
-                    enableNotice={idx === sets.length - 1}
-                    enableActions={idx === sets.length - 1}
-                    consentChecked={consentChecked}
-                    onConsentChange={setConsentChecked}
-                    onFileChange={(id, file) => handleFileChange(idx, id, file)}
-                    onSubmit={handleFinalSubmit}
-                    onDraftSave={handleDraftSave}
-                />
-            ))}
+                {sets.map((set, idx) => (
+                    <ApplyForm
+                        key={idx}
+                        mode="edit"
+                        variant="survey"
+                        title={set.title}
+                        subtitle={set.subtitle}
+                        questions={set.questions}
+                        allQuestions={allQuestions}
+                        onChange={(id, value) => handleChange(idx, id, value)}
+                        enableConsent={idx === sets.length - 1}
+                        enableNotice={idx === sets.length - 1}
+                        enableActions={idx === sets.length - 1}
+                        consentChecked={consentChecked}
+                        onConsentChange={setConsentChecked}
+                        onFileChange={(id, file) => handleFileChange(idx, id, file)}
+                        onSubmit={handleFinalSubmit}
+                        onDraftSave={handleDraftSave}
+                    />
+                ))}
 
-            <ApplyFooter />
+                <ApplyFooter />
             </div>
         </div>
     )
