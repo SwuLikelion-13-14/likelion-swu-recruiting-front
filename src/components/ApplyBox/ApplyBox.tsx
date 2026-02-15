@@ -20,6 +20,15 @@ const ApplyBox = () => {
     const handleCheck = async () => {
         setStudentError('');
         setPasswordError('');
+        if (!studentId.trim()) {
+            setStudentError('학번을 입력해주세요.');
+            return; // API 호출하지 않음
+        }
+        if (!password.trim()) {
+            setPasswordError('비밀번호를 입력해주세요.');
+            return; // API 호출하지 않음
+        }
+
         setLoading(true);
 
         try {
