@@ -111,11 +111,24 @@ html, body {
   overflow: hidden;           /* 넘치는 콘텐츠 숨김 */
   cursor: pointer;            /* 포인터 커서로 변경 */
   box-sizing: border-box;
-  background: rgb(var(--alpha-black-25));
-  outline: 1px solid rgb(var(--alpha-white-25));
-  outline-offset: -1px;
-  box-shadow: inset 2px 2px 8.1px rgb(var(--alpha-white-50)), inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
-  transition: background-color 0.3s ease;  /* 부드러운 색상 전환 효과 */
+  /* 안쪽 그림자 효과로 입체감 생성 */
+  box-shadow: inset 2px 2px 8.1px rgba(255, 255, 255, 0.5), 
+              inset -10px -10px 8px 2px rgba(255, 74, 67, 0.2), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.4), 
+              inset 1px 0 0 rgba(255, 255, 255, 0.32), 
+              inset 0 -1px 3px rgba(0, 0, 0, 0.2), 
+              inset -1px 0 3px rgba(0, 0, 0, 0.16);
+  /* 배경 블러 및 색상 조정 효과 */
+  -webkit-backdrop-filter: blur(4.5px) brightness(100%) saturate(105%) hue-rotate(10deg);
+  backdrop-filter: blur(4.5px) brightness(100%) saturate(105%) hue-rotate(10deg);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  /* 그라데이션 배경 - 왼쪽이 더 진한 빨간색 */
+  background: linear-gradient(90deg, 
+    rgba(255, 0, 0, 0.25) 0%, 
+    rgba(255, 0, 0, 0.03) 50%,
+    rgba(255, 0, 0, 0.03) 100%
+  );
+  transition: all 0.3s ease;
   
   @media (max-width: 768px) {
     height: auto;
@@ -140,7 +153,6 @@ html, body {
   left: -346.31px;
   top: -403.89px;
   position: absolute;
-  background: radial-gradient(ellipse 50.00% 50.00% at 50.00% 50.00%, rgba(214, 11, 3, 0.56) 0%, rgba(214, 11, 3, 0) 100%);
   border-radius: 60px;
   opacity: 0.3;
 }
@@ -151,7 +163,6 @@ html, body {
   right: -100px;
   bottom: -100px;
   position: absolute;
-  background: radial-gradient(ellipse 50.00% 50.00% at 50.00% 50.00%, rgba(232.12, 165.31, 71.79, 0.56) 0%, rgba(214, 11, 3, 0) 100%);
   border-radius: 60px;
   opacity: 0.3;
 }
@@ -218,16 +229,30 @@ html, body {
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  background: rgb(var(--alpha-black-25));
-  outline: 1px solid rgb(var(--alpha-white-25));
-  outline-offset: -1px;
-  box-shadow: inset 2px 2px 8.1px rgb(var(--alpha-white-50)), inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
   overflow: hidden;
   border-radius: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: auto;
+  /* 안쪽 그림자 효과로 입체감 생성 */
+  box-shadow: inset 2px 2px 8.1px rgba(255, 255, 255, 0.5), 
+              inset -10px -10px 8px 2px rgba(255, 74, 67, 0.2), 
+              inset 0 1px 0 rgba(255, 255, 255, 0.4), 
+              inset 1px 0 0 rgba(255, 255, 255, 0.32), 
+              inset 0 -1px 3px rgba(0, 0, 0, 0.2), 
+              inset -1px 0 3px rgba(0, 0, 0, 0.16);
+  /* 배경 블러 및 색상 조정 효과 */
+  -webkit-backdrop-filter: blur(4.5px) brightness(100%) saturate(105%) hue-rotate(10deg);
+  backdrop-filter: blur(4.5px) brightness(100%) saturate(105%) hue-rotate(10deg);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  /* 그라데이션 배경 - 왼쪽이 더 진한 빨간색 */
+  background: linear-gradient(90deg, 
+    rgba(255, 0, 0, 0.25) 0%, 
+    rgba(255, 0, 0, 0.03) 50%,
+    rgba(255, 0, 0, 0.03) 100%
+  );
+  transition: all 0.3s ease;
 }
 
 .glassGradient1 {
@@ -236,11 +261,6 @@ html, body {
   height: 736.03px;
   left: -346.31px;
   top: -403.89px;
-  background: radial-gradient(
-    ellipse 50% 50% at 50% 50%,
-    rgba(214, 11, 3, 0.56) 0%,
-    rgba(214, 11, 3, 0) 100%
-  );
   border-radius: 60px;
   opacity: 0.3;
 }
@@ -251,11 +271,6 @@ html, body {
   height: 441.97px;
   left: 325.94px;
   top: 310.89px;
-  background: radial-gradient(
-    ellipse 50% 50% at 50% 50%,
-    rgba(232.12, 165.31, 71.79, 0.56) 0%,
-    rgba(214, 11, 3, 0) 100%
-  );
   border-radius: 60px;
   opacity: 0.3;
 }
@@ -284,10 +299,8 @@ html, body {
   height: 60%;
   background: radial-gradient(
     circle,
-    rgba(255, 150, 100, 0.15) 0%,
     transparent 70%
   );
-  filter: blur(40px);
   z-index: 1;
 }
 
