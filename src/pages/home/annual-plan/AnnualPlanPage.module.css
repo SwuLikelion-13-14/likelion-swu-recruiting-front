@@ -215,6 +215,7 @@ h1 {
   width: 100%;
   height: calc(100% - 50px);
   pointer-events: none;
+  overflow: hidden;
 }
 
 /* Event Bar */
