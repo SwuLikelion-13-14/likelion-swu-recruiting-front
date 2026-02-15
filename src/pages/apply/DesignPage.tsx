@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Header } from '@/components/Layout/Header/Header';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
@@ -32,6 +32,8 @@ const DesignPage = () => {
 
     // 페이지 전체 질문(flat)
     const allQuestions = sets.flatMap(set => set.questions)
+
+
 
     // ✅ 답안 초기화(useEffect)
     useEffect(() => {
@@ -198,27 +200,29 @@ const DesignPage = () => {
         )
     }
 
+    const allQuestionsRef = useRef(allQuestions)
+    useEffect(() => {
+        allQuestionsRef.current = allQuestions
+    }, [allQuestions])
 
 
-    const handleFinalSubmit = async () => {
-        allQuestions.forEach(q => {
-            console.log(`id:${q.id} | answer:"${q.answer}" | file:${q.file} | fileLink:"${q.fileLink}"`)
-        })
+    const handleFinalSubmit = async (): Promise<boolean> => {
+        const currentQuestions = allQuestionsRef.current
         try {
             // 1️⃣ 기본정보 (id 2번을 사용!)
             const userInfoDTO = {
-                name: allQuestions.find(q => q.id === 1)?.answer || '',
-                studentId: allQuestions.find(q => q.id === 2)?.answer || '', // ✅ 15번 아니라 2번!
-                password: allQuestions.find(q => q.id === 16)?.answer || '',
-                major: allQuestions.find(q => q.id === 3)?.answer || '',
-                doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
-                schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
-                phone: allQuestions.find(q => q.id === 6)?.answer || '',
-                email: allQuestions.find(q => q.id === 7)?.answer || '',
+                name: currentQuestions.find(q => q.id === 1)?.answer || '',
+                studentId: currentQuestions.find(q => q.id === 2)?.answer || '', // ✅ 15번 아니라 2번!
+                password: currentQuestions.find(q => q.id === 16)?.answer || '',
+                major: currentQuestions.find(q => q.id === 3)?.answer || '',
+                doubleMajor: currentQuestions.find(q => q.id === 4)?.answer || '',
+                schoolStatus: currentQuestions.find(q => q.id === 5)?.answer || '',
+                phone: currentQuestions.find(q => q.id === 6)?.answer || '',
+                email: currentQuestions.find(q => q.id === 7)?.answer || '',
             }
 
             // 2️⃣ 질문 답변 (8~14번)
-            const responses = allQuestions
+            const responses = currentQuestions
                 .filter(q => q.id >= 8 && q.id <= 14)
                 .map(q => ({
                     questionId: q.id,
@@ -226,7 +230,7 @@ const DesignPage = () => {
                 }))
 
             // 3️⃣ 포트폴리오 처리
-            const portfolioQuestion = allQuestions.find(q => q.id === 14)
+            const portfolioQuestion = currentQuestions.find(q => q.id === 14)
             const portfolioFile = portfolioQuestion?.file
             const portfolioLink = portfolioFile
                 ? '' // 파일이 있으면 링크는 비워서 파일 전송
@@ -255,47 +259,46 @@ const DesignPage = () => {
 
             // 7️⃣ API 호출
             const res = await api.post('/api/recruit/application/PND/', formData)
-            alert('지원서가 성공적으로 제출되었습니다!')
             console.log('최종 제출 성공:', res.data)
             return true
         } catch (err: any) {
             console.error('제출 실패:', err)
-            alert('제출 중 오류가 발생했습니다.')
             return false
         }
     }
 
     // 임시저장
 
-    const handleDraftSave = async () => {
+    const handleDraftSave = async (): Promise<boolean> => {
+        const currentQuestions = allQuestionsRef.current
         try {
             // 🔍 임시저장 시에는 학번, 비밀번호만 검증
-            const studentId = allQuestions.find(q => q.id === 15)?.answer || ''
-            const password = allQuestions.find(q => q.id === 16)?.answer || ''
+            const studentId = currentQuestions.find(q => q.id === 15)?.answer || ''
+            const password = currentQuestions.find(q => q.id === 16)?.answer || ''
 
             if (!studentId || !password) {
                 return false
             }
 
             const userInfoDTO = {
-                name: allQuestions.find(q => q.id === 1)?.answer || '',
+                name: currentQuestions.find(q => q.id === 1)?.answer || '',
                 studentId: studentId,
                 password: password,
-                major: allQuestions.find(q => q.id === 3)?.answer || '',
-                doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
-                schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
-                phone: allQuestions.find(q => q.id === 6)?.answer || '',
-                email: allQuestions.find(q => q.id === 7)?.answer || '',
+                major: currentQuestions.find(q => q.id === 3)?.answer || '',
+                doubleMajor: currentQuestions.find(q => q.id === 4)?.answer || '',
+                schoolStatus: currentQuestions.find(q => q.id === 5)?.answer || '',
+                phone: currentQuestions.find(q => q.id === 6)?.answer || '',
+                email: currentQuestions.find(q => q.id === 7)?.answer || '',
             }
 
-            const responses = allQuestions
+            const responses = currentQuestions
                 .filter(q => q.id >= 8 && q.id <= 13)
                 .map(q => ({
                     questionId: q.id,
                     responseText: q.answer || '',
                 }))
 
-            const portfolioQuestion = allQuestions.find(q => q.id === 14)
+            const portfolioQuestion = currentQuestions.find(q => q.id === 14)
             const portfolioFile = portfolioQuestion?.file
             const portfolioLink = portfolioQuestion?.answer || ''
 
