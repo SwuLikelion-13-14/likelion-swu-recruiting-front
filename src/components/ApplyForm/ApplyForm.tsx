@@ -82,6 +82,7 @@ export default function ApplyForm({
   const [isSubmitFromDraftOpen, setIsSubmitFromDraftOpen] = useState(false);
   const [isDraftFromSubmittedOpen, setIsDraftFromSubmittedOpen] = useState(false);
   const [isSubmitOverwriteOpen, setIsSubmitOverwriteOpen] = useState(false);
+  const [isLoadingOpen, setIsLoadingOpen] = useState(false);
 
   const [_isDrafting, setIsDrafting] = useState(false);
   const [_isSubmitting, setIsSubmitting] = useState(false);
@@ -143,10 +144,15 @@ export default function ApplyForm({
   const executeDraftOverwrite = async () => {
     setIsDraftOverwriteOpen(false);
     setIsDraftFromSubmittedOpen(false);
+    setIsLoadingOpen(true); // ✅ 로딩 모달 열기
     setIsDrafting(true);
     try {
-      await onDirectDraftSave?.(); 
+      await onDirectDraftSave?.();
+      setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
       setIsDraftSuccessOpen(true);
+    } catch (error) {
+      setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
+      console.error('임시저장 실패:', error);
     } finally {
       setIsDrafting(false);
     }
@@ -155,15 +161,19 @@ export default function ApplyForm({
   const executeSubmitOverwrite = async () => {
     setIsSubmitFromDraftOpen(false);
     setIsSubmitOverwriteOpen(false);
+    setIsLoadingOpen(true); // ✅ 로딩 모달 열기
     setIsSubmitting(true);
     try {
       await onDirectSubmit?.();
+      setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
       setIsSubmitSuccessOpen(true);
+    } catch (error) {
+      setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
+      console.error('최종제출 실패:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
-
 
   // 입력 유무(파일 포함)로 dirty 판단
   const hasAnyChange = useMemo(() => {
@@ -285,14 +295,23 @@ export default function ApplyForm({
     setStudentStatus(status);
 
     if (status === "valid") {
-      await onSubmit?.();
-      return true;  //성공
+      setIsLoadingOpen(true); // ✅ 로딩 모달 열기
+      try {
+        await onSubmit?.();
+        setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
+        setIsSubmitSuccessOpen(true); // 성공 모달 열기
+        return true;
+      } catch (error) {
+        setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
+        console.error('제출 실패:', error);
+        return false;
+      }
     } else if (status === "draft-exists") {
       setIsSubmitFromDraftOpen(true);
-      return false;  //취소 가능성
+      return false;
     } else if (status === "submitted-exists") {
       setIsSubmitOverwriteOpen(true);
-      return false;  //취소 가능성
+      return false;
     } else {
       setErrors((prev) => ({
         ...prev,
@@ -311,14 +330,23 @@ export default function ApplyForm({
     setStudentStatus(status);
 
     if (status === "valid") {
-      await onDraftSave?.();
-      return true; 
+      setIsLoadingOpen(true); // ✅ 로딩 모달 열기
+      try {
+        await onDraftSave?.();
+        setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
+        setIsDraftSuccessOpen(true); // 성공 모달 열기
+        return true;
+      } catch (error) {
+        setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
+        console.error('임시저장 실패:', error);
+        return false;
+      }
     } else if (status === "draft-exists") {
       setIsDraftOverwriteOpen(true);
-      return false; 
+      return false;
     } else if (status === "submitted-exists") {
       setIsDraftFromSubmittedOpen(true);
-      return false;  
+      return false;
     } else {
       setErrors((prev) => ({
         ...prev,
@@ -327,7 +355,6 @@ export default function ApplyForm({
       return false;
     }
   };
-
 
 
   const handleFileUpload = (id: number) => {
@@ -888,8 +915,8 @@ export default function ApplyForm({
             {enableActions && (
               <ApplyFormActions
                 cancelState={cancelState}
-                draftState={draftState}
-                submitState={submitState}
+                draftState={_isDrafting ? "unactive" : draftState}
+                submitState={_isSubmitting ? "unactive" : submitState}
                 hasInput={hasAnyChange}
                 onDraftSave={handleDraftSave}  // API 검증 포함
                 onSubmit={handleSubmit}
@@ -1188,6 +1215,21 @@ export default function ApplyForm({
             }
           }}
           onClose={() => setIsDraftSuccessOpen(false)}
+        />
+      )}
+      {/* ✅ 로딩 모달 추가 */}
+      {isLoadingOpen && (
+        <Modal
+          isOpen={isLoadingOpen}
+          title="처리 중입니다..."
+          description={
+            <span>
+              잠시만 기다려 주세요.<br />
+              지원서를 제출하고 있습니다.
+            </span>
+          }
+          // 버튼 없이 로딩만 표시
+          onClose={() => { }} // 닫기 비활성화
         />
       )}
 
