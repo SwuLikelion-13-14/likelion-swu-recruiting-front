@@ -111,7 +111,7 @@ const ApplyFormActions = ({
         <Modal
           isOpen={isCancelStep2Open}
           title="지원서 작성 취소"
-          extraText="지원서가 정상적으로 삭제되었습니다."
+          extraText="지원서 작성이 취소되었습니다."
           primaryButton={{
             text: '확인',
             onClick: () => {
