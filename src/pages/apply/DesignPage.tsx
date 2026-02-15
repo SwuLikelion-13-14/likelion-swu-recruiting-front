@@ -201,10 +201,9 @@ const DesignPage = () => {
 
 
     const handleFinalSubmit = async () => {
-        console.log('=== allQuestions 전체 ===')
-    allQuestions.forEach(q => {
-        console.log(`id:${q.id} | answer:"${q.answer}" | file:${q.file} | fileLink:"${q.fileLink}"`)
-    })
+        allQuestions.forEach(q => {
+            console.log(`id:${q.id} | answer:"${q.answer}" | file:${q.file} | fileLink:"${q.fileLink}"`)
+        })
         try {
             // 1️⃣ 기본정보 (id 2번을 사용!)
             const userInfoDTO = {
@@ -258,9 +257,11 @@ const DesignPage = () => {
             const res = await api.post('/api/recruit/application/PND/', formData)
             alert('지원서가 성공적으로 제출되었습니다!')
             console.log('최종 제출 성공:', res.data)
+            return true
         } catch (err: any) {
             console.error('제출 실패:', err)
             alert('제출 중 오류가 발생했습니다.')
+            return false
         }
     }
 
@@ -273,7 +274,7 @@ const DesignPage = () => {
             const password = allQuestions.find(q => q.id === 16)?.answer || ''
 
             if (!studentId || !password) {
-                return
+                return false
             }
 
             const userInfoDTO = {
@@ -323,14 +324,12 @@ const DesignPage = () => {
             })
 
             console.log('✅ 임시저장 성공:', res.data)
+            return true
 
         } catch (err: any) {
             console.error('❌ 임시저장 실패:', err)
             console.error('에러 응답:', err.response?.data)
-
-            if (err.response?.data?.message) {
-            } else {
-            }
+            return true
         }
     }
 

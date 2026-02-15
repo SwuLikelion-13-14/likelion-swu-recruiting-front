@@ -1,6 +1,6 @@
 export interface Question {
   id: number
-  apiId?: number 
+  apiId?: number
   question: string
   answer: string
   placeholder?: string
@@ -10,7 +10,7 @@ export interface Question {
   pattern?: RegExp;
   errorMessage?: string;
   serverId?: number
-  fileLink?: string 
+  fileLink?: string
 }
 
 export type Mode = 'edit' | 'view'
@@ -31,10 +31,11 @@ export interface ApplyFormProps {
   consentChecked?: boolean
   onConsentChange?: (checked: boolean) => void
   allQuestions: Question[]
-  onSubmit?: () => void
-  onDraftSave?: (options?: { skipValidation?: boolean }) => void
-
-  studentIdField?: number;  
-  passwordField?: number;   
+  onSubmit?: () => Promise<boolean> | void
+  onDraftSave?: (options?: { skipValidation?: boolean }) => Promise<boolean> | void
+  onDirectSubmit?: () => Promise<boolean>   
+  onDirectDraftSave?: () => Promise<boolean>
+  studentIdField?: number;
+  passwordField?: number;
   dbStatus?: 'none' | 'draft-exists' | 'submitted-exists';
 }

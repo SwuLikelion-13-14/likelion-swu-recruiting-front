@@ -242,10 +242,12 @@ const FrontPage = () => {
 
             alert('지원서가 성공적으로 제출되었습니다!')
             console.log(res.data)
+            return true
 
         } catch (err: any) {
             console.error('제출 실패:', err)
             alert('제출 중 오류가 발생했습니다.')
+            return false
         }
     }
 
@@ -257,7 +259,7 @@ const FrontPage = () => {
 
             if (!studentId || !password) {
                 alert('학번과 비밀번호를 입력해주세요!')
-                return
+                return false
             }
 
             const userInfoDTO = {
@@ -305,10 +307,12 @@ const FrontPage = () => {
 
             alert('임시 저장되었습니다!')
             console.log(res.data)
+            return true 
 
         } catch (err: any) {
             console.error('임시 저장 실패:', err)
             alert('임시 저장 중 오류 발생')
+            return false
         }
     }
 

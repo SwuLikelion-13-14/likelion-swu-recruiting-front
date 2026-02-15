@@ -226,22 +226,26 @@ const BackPage = () => {
     const handleFinalSubmit = async () => {
         try {
             const formData = buildPayload(1)
-            if (!formData) return
+            if (!formData) return false
             const res = await api.post('/api/recruit/application/BACK/', formData)
             console.log(res.data)
+            return true
         } catch (err) {
             console.error('제출 실패:', err)
+            return false
         }
     }
 
     const handleDraftSave = async () => {
         try {
             const formData = buildPayload(2)
-            if (!formData) return
+            if (!formData) return false
             const res = await api.post('/api/recruit/application/BACK/', formData)
             console.log(res.data)
+            return true
         } catch (err) {
             console.error('임시 저장 실패:', err)
+            return false
         }
     }
 
@@ -272,6 +276,8 @@ const BackPage = () => {
                         onFileChange={(id, file) => handleFileChange(idx, id, file)}
                         onSubmit={handleFinalSubmit}
                         onDraftSave={handleDraftSave}
+                        onDirectSubmit={handleFinalSubmit}
+                        onDirectDraftSave={handleDraftSave}
                     />
                 ))}
 
