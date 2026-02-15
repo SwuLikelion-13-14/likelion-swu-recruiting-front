@@ -28,12 +28,18 @@ const DesignPage = () => {
     ])
     const [consentChecked, setConsentChecked] = useState(false)
 
+
+
     // 페이지 전체 질문(flat)
     const allQuestions = sets.flatMap(set => set.questions)
 
     // ✅ 답안 초기화(useEffect)
     useEffect(() => {
         const fetchQuestions = async () => {
+            console.log("applicationData:", applicationData)
+            console.log("userInfo:", applicationData?.userInfo)
+            console.log("password:", applicationData?.userInfo?.password)
+
             try {
                 const res = await api.get('/api/recruit/application/PND')
 
@@ -56,6 +62,8 @@ const DesignPage = () => {
                             else if (id === 5) answerFromState = userInfo.schoolStatus || ''
                             else if (id === 6) answerFromState = userInfo.phone || ''
                             else if (id === 7) answerFromState = userInfo.email || ''
+                            else if (id === 15) answerFromState = userInfo.studentId || ''
+                            else if (id === 16) answerFromState = userInfo.password || ''
                         }
 
                         // ✅ 질문 답변에서 가져오기
@@ -143,45 +151,60 @@ const DesignPage = () => {
     }, [applicationData])
 
     const handleChange = (_setIndex: number, id: number, value: string) => {
-    setSets(prev =>
-        prev.map((set, _i) => ({
-            ...set,
-            questions: set.questions.map(q => {
-                let newQ = q.id === id ? { ...q, answer: value } : q
+        setSets(prev =>
+            prev.map((set, _i) => ({
+                ...set,
+                questions: set.questions.map(q => {
+                    let newQ = q.id === id ? { ...q, answer: value } : q
 
-                // 체크 학번(id === 15) 입력 시 BASIC_INFO_QUESTIONS 학번(id === 2)도 자동 업데이트
-                if (id === 15 && q.id === 2) {
-                    newQ = { ...newQ, answer: value }
-                }
+                    // 체크 학번(id === 15) 입력 시 BASIC_INFO_QUESTIONS 학번(id === 2)도 자동 업데이트
+                    if (id === 15 && q.id === 2) {
+                        newQ = { ...newQ, answer: value }
+                    }
 
-                // BASIC_INFO_QUESTIONS 학번(id === 2) 입력 시 CHECK_QUESTIONS 학번(id === 15)도 자동 업데이트
-                if (id === 2 && q.id === 15) {
-                    newQ = { ...newQ, answer: value }
-                }
+                    // BASIC_INFO_QUESTIONS 학번(id === 2) 입력 시 CHECK_QUESTIONS 학번(id === 15)도 자동 업데이트
+                    if (id === 2 && q.id === 15) {
+                        newQ = { ...newQ, answer: value }
+                    }
 
-                return newQ
-            })
-        }))
-    )
-}
+                    return newQ
+                })
+            }))
+        )
+    }
 
 
     const handleFileChange = (setIndex: number, id: number, file: File | null) => {
-    setSets(prev =>
-        prev.map((set, i) =>
-            i === setIndex
-                ? {
-                    ...set,
-                    questions: set.questions.map(q =>
-                        q.id === id ? { ...q, file, answer: file?.name || '' } : q
-                    ),
-                }
-                : set
+        setSets(prev =>
+            prev.map((set, i) =>
+                i === setIndex
+                    ? {
+                        ...set,
+                        questions: set.questions.map(q => {
+                            if (q.id === id) {
+                                return {
+                                    ...q,
+                                    file: file ?? undefined,
+                                    // 파일이 없으면 기존 fileLink를 그대로 유지
+                                    answer: file ? file.name : '',  // ✅ null이면 무조건 빈 문자열
+                                    fileLink: file ? q.fileLink : '',
+                                }
+                            }
+                            return q
+                        }),
+                    }
+                    : set
+            )
         )
-    )
-}
+    }
+
+
 
     const handleFinalSubmit = async () => {
+        console.log('=== allQuestions 전체 ===')
+    allQuestions.forEach(q => {
+        console.log(`id:${q.id} | answer:"${q.answer}" | file:${q.file} | fileLink:"${q.fileLink}"`)
+    })
         try {
             // 1️⃣ 기본정보 (id 2번을 사용!)
             const userInfoDTO = {
@@ -197,7 +220,7 @@ const DesignPage = () => {
 
             // 2️⃣ 질문 답변 (8~14번)
             const responses = allQuestions
-                .filter(q => q.id >= 8 && q.id <= 13)
+                .filter(q => q.id >= 8 && q.id <= 14)
                 .map(q => ({
                     questionId: q.id,
                     responseText: q.answer || '',
@@ -206,22 +229,18 @@ const DesignPage = () => {
             // 3️⃣ 포트폴리오 처리
             const portfolioQuestion = allQuestions.find(q => q.id === 14)
             const portfolioFile = portfolioQuestion?.file
-            const portfolioLink = portfolioQuestion?.answer || ''
+            const portfolioLink = portfolioFile
+                ? '' // 파일이 있으면 링크는 비워서 파일 전송
+                : portfolioQuestion?.fileLink || portfolioQuestion?.answer || '' // 파일 없으면 기존 link 또는 answer 사용
 
             // 4️⃣ dto 객체
             const dtoPayload = {
+                applicationId: applicationData?.id,
                 applicationField2: 1, // 1=최종제출
                 userInfoDTO,
                 responses,
                 portfolioLink: portfolioFile ? '' : portfolioLink, // 파일 있으면 링크는 빈값
             }
-            console.log('=== 전송 데이터 확인 ===')
-            console.log('userInfoDTO:', userInfoDTO)
-            console.log('responses:', responses)
-            console.log('portfolioFile:', portfolioFile)
-            console.log('portfolioLink:', portfolioLink)
-            console.log('전체 payload:', dtoPayload)
-
 
             // 5️⃣ FormData 생성
             const formData = new FormData()
@@ -234,40 +253,14 @@ const DesignPage = () => {
             if (portfolioFile) {
                 formData.append('portfolioFile', portfolioFile)
             }
-            console.log('=== FormData 내용 ===')
-            for (let [key, value] of formData.entries()) {
-                if (value instanceof Blob) {
-                    console.log(key, '(Blob):', value.size, 'bytes')
-                } else {
-                    console.log(key, value)
-                }
-            }
 
             // 7️⃣ API 호출
-            const res = await api.post('/api/recruit/application/PND/', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            })
-
+            const res = await api.post('/api/recruit/application/PND/', formData)
+            alert('지원서가 성공적으로 제출되었습니다!')
             console.log('최종 제출 성공:', res.data)
-
         } catch (err: any) {
-            console.error('❌ 제출 실패:', err)
-            console.error('에러 응답:', err.response?.data)
-            console.error('상태 코드:', err.response?.status)
-
-            // 백엔드 에러 메시지 표시
-            if (err.response?.data?.message) {
-            } else if (err.response?.data?.result) {
-                const errors = err.response.data.result
-                const errorMsg = Object.entries(errors)
-                    .map(([field, msg]) => `${field}: ${msg}`)
-                    .join('\n')
-                alert(`필드 오류:\n${errorMsg}`)
-            } else {
-                alert('제출 중 오류가 발생했습니다.')
-            }
+            console.error('제출 실패:', err)
+            alert('제출 중 오류가 발생했습니다.')
         }
     }
 
@@ -312,8 +305,6 @@ const DesignPage = () => {
                 portfolioLink: portfolioFile ? '' : portfolioLink,
             }
 
-            console.log('=== 임시저장 데이터 ===')
-            console.log('dtoPayload:', dtoPayload)
 
             const formData = new FormData()
             formData.append(
@@ -342,6 +333,7 @@ const DesignPage = () => {
             }
         }
     }
+
 
     return (
         <div className={styles.page}>

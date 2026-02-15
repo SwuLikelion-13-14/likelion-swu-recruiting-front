@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./ApplyForm.module.css";
 import type { ApplyFormProps, Question } from "./types";
 
-
+import { api } from '@/api/client'
 import checkboxDefault from "@/assets/icon/checkbox_default.svg";
 import checkboxChecked from "@/assets/icon/checkbox_checked.svg";
 import noticeIcon from "@/assets/icon/alert_octagon.svg";
@@ -63,10 +63,31 @@ export default function ApplyForm({
   const STUDENT_ID = studentIdField ?? 15;   // props 없으면 기본 15
   const PASSWORD_ID = passwordField ?? 16;
 
+  type ModalType =
+    | "draft"                        // 기존 임시저장 존재
+    | "submitted"                    // 기존 최종제출 존재
+    | "draft-overwrite"              // 기존 임시저장 + 임시저장 버튼 클릭
+    | "draft-overwrite-submitted"    // 기존 최종제출 + 임시저장 버튼 클릭
+    | "submit-overwrite-draft"       // 기존 임시저장 + 최종제출 버튼 클릭
+    | "submit-overwrite-submitted"   // 기존 최종제출 + 최종제출 버튼 클릭
+    | "leave"
+    | null;
+
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<
-    "submitted" | "draft" | "leave" | null
-  >(null);
+  const [modalType, _setModalType] = useState<ModalType>(null);
+  // ApplyForm 상단 useState
+  const [isDraftOverwriteOpen, setIsDraftOverwriteOpen] = useState(false);
+  const [isSubmitFromDraftOpen, setIsSubmitFromDraftOpen] = useState(false);
+  const [isDraftFromSubmittedOpen, setIsDraftFromSubmittedOpen] = useState(false);
+  const [isSubmitOverwriteOpen, setIsSubmitOverwriteOpen] = useState(false);
+
+  const [_isDrafting, setIsDrafting] = useState(false);
+  const [_isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+  const [_cancelTargetModal, setCancelTargetModal] = useState<"draft" | "submit" | null>(null);
+  const [isCancelFlow, setIsCancelFlow] = useState(false);
+
+
 
   const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
     {}
@@ -114,6 +135,32 @@ export default function ApplyForm({
     }
   }, [questions, STUDENT_ID]);
 
+  // 덮어쓰기 모달 함수
+  const executeDraftOverwrite = async () => {
+    if (isCancelFlow) return;
+
+    setIsDraftOverwriteOpen(false);
+    setIsDraftFromSubmittedOpen(false);
+    setIsDrafting(true);
+    try {
+      await onDraftSave?.({ skipValidation: true });
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  const executeSubmitOverwrite = async () => {
+    if (isCancelFlow) return;
+    setIsSubmitFromDraftOpen(false);
+    setIsSubmitOverwriteOpen(false);
+    setIsSubmitting(true);
+    try {
+      await onSubmit?.();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   // 입력 유무(파일 포함)로 dirty 판단
   const hasAnyChange = useMemo(() => {
@@ -143,24 +190,25 @@ export default function ApplyForm({
   }, [hasAnyChange, setDirty]);
 
 
-  // submitted/draft-exists 상태면 3초 후 모달 오픈
-  useEffect(() => {
-    if (studentStatus === "submitted-exists") {
-      const timer = setTimeout(() => {
-        setModalType("submitted");
-        setModalOpen(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+  const checkStudentIdAPI = async (studentId: string): Promise<StudentStatus> => {
+    try {
+      const response = await api.post('/api/users/existence', { studentId }); // URL 수정
+      const data = response.data;
 
-    if (studentStatus === "draft-exists") {
-      const timer = setTimeout(() => {
-        setModalType("draft");
-        setModalOpen(true);
-      }, 3000);
-      return () => clearTimeout(timer);
+      if (!data.isSuccess) return "invalid";
+
+      if (data.result.exist) {
+        // applicationField2 값으로 draft / submitted 구분
+        return data.result.applicationField2 === 1 ? "submitted-exists" : "draft-exists";
+      }
+
+      return "valid"; // 없으면 valid
+    } catch (err) {
+      console.error('학번 체크 실패:', err);
+      return "invalid"; // 에러 발생 시 invalid 처리
     }
-  }, [studentStatus]);
+  };
+
 
 
 
@@ -229,8 +277,61 @@ export default function ApplyForm({
     }));
   };
 
+  const handleSubmit = async (): Promise<boolean> => {
+    const studentId = answers[STUDENT_ID] || "";
+    if (!studentId) return false;
+
+    const status = await checkStudentIdAPI(studentId);
+    setStudentStatus(status);
+
+    if (status === "valid") {
+      await onSubmit?.();
+      return true;  // ✅ 성공
+    } else if (status === "draft-exists") {
+      setIsSubmitFromDraftOpen(true);
+      return false;  // ✅ 취소 가능성
+    } else if (status === "submitted-exists") {
+      setIsSubmitOverwriteOpen(true);
+      return false;  // ✅ 취소 가능성
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        [STUDENT_ID]: studentMessages[status],
+      }));
+      return false;
+    }
+  };
+
+  // handleDraftSave도 동일하게
+  const handleDraftSave = async (): Promise<boolean> => {
+    const studentId = answers[STUDENT_ID] || "";
+    if (!studentId) return false;
+
+    const status = await checkStudentIdAPI(studentId);
+    setStudentStatus(status);
+
+    if (status === "valid") {
+      await onDraftSave?.();
+      return true;  // ✅
+    } else if (status === "draft-exists") {
+      setIsDraftOverwriteOpen(true);
+      return false;  // ✅
+    } else if (status === "submitted-exists") {
+      setIsDraftFromSubmittedOpen(true);
+      return false;  // ✅
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        [STUDENT_ID]: studentMessages[status],
+      }));
+      return false;
+    }
+  };
+
+
+
   const handleFileUpload = (id: number) => {
-    if (typeof window === "undefined") return; 
+    if (typeof window === "undefined") return;
     const input = document.createElement("input");
     input.type = "file";
     input.onchange = (e) => {
@@ -263,6 +364,7 @@ export default function ApplyForm({
 
     // 부모 콜백 호출
     onFileChange?.(id, null);
+    onChange?.(id, "");
 
     // 오류/성공 메시지 초기화
     setErrors((prev) => {
@@ -294,12 +396,12 @@ export default function ApplyForm({
 
       requestAnimationFrame(() => {
         if (typeof document !== "undefined") {
-        document.getElementById(`field-${firstErrorId}`)?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-    });
+          document.getElementById(`field-${firstErrorId}`)?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      });
       return false;
     }
 
@@ -333,7 +435,7 @@ export default function ApplyForm({
 
   const cancelState: ButtonState = "default";
   const draftState: ButtonState =
-    hasAnyChange && studentValid && passwordValid && consentOk
+    studentValid && passwordValid && consentOk
       ? "default"
       : "unactive";
   const submitState: ButtonState =
@@ -768,9 +870,10 @@ export default function ApplyForm({
                 draftState={draftState}
                 submitState={submitState}
                 hasInput={hasAnyChange}
-                onDraftSave={() => onDraftSave?.()}
-                onSubmit={onSubmit}
+                onDraftSave={handleDraftSave}  // API 검증 포함
+                onSubmit={handleSubmit}
                 onCancelConfirmed={() => (window.location.href = "/")}
+                dbStatus={studentStatus === "draft-exists" || studentStatus === "submitted-exists" ? studentStatus : 'none'}
               />
             )}
           </section>
@@ -877,6 +980,158 @@ export default function ApplyForm({
           />
         )
       }
+      {/* ===== DB 상태 모달 ===== */}
+      {isDraftOverwriteOpen && (
+        <Modal
+          isOpen={isDraftOverwriteOpen}
+          title="이미 작성한 지원서가 있습니다."
+          description={
+            <span>
+              임시저장 했던 다른 지원서가 있습니다.<br />
+              이전 지원서는 삭제하고,<br />
+              <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
+            </span>
+          }
+          extraText={
+            <span>
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>{" "}상태로 저장됩니다.
+            </span>
+          }
+          primaryButton={{ text: '덮어쓰기', onClick: executeDraftOverwrite }}
+          secondaryButton={{
+            text: '취소',
+            onClick: () => {
+              // 덮어쓰기 모달 닫기
+              setIsDraftOverwriteOpen(false);
+              // 취소 확인 모달 열기
+
+              setIsCancelConfirmOpen(true);
+
+            },
+          }}
+
+          onClose={() => setIsDraftOverwriteOpen(false)}
+        />
+      )}
+
+      {isSubmitFromDraftOpen && (
+        <Modal
+          isOpen={isSubmitFromDraftOpen}
+          title="이미 작성한 지원서가 있습니다."
+          description={
+            <span>
+              임시저장 했던 다른 지원서가 있습니다.<br />
+              이전 지원서는 삭제하고,<br />
+              <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
+            </span>
+          }
+          extraText={
+            <span>
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>{" "}상태로 저장됩니다.
+            </span>
+          }
+          primaryButton={{ text: '덮어쓰기', onClick: executeSubmitOverwrite }}
+          secondaryButton={{
+            text: '취소',
+            onClick: () => {
+              // 덮어쓰기 모달 닫기
+              setIsSubmitFromDraftOpen(false);
+
+              // 취소 확인 모달 열기
+
+              setIsCancelConfirmOpen(true);
+
+            },
+          }}
+
+          onClose={() => setIsSubmitFromDraftOpen(false)}
+        />
+      )}
+
+      {isDraftFromSubmittedOpen && (
+        <Modal
+          isOpen={isDraftFromSubmittedOpen}
+          title="이미 작성한 지원서가 있습니다."
+          description={
+            <span>
+              최종제출 했던 다른 지원서가 있습니다.<br />
+              이전 지원서는 삭제하고,<br />
+              <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
+            </span>
+          }
+          extraText={
+            <span>
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>{" "}상태로 저장됩니다.
+            </span>
+          }
+          primaryButton={{ text: '덮어쓰기', onClick: executeDraftOverwrite }}
+          secondaryButton={{
+            text: '취소',
+            onClick: () => {
+              // 덮어쓰기 모달 닫기
+              setIsDraftFromSubmittedOpen(false);
+              // 취소 확인 모달 열기
+
+              setIsCancelConfirmOpen(true);
+
+            },
+          }}
+
+          onClose={() => setIsDraftFromSubmittedOpen(false)}
+        />
+      )}
+
+      {isSubmitOverwriteOpen && (
+        <Modal
+          isOpen={isSubmitOverwriteOpen}
+          title="이미 작성한 지원서가 있습니다."
+          description={
+            <span>
+              최종제출 했던 다른 지원서가 있습니다.<br />
+              이전 지원서는 삭제하고,<br />
+              <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
+            </span>
+          }
+          extraText={
+            <span>
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>{" "}상태로 저장됩니다.
+            </span>
+          }
+          primaryButton={{ text: '덮어쓰기', onClick: executeSubmitOverwrite }}
+          secondaryButton={{
+            text: '취소',
+            onClick: () => {
+              // 덮어쓰기 모달 닫기
+              setIsSubmitOverwriteOpen(false);
+
+              // 취소 확인 모달 열기
+
+              setIsCancelConfirmOpen(true);
+
+            },
+          }}
+
+          onClose={() => setIsSubmitOverwriteOpen(false)}
+        />
+      )}
+      {isCancelConfirmOpen && (
+        <Modal
+          isOpen={isCancelConfirmOpen}
+          title="덮어쓰기가 취소되었습니다."
+          description="작성하고 있던 지원폼으로 돌아갑니다."
+          primaryButton={{
+            text: "확인",
+            onClick: () => {
+              // 모달 닫기
+              setIsCancelConfirmOpen(false);
+              setCancelTargetModal(null);
+              setIsCancelFlow(false);
+            },
+          }}
+
+        />
+      )}
+
     </section>
   );
 }

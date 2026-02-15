@@ -8,10 +8,13 @@ interface ApplyFormActionsProps {
   cancelState: ButtonState
   draftState: ButtonState
   submitState: ButtonState
-  onDraftSave?: (options?: { skipValidation?: boolean }) => void
-  onSubmit?: () => void
+  onDraftSave?: (options?: { skipValidation?: boolean }) => Promise<boolean> | void
+  onSubmit?: () => Promise<boolean> | void
+  onDraftOverwrite?: () => void
+
   onCancelConfirmed?: () => void
   hasInput?: boolean // 폼에 입력이 있는지
+  dbStatus?: 'draft-exists' | 'submitted-exists' | 'none'
 }
 
 const ApplyFormActions = ({
@@ -47,8 +50,8 @@ const ApplyFormActions = ({
 
 
   const handleDraftSave = () => {
-  setIsDraftStep1Open(true)
-}
+    setIsDraftStep1Open(true)
+  }
 
 
   return (
@@ -133,19 +136,22 @@ const ApplyFormActions = ({
             </span>
           }
           primaryButton={{
-  text: '제출하기',
-  onClick: async () => {
-    try {
-      if(onSubmit){
-        await onSubmit(); // handleFinalSubmit async 호출
-      }
-      setIsSubmitStep1Open(false);
-      setIsSubmitStep2Open(true);
-    } catch(err) {
-      console.error('제출 실패:', err);
-    }
-  }
-}}
+            text: '제출하기',
+            onClick: async () => {
+              try {
+                const result = await onSubmit?.();
+                if (result === false) {
+                  setIsSubmitStep1Open(false);  
+                  return;
+                }
+                setIsSubmitStep1Open(false);
+                setIsSubmitStep2Open(true);
+              } catch (err) {
+                console.error('제출 실패:', err);
+                setIsSubmitStep1Open(false);
+              }
+            }
+          }}
 
           secondaryButton={{
             text: '취소',
@@ -214,19 +220,22 @@ const ApplyFormActions = ({
             </span>
           }
           primaryButton={{
-  text: '임시저장',
-  onClick: async () => {
-    try {
-      if(onDraftSave){
-        await onDraftSave({ skipValidation: false })
-      }
-      setIsDraftStep1Open(false)
-      setIsDraftStep2Open(true)
-    } catch(err) {
-      console.error('임시저장 실패:', err)
-    }
-  }
-}}
+            text: '임시저장',
+            onClick: async () => {
+              try {
+                const result = await onDraftSave?.({ skipValidation: false });
+                if (result === false) {
+                  setIsDraftStep1Open(false);  
+                  return;
+                }
+                setIsDraftStep1Open(false);
+                setIsDraftStep2Open(true);
+              } catch (err) {
+                console.error('임시저장 실패:', err);
+                setIsDraftStep1Open(false);
+              }
+            }
+          }}
 
           secondaryButton={{
             text: '취소',
