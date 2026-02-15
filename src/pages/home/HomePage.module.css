@@ -110,11 +110,11 @@ html, body {
   position: relative;         /* 상대적 위치 설정 */
   overflow: hidden;           /* 넘치는 콘텐츠 숨김 */
   cursor: pointer;            /* 포인터 커서로 변경 */
-  /* 안쪽 그림자 효과 */
-  box-shadow: 2px 2px 8.1px rgba(255, 255, 255, 0.50) inset, 
-              -10px -10px 8px 2px rgba(255, 74, 67, 0.20) inset;
-  outline: 1px solid rgba(255, 255, 255, 0.20);  /* 외곽선 설정 */
-  outline-offset: -1px;       /* 외곽선 오프셋 */
+  box-sizing: border-box;
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+  box-shadow: inset 2px 2px 8.1px rgb(var(--alpha-white-50)), inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
   transition: background-color 0.3s ease;  /* 부드러운 색상 전환 효과 */
   
   @media (max-width: 768px) {
@@ -168,7 +168,7 @@ html, body {
   /*backdrop-filter: blur(4px);  블러효과*/ 
   transition: background-color 200ms;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /*border: 1px solid rgba(255, 255, 255, 0.2);*/
   
   @media (max-width: 768px) {
     padding: 15px 20px;
@@ -217,13 +217,13 @@ html, body {
   position: relative;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0);
-  box-shadow: 2px 2px 8.1px rgba(255, 255, 255, 0.5) inset,
-              -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
+  box-sizing: border-box;
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+  box-shadow: inset 2px 2px 8.1px rgb(var(--alpha-white-50)), inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
   overflow: hidden;
   border-radius: 34px;
-  outline: 1px solid rgba(255, 255, 255, 0.2);
-  outline-offset: -1px;
   display: flex;
   align-items: center;
   justify-content: center;
