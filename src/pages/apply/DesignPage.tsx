@@ -35,7 +35,7 @@ const DesignPage = () => {
 
 
 
-    // ✅ 답안 초기화(useEffect)
+    // 답안 초기화(useEffect)
     useEffect(() => {
         const fetchQuestions = async () => {
             console.log("applicationData:", applicationData)
@@ -52,7 +52,7 @@ const DesignPage = () => {
                     ids.map((id, idx) => {
                         const apiQ = apiQuestions.find(q => q.id === id)
 
-                        // ✅ 기본정보에서 답변 가져오기
+                        // 기본정보에서 답변 가져오기
                         let answerFromState = ''
 
                         if (applicationData?.userInfo) {
@@ -65,10 +65,13 @@ const DesignPage = () => {
                             else if (id === 6) answerFromState = userInfo.phone || ''
                             else if (id === 7) answerFromState = userInfo.email || ''
                             else if (id === 15) answerFromState = userInfo.studentId || ''
-                            else if (id === 16) answerFromState = userInfo.password || ''
+                            else if (id === 16 && applicationData?.password) {
+                                answerFromState = applicationData.password
+                            }
+
                         }
 
-                        // ✅ 질문 답변에서 가져오기
+                        // 질문 답변에서 가져오기
                         const existingAnswer = (applicationData?.responses as ResponseDTO[] | undefined)
                             ?.find(r => r.questionId === id)
 
@@ -76,7 +79,7 @@ const DesignPage = () => {
                             answerFromState = existingAnswer.responseText || ''
                         }
 
-                        // ✅ 포트폴리오 처리
+                        // 포트폴리오 처리
                         let fileLink = ''
                         if (id === 14 && applicationData?.portfolioLink) {
                             fileLink = applicationData.portfolioLink
@@ -101,12 +104,12 @@ const DesignPage = () => {
             } catch (err) {
                 console.error('질문 불러오기 실패:', err)
 
-                // ✅ API 실패 시에도 applicationData 반영!
+                // API 실패 시에도 applicationData 반영!
                 const mapDummyWithData = (dummy: Question[], ids: number[]) =>
                     ids.map((id, idx) => {
                         let answerFromState = ''
 
-                        // ✅ 기본정보
+                        // 기본정보
                         if (applicationData?.userInfo) {
                             const userInfo = applicationData.userInfo
                             if (id === 1) answerFromState = userInfo.name || ''
@@ -118,7 +121,7 @@ const DesignPage = () => {
                             else if (id === 7) answerFromState = userInfo.email || ''
                         }
 
-                        // ✅ 질문 답변
+                        // 질문 답변
                         const existingAnswer = (applicationData?.responses as ResponseDTO[] | undefined)
                             ?.find(r => r.questionId === id)
 
@@ -126,7 +129,7 @@ const DesignPage = () => {
                             answerFromState = existingAnswer.responseText || ''
                         }
 
-                        // ✅ 포트폴리오
+                        // 포트폴리오
                         let fileLink = ''
                         if (id === 14 && applicationData?.portfolioLink) {
                             fileLink = applicationData.portfolioLink
@@ -188,7 +191,7 @@ const DesignPage = () => {
                                     ...q,
                                     file: file ?? undefined,
                                     // 파일이 없으면 기존 fileLink를 그대로 유지
-                                    answer: file ? file.name : '',  // ✅ null이면 무조건 빈 문자열
+                                    answer: file ? file.name : '',  // null이면 무조건 빈 문자열
                                     fileLink: file ? q.fileLink : '',
                                 }
                             }
@@ -209,10 +212,10 @@ const DesignPage = () => {
     const handleFinalSubmit = async (): Promise<boolean> => {
         const currentQuestions = allQuestionsRef.current
         try {
-            // 1️⃣ 기본정보 (id 2번을 사용!)
+            // 기본정보 (id 2번을 사용!)
             const userInfoDTO = {
                 name: currentQuestions.find(q => q.id === 1)?.answer || '',
-                studentId: currentQuestions.find(q => q.id === 2)?.answer || '', // ✅ 15번 아니라 2번!
+                studentId: currentQuestions.find(q => q.id === 2)?.answer || '', //15번 아니라 2번!
                 password: currentQuestions.find(q => q.id === 16)?.answer || '',
                 major: currentQuestions.find(q => q.id === 3)?.answer || '',
                 doubleMajor: currentQuestions.find(q => q.id === 4)?.answer || '',
@@ -221,7 +224,7 @@ const DesignPage = () => {
                 email: currentQuestions.find(q => q.id === 7)?.answer || '',
             }
 
-            // 2️⃣ 질문 답변 (8~14번)
+            // 질문 답변 (8~14번)
             const responses = currentQuestions
                 .filter(q => q.id >= 8 && q.id <= 14)
                 .map(q => ({
@@ -229,14 +232,14 @@ const DesignPage = () => {
                     responseText: q.answer || '',
                 }))
 
-            // 3️⃣ 포트폴리오 처리
+            // 포트폴리오 처리
             const portfolioQuestion = currentQuestions.find(q => q.id === 14)
             const portfolioFile = portfolioQuestion?.file
             const portfolioLink = portfolioFile
                 ? '' // 파일이 있으면 링크는 비워서 파일 전송
                 : portfolioQuestion?.fileLink || portfolioQuestion?.answer || '' // 파일 없으면 기존 link 또는 answer 사용
 
-            // 4️⃣ dto 객체
+            // dto 객체
             const dtoPayload = {
                 applicationId: applicationData?.id,
                 applicationField2: 1, // 1=최종제출
@@ -245,19 +248,19 @@ const DesignPage = () => {
                 portfolioLink: portfolioFile ? '' : portfolioLink, // 파일 있으면 링크는 빈값
             }
 
-            // 5️⃣ FormData 생성
+            // FormData 생성
             const formData = new FormData()
             formData.append(
                 'dto',
                 new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' })
             )
 
-            // 6️⃣ 파일 첨부
+            // 파일 첨부
             if (portfolioFile) {
                 formData.append('portfolioFile', portfolioFile)
             }
 
-            // 7️⃣ API 호출
+            // API 호출
             const res = await api.post('/api/recruit/application/PND/', formData)
             console.log('최종 제출 성공:', res.data)
             return true
@@ -326,7 +329,7 @@ const DesignPage = () => {
                 },
             })
 
-            console.log('✅ 임시저장 성공:', res.data)
+            console.log('임시저장 성공:', res.data)
             return true
 
         } catch (err: any) {

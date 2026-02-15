@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   // 폼 페이지에서만 화면 이동 제한
   const requestNavigation = (url: string) => {
-    if (isDirtyRef.current) {
+    if (true) {
       setPendingUrl(url);
       setWarningOpen(true)
       return
