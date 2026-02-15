@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Header } from '@/components/Layout/Header/Header';
+import { ApplyHeader } from '@/components/Layout/Header/ApplyHeader';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
 import styles from './TrackApplyPage.module.css'
@@ -8,10 +8,13 @@ import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
 import { api } from '@/api/client'
 import type { Question } from '@/components/ApplyForm/types'
 import { useLocation } from 'react-router-dom'
+import { useNavigationGuard } from '@/contexts/NavigationGuardContext'
 
 const DesignPage = () => {
     const location = useLocation();
     const applicationData = location.state?.applicationData;
+    const { setDirty } = useNavigationGuard();
+    const isInitialLoad = useRef(true);
 
     type ResponseDTO = {
         questionId: number
@@ -26,6 +29,12 @@ const DesignPage = () => {
         { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: [] },
         { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: [] },
     ])
+
+    useEffect(() => {
+        // 페이지 진입 시 dirty를 false로 초기화
+        setDirty(false);
+    }, []);
+
     const [consentChecked, setConsentChecked] = useState(false)
 
 
@@ -101,6 +110,9 @@ const DesignPage = () => {
                     { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: mapDummy(BASIC_QUESTIONS_DESIGN, [8, 9, 10, 11, 12, 13, 14]) },
                     { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapDummy(CHECK_QUESTIONS, [15, 16]) },
                 ])
+                setTimeout(() => {
+                    isInitialLoad.current = false;
+                }, 100);
             } catch (err) {
                 console.error('질문 불러오기 실패:', err)
 
@@ -150,12 +162,18 @@ const DesignPage = () => {
                     { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapDummyWithData(CHECK_QUESTIONS, [15, 16]) },
                 ])
             }
+            setTimeout(() => {
+                isInitialLoad.current = false;
+            }, 100);
         }
 
         fetchQuestions()
     }, [applicationData])
 
     const handleChange = (_setIndex: number, id: number, value: string) => {
+        if (!isInitialLoad.current) {
+            setDirty(true);
+        }
         setSets(prev =>
             prev.map((set, _i) => ({
                 ...set,
@@ -180,6 +198,9 @@ const DesignPage = () => {
 
 
     const handleFileChange = (setIndex: number, id: number, file: File | null) => {
+        if (!isInitialLoad.current) {
+            setDirty(true);
+        }
         setSets(prev =>
             prev.map((set, i) =>
                 i === setIndex
@@ -263,6 +284,7 @@ const DesignPage = () => {
             // API 호출
             const res = await api.post('/api/recruit/application/PND/', formData)
             console.log('최종 제출 성공:', res.data)
+            setDirty(false);
             return true
         } catch (err: any) {
             console.error('제출 실패:', err)
@@ -330,6 +352,7 @@ const DesignPage = () => {
             })
 
             console.log('임시저장 성공:', res.data)
+            setDirty(false);
             return true
 
         } catch (err: any) {
@@ -343,7 +366,7 @@ const DesignPage = () => {
     return (
         <div className={styles.page}>
             <div className={styles['page-content']}>
-                <Header />
+                <ApplyHeader />
                 <Banner line1="기획 디자인" line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서" />
 
                 {sets.map((set, idx) => (
