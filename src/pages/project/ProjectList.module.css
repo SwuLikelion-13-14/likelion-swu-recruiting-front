@@ -196,9 +196,12 @@ h1 {
 /* 프로젝트 콘텐츠 공통 스타일 */
 .projectContent {
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+  box-shadow: inset 2px 2px 8.1px rgb(var(--alpha-white-50)), inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
   padding: 0 50px; /* 타이틀 컨테이너와 좌우 간격 */
   box-sizing: border-box;
   position: relative;
