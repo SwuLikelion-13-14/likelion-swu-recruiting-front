@@ -99,7 +99,7 @@ export default function ApplyForm({
 
   const { setDirty, registerValidator } = useNavigationGuard();
 
-  // ✅ 기존 답안/파일 반영을 위한 internal state
+  // 기존 답안/파일 반영을 위한 internal state
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [files, setFiles] = useState<Record<number, File | null>>({});
 
@@ -187,9 +187,6 @@ export default function ApplyForm({
   useEffect(() => {
     setDirty(hasAnyChange);
 
-    return () => {
-      setDirty(false);
-    };
   }, [hasAnyChange, setDirty]);
 
 
@@ -228,7 +225,7 @@ export default function ApplyForm({
 
       if (q.id === STUDENT_ID || q.id === PASSWORD_ID) continue;
 
-      // ✅ 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
+      // 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
       if (q.type === "file") {
         const hasFileOrLink = !!files[q.id] || answer.trim() !== "";
         if (q.required && !hasFileOrLink) {
@@ -237,13 +234,13 @@ export default function ApplyForm({
         continue;
       }
 
-      // ✅ 필수 체크
+      // 필수 체크
       if (q.required && !answer.trim()) {
         newErrors[q.id] = "필수 답변 항목입니다.";
         continue;
       }
 
-      // ✅ 학번 체크
+      // 학번 체크
       if (q.id === STUDENT_ID && answer.trim()) {
         const status = mockCheckStudentId(answer.trim());
         setStudentStatus(status);
@@ -256,7 +253,7 @@ export default function ApplyForm({
         continue;
       }
 
-      // ✅ 비밀번호 체크 (4자리 숫자)
+      // 비밀번호 체크 (4자리 숫자)
       if (q.id === PASSWORD_ID && answer.trim()) {
         if (!/^\d{4}$/.test(answer.trim())) {
           newErrors[q.id] = "형식이 다릅니다. 숫자 4자리를 입력하세요.";
@@ -266,7 +263,7 @@ export default function ApplyForm({
         continue;
       }
 
-      // ✅ 기타 pattern 기반 검증이 있는 경우
+      // 기타 pattern 기반 검증이 있는 경우
       if (q.pattern && answer.trim() && !q.pattern.test(answer)) {
         newErrors[q.id] = q.errorMessage || "형식이 다릅니다.";
       }
@@ -289,13 +286,13 @@ export default function ApplyForm({
 
     if (status === "valid") {
       await onSubmit?.();
-      return true;  // ✅ 성공
+      return true;  //성공
     } else if (status === "draft-exists") {
       setIsSubmitFromDraftOpen(true);
-      return false;  // ✅ 취소 가능성
+      return false;  //취소 가능성
     } else if (status === "submitted-exists") {
       setIsSubmitOverwriteOpen(true);
-      return false;  // ✅ 취소 가능성
+      return false;  //취소 가능성
     } else {
       setErrors((prev) => ({
         ...prev,
@@ -315,13 +312,13 @@ export default function ApplyForm({
 
     if (status === "valid") {
       await onDraftSave?.();
-      return true;  // ✅
+      return true; 
     } else if (status === "draft-exists") {
       setIsDraftOverwriteOpen(true);
-      return false;  // ✅
+      return false; 
     } else if (status === "submitted-exists") {
       setIsDraftFromSubmittedOpen(true);
-      return false;  // ✅
+      return false;  
     } else {
       setErrors((prev) => ({
         ...prev,

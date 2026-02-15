@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { api } from '@/api/client'
 import type { Question } from '@/components/ApplyForm/types'
-import { Header } from '@/components/Layout/Header/Header'
+import { ApplyHeader } from '@/components/Layout/Header/ApplyHeader'
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
 import styles from './TrackApplyPage.module.css'
@@ -268,7 +268,7 @@ const mergeQuestionsWithAnswer = (
     return (
         <div className={styles.page}>
             <div className={styles['page-content']}>
-                <Header />
+                <ApplyHeader />
                 <Banner
                     line1="백엔드 개발"
                     line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서"
