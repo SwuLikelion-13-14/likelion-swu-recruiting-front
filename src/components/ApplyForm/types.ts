@@ -32,7 +32,9 @@ export interface ApplyFormProps {
   onConsentChange?: (checked: boolean) => void
   allQuestions: Question[]
   onSubmit?: () => void
-  onDraftSave?: () => void
+  onDraftSave?: (options?: { skipValidation?: boolean }) => void
+
   studentIdField?: number;  
   passwordField?: number;   
+  dbStatus?: 'none' | 'draft-exists' | 'submitted-exists';
 }
