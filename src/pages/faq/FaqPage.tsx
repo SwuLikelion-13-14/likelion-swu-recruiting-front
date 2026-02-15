@@ -128,33 +128,37 @@ const FaqPage: React.FC = () => {
                 <p className={styles.subtitle}>{section.subtitle}</p>
               </div>
               
-              <div className={styles.faqList}>
-                {faqs.map((faq) => (
-                  <div 
-                    key={faq.question} 
-                    className={`${styles.faqItem} ${faq.isOpen ? styles.active : ''}`}
-                  >
-                    <div 
-                      className={styles.faqQuestion}
-                      onClick={() => toggleFaq(faq.question)}
-                    >
-                      <img src={qIcon} alt="Q" style={{ width: '32px', height: '30px', marginRight: '20px' }} />
-                      {faq.question}
-                      <div className={styles.arrowIcon}>
-                        <img src={faq.isOpen ? chevronUp : chevronDown} alt="toggle" />
+              <div className={styles.faqContainer}>
+                <div className={styles.faqSection}>
+                  <div className={styles.faqList}>
+                    {faqs.map((faq) => (
+                      <div 
+                        key={faq.question} 
+                        className={`${styles.faqItem} ${faq.isOpen ? styles.active : ''}`}
+                      >
+                        <div 
+                          className={styles.faqQuestion}
+                          onClick={() => toggleFaq(faq.question)}
+                        >
+                          <img src={qIcon} alt="Q" style={{ width: '32px', height: '30px', marginRight: '20px' }} />
+                          {faq.question}
+                          <div className={styles.arrowIcon}>
+                            <img src={faq.isOpen ? chevronUp : chevronDown} alt="toggle" />
+                          </div>
+                        </div>
+                        {faq.isOpen && (
+                          <div className={styles.faqAnswer}>
+                            {faq.answer.split('\n').map((line, i) => (
+                              <p key={i} style={{ margin: 0 }}>
+                                {getHighlightedText(line.trim(), faq.highlights)}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    {faq.isOpen && (
-                      <div className={styles.faqAnswer}>
-                        {faq.answer.split('\n').map((line, i) => (
-                          <p key={i} style={{ margin: 0 }}>
-                            {getHighlightedText(line.trim(), faq.highlights)}
-                          </p>
-                        ))}
-                      </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </>
           )}
