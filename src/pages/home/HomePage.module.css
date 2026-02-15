@@ -165,9 +165,10 @@ html, body {
   padding-top: 25px;
   padding-left: 45px;
   padding-right: 20px;
-  backdrop-filter: blur(4px);
+  /*backdrop-filter: blur(4px);  블러효과*/ 
   transition: background-color 200ms;
   box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
     padding: 15px 20px;
@@ -176,7 +177,7 @@ html, body {
 }
 
 .cardContent:hover {
-  background-color: rgba(245, 245, 245, 0.2);
+  background-color: rgba(139, 75, 75, 0.2);
 }
 
 .cardHeader {
