@@ -159,15 +159,38 @@ h1 {
 
 .subtitle {
   color: #F5F5F5;
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 500;
   line-height: 1.5;
   opacity: 0.9;
 }
 
 /* FAQ 리스트 스타일 */
+.faqContainer {
+  width: 100%;
+  max-width: 1143px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  padding: 20px 50px;
+  box-sizing: border-box;
+}
+
+/* FAQ 섹션 */
+.faqSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  padding: 0 50px;
+  box-sizing: border-box;
+}
+
 .faqList {
-  max-width: 800px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -175,20 +198,19 @@ h1 {
 }
 
 .faqItem {
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 12px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   overflow: hidden;
   transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
 }
 
-.faqItem:hover {
-  border-color: rgba(255, 119, 16, 0.3);
-}
 
 .faqQuestion {
-  padding: 20px 26px;
-  font-size: 24px;
+  padding: 25px 40px;
+  font-size: 28px;
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -211,7 +233,7 @@ h1 {
 }
 
 .faqAnswer {
-  padding: 0 24px 20px;
+  padding: 0 40px 20px;
   font-size: 20px;
   line-height: 1.6;
   color: rgba(245, 245, 245, 0.9);
