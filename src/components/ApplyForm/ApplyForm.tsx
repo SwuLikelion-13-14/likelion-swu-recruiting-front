@@ -862,6 +862,27 @@ export default function ApplyForm({
                   </p>
                 </div>
               </div>
+              <div className={styles.noticeItem}>
+              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+              <div className={styles.noticeTextGroup}>
+                <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
+                <p className={styles.noticeTextDetail}>
+                  1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다. <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br />
+                  최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
+                  <br /><br />
+                  1차 서류 모집 기간이 끝나면, 지원서 수정 및 열람은 <span className={styles.highlight}>불가능</span> 합니다.
+                </p>
+              </div>
+            </div>
+            <div className={styles.noticeItem}>
+              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+              <div className={styles.noticeTextGroup}>
+                <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
+                <p className={styles.noticeTextDetail}>
+                  본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span> 1회만 지원 가능합니다.
+                </p>
+              </div>
+            </div>
             </div>
 
             {enableActions && (
