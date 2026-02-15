@@ -346,6 +346,8 @@ const FrontPage = () => {
                         onFileChange={(id, file) => handleFileChange(idx, id, file)}
                         onSubmit={handleFinalSubmit}
                         onDraftSave={handleDraftSave}
+                        onDirectSubmit={handleFinalSubmit}
+                        onDirectDraftSave={handleDraftSave}
                     >
                     </ApplyForm>
                 ))}
