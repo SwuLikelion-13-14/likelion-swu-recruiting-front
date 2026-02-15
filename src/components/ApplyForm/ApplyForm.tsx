@@ -51,6 +51,8 @@ export default function ApplyForm({
   onDraftSave,
   studentIdField,
   passwordField,
+  onDirectSubmit,
+  onDirectDraftSave,
 }: ApplyFormProps) {
   const isSurvey = variant === "survey";
   const isResult = variant === "result";
@@ -85,7 +87,7 @@ export default function ApplyForm({
   const [_isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [_cancelTargetModal, setCancelTargetModal] = useState<"draft" | "submit" | null>(null);
-  const [isCancelFlow, setIsCancelFlow] = useState(false);
+  const [_isCancelFlow, setIsCancelFlow] = useState(false);
 
 
 
@@ -103,6 +105,8 @@ export default function ApplyForm({
 
   const [initialAnswers, setInitialAnswers] = useState<Record<number, string>>({});
   const [initialFiles, setInitialFiles] = useState<Record<number, File | null>>({});
+  const [isSubmitSuccessOpen, setIsSubmitSuccessOpen] = useState(false);
+  const [isDraftSuccessOpen, setIsDraftSuccessOpen] = useState(false);
 
   // allQuestions 안전 보정
   const safeAllQuestions = useMemo(
@@ -137,25 +141,24 @@ export default function ApplyForm({
 
   // 덮어쓰기 모달 함수
   const executeDraftOverwrite = async () => {
-    if (isCancelFlow) return;
-
     setIsDraftOverwriteOpen(false);
     setIsDraftFromSubmittedOpen(false);
     setIsDrafting(true);
     try {
-      await onDraftSave?.({ skipValidation: true });
+      await onDirectDraftSave?.(); 
+      setIsDraftSuccessOpen(true);
     } finally {
       setIsDrafting(false);
     }
   };
 
   const executeSubmitOverwrite = async () => {
-    if (isCancelFlow) return;
     setIsSubmitFromDraftOpen(false);
     setIsSubmitOverwriteOpen(false);
     setIsSubmitting(true);
     try {
-      await onSubmit?.();
+      await onDirectSubmit?.();
+      setIsSubmitSuccessOpen(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -863,26 +866,26 @@ export default function ApplyForm({
                 </div>
               </div>
               <div className={styles.noticeItem}>
-              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
-              <div className={styles.noticeTextGroup}>
-                <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
-                <p className={styles.noticeTextDetail}>
-                  1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다. <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br />
-                  최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
-                  <br /><br />
-                  1차 서류 모집 기간이 끝나면, 지원서 수정 및 열람은 <span className={styles.highlight}>불가능</span> 합니다.
-                </p>
+                <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+                <div className={styles.noticeTextGroup}>
+                  <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
+                  <p className={styles.noticeTextDetail}>
+                    1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다. <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br />
+                    최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
+                    <br /><br />
+                    1차 서류 모집 기간이 끝나면, 지원서 수정 및 열람은 <span className={styles.highlight}>불가능</span> 합니다.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className={styles.noticeItem}>
-              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
-              <div className={styles.noticeTextGroup}>
-                <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
-                <p className={styles.noticeTextDetail}>
-                  본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span> 1회만 지원 가능합니다.
-                </p>
+              <div className={styles.noticeItem}>
+                <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+                <div className={styles.noticeTextGroup}>
+                  <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
+                  <p className={styles.noticeTextDetail}>
+                    본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span> 1회만 지원 가능합니다.
+                  </p>
+                </div>
               </div>
-            </div>
             </div>
 
             {enableActions && (
@@ -1150,6 +1153,44 @@ export default function ApplyForm({
             },
           }}
 
+        />
+      )}
+
+      {isSubmitSuccessOpen && (
+        <Modal
+          isOpen={isSubmitSuccessOpen}
+          title="지원해주셔서 감사합니다!"
+          extraText="지원서가 정상적으로 접수되었습니다."
+          primaryButton={{
+            text: '확인',
+            onClick: () => {
+              setIsSubmitSuccessOpen(false);
+              window.location.href = '/';
+            }
+          }}
+          onClose={() => setIsSubmitSuccessOpen(false)}
+        />
+      )}
+
+      {isDraftSuccessOpen && (
+        <Modal
+          isOpen={isDraftSuccessOpen}
+          title="지원서가 임시 저장되었습니다"
+          extraText={
+            <span>
+              저장된 지원서는<br />
+              3월 2일 23시 59분 까지<br />
+              열람 및 수정이 가능합니다.
+            </span>
+          }
+          primaryButton={{
+            text: '확인',
+            onClick: () => {
+              setIsDraftSuccessOpen(false);
+              window.location.href = '/';
+            }
+          }}
+          onClose={() => setIsDraftSuccessOpen(false)}
         />
       )}
 
