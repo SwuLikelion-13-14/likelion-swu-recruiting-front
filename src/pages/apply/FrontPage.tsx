@@ -26,6 +26,7 @@ const FrontPage = () => {
     useEffect(() => {
         if (!applicationData) return;
 
+        
         const mapAnswers = (questions: Question[]) =>
             questions.map(q => {
                 const response = applicationData.responses.find((r: any) => r.questionId === q.id);
@@ -71,6 +72,7 @@ const FrontPage = () => {
                             else if (id === 5) answerFromState = userInfo.schoolStatus || '';
                             else if (id === 6) answerFromState = userInfo.phone || '';
                             else if (id === 7) answerFromState = userInfo.email || '';
+                            else if (id === 15) answerFromState = userInfo.studentId || '';
                         }
 
                         // 질문 답변에서 가져오기
@@ -121,6 +123,11 @@ const FrontPage = () => {
                             else if (id === 5) answerFromState = userInfo.schoolStatus || '';
                             else if (id === 6) answerFromState = userInfo.phone || '';
                             else if (id === 7) answerFromState = userInfo.email || '';
+                            else if (id === 15) answerFromState = userInfo.studentId || '';
+                            else if (id === 16 && applicationData?.password) {
+                                answerFromState = applicationData.password
+                            }
+
                         }
 
                         const existingAnswer = (applicationData?.responses as any[] | undefined)
@@ -198,7 +205,7 @@ const FrontPage = () => {
 
 
 
-    // ✅ 최종 제출
+    // 최종 제출
     const handleFinalSubmit = async (): Promise<boolean> => {
         const currentQuestions = allQuestionsRef.current
         try {
@@ -253,7 +260,7 @@ const FrontPage = () => {
         }
     }
 
-    // ✅ 임시 저장
+    // 임시 저장
     const handleDraftSave = async (): Promise<boolean> => {
         const currentQuestions = allQuestionsRef.current
         try {
