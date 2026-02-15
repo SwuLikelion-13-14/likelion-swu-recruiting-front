@@ -1,13 +1,68 @@
-# swu-recruiting
+# 🦁 swu-recruiting
+<p align="center">
+  <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=React&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=TypeScript&logoColor=white" alt="TS" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=Vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=Tailwind-CSS&logoColor=white" alt="Tailwind" />
+  <br>
+  <img src="https://img.shields.io/github/last-commit/SwuLikelion-13-14/likelion-swu-recruiting-front?style=flat-square" alt="last commit" />
+  <img src="https://img.shields.io/github/contributors/SwuLikelion-13-14/likelion-swu-recruiting-front?style=flat-square" alt="contributors" />
+</p>
 
+**서울여자대학교 멋쟁이사자처럼 리크루팅 프론트엔드 레포지토리**입니다.  
+신입 부원 모집을 위한 지원 시스템부터 관리자 대시보드까지 효율적인 리크루팅 프로세스를 제공합니다.
 
-서울여자대학교 멋쟁이사자처럼 리크루팅 프론트엔드 레포지토리
+## 👩‍💻 Frontend Developer Team
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/5cool9">
+        <img width="120" height="120" alt="팀원1" src="https://github.com/user-attachments/assets/03e70321-d861-4f1c-a3de-053ef02e74e0" /><br />
+        <sub><b>김시원</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/jihyuncoding">
+        <img src="https://github.com/GitHub_ID_2.png" width="120px;" alt="팀원2"/><br />
+        <sub><b>박지현</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/sonyewoen">
+        <img width="120" height="120" alt="팀원3" src="https://github.com/user-attachments/assets/cc8b91f1-846d-440c-8ad3-ad7c5e599939" /><br />
+        <sub><b>손예원</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/jeongkyueun">
+        <img width="120" height="120" alt="팀원4" src="https://github.com/user-attachments/assets/c4ff095c-bb97-485a-993a-fab7f2bfeb3b" /><br />
+        <sub><b>정규은</b></sub>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      지원하기 페이지<br />지원트랙 선택 페이지<br />지원폼 페이지<br />깃허브 레포지토리 초기세팅
+    </td>
+    <td align="center">
+      운영진 페이지<br />모바일 환경 공유 바텀시트<br />
+    </td>
+    <td align="center">
+      홈_활동내용 페이지<br /> 모집정보 페이지<br /> 홈_운영진소개 페이지
+    </td>
+    <td align="center">
+      홈_메인 페이지<br /> 홈_연간일정 페이지<br /> 프로젝트 페이지<br /> 문의사항 페이지<br />배포
+    </td>
+  </tr>
+</table>
 
 <br>
 
 ## 🚀 프로젝트 소개
 
 본 프로젝트는 서울여자대학교 멋쟁이사자처럼의 리크루팅 과정을 효율적으로 관리하기 위해 개발되었습니다. 지원자들은 웹사이트를 통해 활동 내역을 확인하고, 각 트랙(프론트엔드, 백엔드, 디자인)에 지원할 수 있습니다. 관리자는 지원서를 검토하고 일정을 관리할 수 있습니다.
+
 
 <br>
 
