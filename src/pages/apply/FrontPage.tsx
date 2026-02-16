@@ -23,22 +23,7 @@ const FrontPage = () => {
         { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: [] },
     ])
 
-    useEffect(() => {
-        if (!applicationData) return;
 
-        const mapAnswers = (questions: Question[]) =>
-            questions.map(q => {
-                const response = applicationData.responses.find((r: any) => r.questionId === q.id);
-                return { ...q, answer: response?.responseText || '' };
-            });
-
-        setSets([
-            { title: '필수 기본 정보', questions: mapAnswers(BASIC_INFO_QUESTIONS) },
-            { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: mapAnswers(BASIC_QUESTIONS) },
-            { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapAnswers(CHECK_QUESTIONS) },
-        ]);
-
-    }, [applicationData]);
 
     const [consentChecked, setConsentChecked] = useState(false)
     const allQuestions = sets.flatMap(set => set.questions)
@@ -71,6 +56,10 @@ const FrontPage = () => {
                             else if (id === 5) answerFromState = userInfo.schoolStatus || '';
                             else if (id === 6) answerFromState = userInfo.phone || '';
                             else if (id === 7) answerFromState = userInfo.email || '';
+                            else if (id === 15) answerFromState = userInfo.studentId || '';
+                            else if (id === 16 && applicationData?.password)
+                                answerFromState = applicationData.password;
+
                         }
 
                         // 질문 답변에서 가져오기
@@ -121,6 +110,12 @@ const FrontPage = () => {
                             else if (id === 5) answerFromState = userInfo.schoolStatus || '';
                             else if (id === 6) answerFromState = userInfo.phone || '';
                             else if (id === 7) answerFromState = userInfo.email || '';
+                            else if (id === 16 && applicationData?.password)
+                                answerFromState = applicationData.password;
+                        }
+
+                        if (id === 16 && applicationData?.password) {
+                            answerFromState = applicationData.password;
                         }
 
                         const existingAnswer = (applicationData?.responses as any[] | undefined)
