@@ -24,7 +24,7 @@
     </td>
     <td align="center">
       <a href="https://github.com/jihyuncoding">
-        <img src="https://github.com/GitHub_ID_2.png" width="120px;" alt="팀원2"/><br />
+        <img width="80" height="180" alt="팀원2" src="https://github.com/user-attachments/assets/a8b2b8f3-70a4-4b47-a6e6-3042b4b61da9" /><br />
         <sub><b>박지현</b></sub>
       </a>
     </td>
