@@ -133,6 +133,12 @@ function isEmptyTemp(t: DateTimeValue) {
   );
 }
 
+function buildMinuteOptions(step: number) {
+  const out: string[] = [];
+  for (let m = 0; m < 60; m += step) out.push(pad2(m));
+  return out;
+}
+
 export default function ScheduleDateTimePopup({
   anchorLeft,
   anchorTop,
@@ -150,7 +156,7 @@ export default function ScheduleDateTimePopup({
 
   const timeOptions = useMemo(() => {
     const hh = Array.from({ length: 24 }, (_, i) => pad2(i));
-    const mm = ["00"];
+    const mm = buildMinuteOptions(1);
     return { hh, mm };
   }, []);
 
@@ -165,9 +171,11 @@ export default function ScheduleDateTimePopup({
     const nowM = now.getMonth() + 1;
     const nowD = now.getDate();
     const nowHh = pad2(now.getHours());
-    const fixedMm = "00";
 
-    onPickTime(nowHh, fixedMm);
+    const minuteStep = 5;
+    const roundedMm = pad2(Math.floor(now.getMinutes() / minuteStep) * minuteStep);
+
+    onPickTime(nowHh, roundedMm);
 
     if (viewY === nowY && viewM === nowM) {
       onPickDay(nowD);
@@ -176,8 +184,11 @@ export default function ScheduleDateTimePopup({
 
   const grid = useMemo(() => buildCalendarGrid(viewY, viewM), [viewY, viewM]);
 
+  const safeMm =
+    timeOptions.mm.includes(temp.mm) ? temp.mm : (timeOptions.mm[0] ?? "00");
+
   const topDateText = `${temp.y}.${pad2(temp.m)}.${pad2(temp.d)}`;
-  const topTimeText = `${temp.hh}:${temp.mm}`;
+  const topTimeText = `${temp.hh}:${safeMm}`;
   const monthText = `${viewM}월`;
 
   return (
@@ -328,7 +339,13 @@ export default function ScheduleDateTimePopup({
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <select
             value={temp.hh}
-            onChange={(e) => onPickTime(e.target.value, "00")}
+            onChange={(e) => {
+              const nextHh = e.target.value;
+              const nextMm = timeOptions.mm.includes(temp.mm)
+                ? temp.mm
+                : (timeOptions.mm[0] ?? "00");
+              onPickTime(nextHh, nextMm); // ✅ 시 바꿀 때 분 유지
+            }}
             style={{
               ...TEXT_16_M,
               border: "none",
@@ -347,8 +364,8 @@ export default function ScheduleDateTimePopup({
           <span style={TEXT_16_M}>:</span>
 
           <select
-            value={temp.mm}
-            onChange={() => onPickTime(temp.hh, "00")}
+            value={safeMm}
+            onChange={(e) => onPickTime(temp.hh, e.target.value)} 
             style={{
               ...TEXT_16_M,
               border: "none",
