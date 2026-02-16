@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./ApplyForm.module.css";
 import type { ApplyFormProps, Question } from "./types";
 
-import { api } from '@/api/client'
+import { api } from "@/api/client";
 import checkboxDefault from "@/assets/icon/checkbox_default.svg";
 import checkboxChecked from "@/assets/icon/checkbox_checked.svg";
 import noticeIcon from "@/assets/icon/alert_octagon.svg";
@@ -11,16 +11,14 @@ import ApplyFormActions from "./ApplyFormActions";
 import Modal from "@/components/Modal/Modal";
 import { useNavigationGuard } from "@/contexts/NavigationGuardContext";
 
-
 type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
-
 
 const studentMessages: Record<StudentStatus, string> = {
   invalid: "형식이 다릅니다. 숫자 10자리를 입력하세요.",
   "draft-exists":
     "임시저장 된 지원서가 이미 있습니다. 여러 개의 지원서를 임시저장할 수 없습니다.",
   "submitted-exists":
-    "이미 지원서를 최종 제출한 기록이 존재합니다. 중복 지원은 불가합니다.",
+    "이미 최종 제출한 기록이 존재합니다. 중복 지원은 불가합니다.",
   valid: "지원 가능한 학번입니다.",
 };
 
@@ -53,6 +51,7 @@ export default function ApplyForm({
   passwordField,
   onDirectSubmit,
   onDirectDraftSave,
+  onFileDownload, 
 }: ApplyFormProps) {
   const isSurvey = variant === "survey";
   const isResult = variant === "result";
@@ -62,22 +61,22 @@ export default function ApplyForm({
   const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(
     undefined
   );
-  const STUDENT_ID = studentIdField ?? 15;   // props 없으면 기본 15
+  const STUDENT_ID = studentIdField ?? 15;
   const PASSWORD_ID = passwordField ?? 16;
 
   type ModalType =
-    | "draft"                        // 기존 임시저장 존재
-    | "submitted"                    // 기존 최종제출 존재
-    | "draft-overwrite"              // 기존 임시저장 + 임시저장 버튼 클릭
-    | "draft-overwrite-submitted"    // 기존 최종제출 + 임시저장 버튼 클릭
-    | "submit-overwrite-draft"       // 기존 임시저장 + 최종제출 버튼 클릭
-    | "submit-overwrite-submitted"   // 기존 최종제출 + 최종제출 버튼 클릭
+    | "draft"
+    | "submitted"
+    | "draft-overwrite"
+    | "draft-overwrite-submitted"
+    | "submit-overwrite-draft"
+    | "submit-overwrite-submitted"
     | "leave"
     | null;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, _setModalType] = useState<ModalType>(null);
-  // ApplyForm 상단 useState
+
   const [isDraftOverwriteOpen, setIsDraftOverwriteOpen] = useState(false);
   const [isSubmitFromDraftOpen, setIsSubmitFromDraftOpen] = useState(false);
   const [isDraftFromSubmittedOpen, setIsDraftFromSubmittedOpen] = useState(false);
@@ -87,20 +86,16 @@ export default function ApplyForm({
   const [_isDrafting, setIsDrafting] = useState(false);
   const [_isSubmitting, setIsSubmitting] = useState(false);
   const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
-  const [_cancelTargetModal, setCancelTargetModal] = useState<"draft" | "submit" | null>(null);
+  const [_cancelTargetModal, setCancelTargetModal] = useState<
+    "draft" | "submit" | null
+  >(null);
   const [_isCancelFlow, setIsCancelFlow] = useState(false);
 
-
-
-  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
-    {}
-  );
+  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>({});
 
   const { allowNavigation } = useNavigationGuard();
-
   const { setDirty, registerValidator } = useNavigationGuard();
 
-  // 기존 답안/파일 반영을 위한 internal state
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [files, setFiles] = useState<Record<number, File | null>>({});
 
@@ -109,7 +104,6 @@ export default function ApplyForm({
   const [isSubmitSuccessOpen, setIsSubmitSuccessOpen] = useState(false);
   const [isDraftSuccessOpen, setIsDraftSuccessOpen] = useState(false);
 
-  // allQuestions 안전 보정
   const safeAllQuestions = useMemo(
     () => (allQuestions && allQuestions.length ? allQuestions : questions),
     [allQuestions, questions]
@@ -117,14 +111,13 @@ export default function ApplyForm({
 
   const passwordAnswer = answers[PASSWORD_ID] ?? "";
 
-  // 질문 변경 시 internal state 초기화
   useEffect(() => {
     const initAnswers: Record<number, string> = {};
     const initFiles: Record<number, File | null> = {};
 
     questions.forEach((q) => {
-      initAnswers[q.id] = q.answer || ""; // props의 answer 반영
-      initFiles[q.id] = q.file || null;   // props의 file 반영
+      initAnswers[q.id] = q.answer || "";
+      initFiles[q.id] = q.file || null;
     });
 
     setAnswers(initAnswers);
@@ -133,26 +126,24 @@ export default function ApplyForm({
     setInitialAnswers(initAnswers);
     setInitialFiles(initFiles);
 
-    // 학번 검증 상태도 초기화
-    const studentQ = questions.find(q => q.id === STUDENT_ID);
+    const studentQ = questions.find((q) => q.id === STUDENT_ID);
     if (studentQ?.answer) {
       setStudentStatus(mockCheckStudentId(studentQ.answer));
     }
   }, [questions, STUDENT_ID]);
 
-  // 덮어쓰기 모달 함수
   const executeDraftOverwrite = async () => {
     setIsDraftOverwriteOpen(false);
     setIsDraftFromSubmittedOpen(false);
-    setIsLoadingOpen(true); // ✅ 로딩 모달 열기
+    setIsLoadingOpen(true);
     setIsDrafting(true);
     try {
       await onDirectDraftSave?.();
-      setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
+      setIsLoadingOpen(false);
       setIsDraftSuccessOpen(true);
     } catch (error) {
-      setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
-      console.error('임시저장 실패:', error);
+      setIsLoadingOpen(false);
+      console.error("임시저장 실패:", error);
     } finally {
       setIsDrafting(false);
     }
@@ -161,21 +152,20 @@ export default function ApplyForm({
   const executeSubmitOverwrite = async () => {
     setIsSubmitFromDraftOpen(false);
     setIsSubmitOverwriteOpen(false);
-    setIsLoadingOpen(true); // ✅ 로딩 모달 열기
+    setIsLoadingOpen(true);
     setIsSubmitting(true);
     try {
       await onDirectSubmit?.();
-      setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
+      setIsLoadingOpen(false);
       setIsSubmitSuccessOpen(true);
     } catch (error) {
-      setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
-      console.error('최종제출 실패:', error);
+      setIsLoadingOpen(false);
+      console.error("최종제출 실패:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 입력 유무(파일 포함)로 dirty 판단
   const hasAnyChange = useMemo(() => {
     return questions.some((q) => {
       const currentAnswer = answers[q.id] || "";
@@ -184,43 +174,33 @@ export default function ApplyForm({
       const initialFile = initialFiles[q.id];
 
       if (q.type === "file") {
-        // 파일이 변경되었거나, 링크가 변경되었으면 true
         return currentFile !== initialFile || currentAnswer !== initialAnswer;
       }
-
-      // 일반 필드는 답변이 변경되었으면 true
       return currentAnswer !== initialAnswer;
     });
   }, [questions, answers, files, initialAnswers, initialFiles]);
 
-
   useEffect(() => {
     setDirty(hasAnyChange);
-
   }, [hasAnyChange, setDirty]);
-
 
   const checkStudentIdAPI = async (studentId: string): Promise<StudentStatus> => {
     try {
-      const response = await api.post('/api/users/existence', { studentId }); // URL 수정
+      const response = await api.post("/api/users/existence", { studentId });
       const data = response.data;
 
       if (!data.isSuccess) return "invalid";
 
       if (data.result.exist) {
-        // applicationField2 값으로 draft / submitted 구분
         return data.result.applicationField2 === 1 ? "submitted-exists" : "draft-exists";
       }
 
-      return "valid"; // 없으면 valid
+      return "valid";
     } catch (err) {
-      console.error('학번 체크 실패:', err);
-      return "invalid"; // 에러 발생 시 invalid 처리
+      console.error("학번 체크 실패:", err);
+      return "invalid";
     }
   };
-
-
-
 
   const handleBlur = (currentId: number, allQ: Question[]) => {
     const newErrors: Record<number, string> = {};
@@ -235,7 +215,6 @@ export default function ApplyForm({
 
       if (q.id === STUDENT_ID || q.id === PASSWORD_ID) continue;
 
-      // 파일 문항 처리: file 존재 or 링크(answer) 존재하면 OK
       if (q.type === "file") {
         const hasFileOrLink = !!files[q.id] || answer.trim() !== "";
         if (q.required && !hasFileOrLink) {
@@ -244,13 +223,11 @@ export default function ApplyForm({
         continue;
       }
 
-      // 필수 체크
       if (q.required && !answer.trim()) {
         newErrors[q.id] = "필수 답변 항목입니다.";
         continue;
       }
 
-      // 학번 체크
       if (q.id === STUDENT_ID && answer.trim()) {
         const status = mockCheckStudentId(answer.trim());
         setStudentStatus(status);
@@ -263,7 +240,6 @@ export default function ApplyForm({
         continue;
       }
 
-      // 비밀번호 체크 (4자리 숫자)
       if (q.id === PASSWORD_ID && answer.trim()) {
         if (!/^\d{4}$/.test(answer.trim())) {
           newErrors[q.id] = "형식이 다릅니다. 숫자 4자리를 입력하세요.";
@@ -273,18 +249,13 @@ export default function ApplyForm({
         continue;
       }
 
-      // 기타 pattern 기반 검증이 있는 경우
       if (q.pattern && answer.trim() && !q.pattern.test(answer)) {
         newErrors[q.id] = q.errorMessage || "형식이 다릅니다.";
       }
     }
 
     setErrors(newErrors);
-
-    setSuccess(prev => ({
-      ...prev,
-      ...newSuccess
-    }));
+    setSuccess((prev) => ({ ...prev, ...newSuccess }));
   };
 
   const handleSubmit = async (): Promise<boolean> => {
@@ -295,15 +266,15 @@ export default function ApplyForm({
     setStudentStatus(status);
 
     if (status === "valid") {
-      setIsLoadingOpen(true); // ✅ 로딩 모달 열기
+      setIsLoadingOpen(true);
       try {
         await onSubmit?.();
-        setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
-        setIsSubmitSuccessOpen(true); // 성공 모달 열기
+        setIsLoadingOpen(false);
+        setIsSubmitSuccessOpen(true);
         return true;
       } catch (error) {
-        setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
-        console.error('제출 실패:', error);
+        setIsLoadingOpen(false);
+        console.error("제출 실패:", error);
         return false;
       }
     } else if (status === "draft-exists") {
@@ -313,15 +284,11 @@ export default function ApplyForm({
       setIsSubmitOverwriteOpen(true);
       return false;
     } else {
-      setErrors((prev) => ({
-        ...prev,
-        [STUDENT_ID]: studentMessages[status],
-      }));
+      setErrors((prev) => ({ ...prev, [STUDENT_ID]: studentMessages[status] }));
       return false;
     }
   };
 
-  // handleDraftSave도 동일하게
   const handleDraftSave = async (): Promise<boolean> => {
     const studentId = answers[STUDENT_ID] || "";
     if (!studentId) return false;
@@ -330,15 +297,15 @@ export default function ApplyForm({
     setStudentStatus(status);
 
     if (status === "valid") {
-      setIsLoadingOpen(true); // ✅ 로딩 모달 열기
+      setIsLoadingOpen(true);
       try {
         await onDraftSave?.();
-        setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
-        setIsDraftSuccessOpen(true); // 성공 모달 열기
+        setIsLoadingOpen(false);
+        setIsDraftSuccessOpen(true);
         return true;
       } catch (error) {
-        setIsLoadingOpen(false); // ✅ 에러 시에도 로딩 모달 닫기
-        console.error('임시저장 실패:', error);
+        setIsLoadingOpen(false);
+        console.error("임시저장 실패:", error);
         return false;
       }
     } else if (status === "draft-exists") {
@@ -348,14 +315,10 @@ export default function ApplyForm({
       setIsDraftFromSubmittedOpen(true);
       return false;
     } else {
-      setErrors((prev) => ({
-        ...prev,
-        [STUDENT_ID]: studentMessages[status],
-      }));
+      setErrors((prev) => ({ ...prev, [STUDENT_ID]: studentMessages[status] }));
       return false;
     }
   };
-
 
   const handleFileUpload = (id: number) => {
     if (typeof window === "undefined") return;
@@ -389,11 +352,9 @@ export default function ApplyForm({
     setFiles((prev) => ({ ...prev, [id]: null }));
     setAnswers((prev) => ({ ...prev, [id]: "" }));
 
-    // 부모 콜백 호출
     onFileChange?.(id, null);
     onChange?.(id, "");
 
-    // 오류/성공 메시지 초기화
     setErrors((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -405,7 +366,6 @@ export default function ApplyForm({
       return next;
     });
   };
-
 
   const validateInfoSection = () => {
     const studentOk = studentStatus === "valid";
@@ -440,7 +400,6 @@ export default function ApplyForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentStatus, passwordAnswer]);
 
-  // 수정
   const requiredQuestions = safeAllQuestions.filter(
     (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
   );
@@ -448,7 +407,7 @@ export default function ApplyForm({
   const requiredFilled =
     requiredQuestions.length > 0 &&
     requiredQuestions.every((q) => {
-      const question = safeAllQuestions.find(item => item.id === q.id);
+      const question = safeAllQuestions.find((item) => item.id === q.id);
       if (!question) return false;
 
       return q.type === "file"
@@ -461,14 +420,9 @@ export default function ApplyForm({
   const consentOk = !!consentChecked;
 
   const cancelState: ButtonState = "default";
-  const draftState: ButtonState =
-    studentValid && passwordValid && consentOk
-      ? "default"
-      : "unactive";
+  const draftState: ButtonState = studentValid && passwordValid && consentOk ? "default" : "unactive";
   const submitState: ButtonState =
-    requiredFilled && studentValid && passwordValid && consentOk
-      ? "default"
-      : "unactive";
+    requiredFilled && studentValid && passwordValid && consentOk ? "default" : "unactive";
 
   return (
     <section
@@ -500,16 +454,15 @@ export default function ApplyForm({
             ? errors[item.id]
               ? styles.inputError
               : studentStatus === "valid"
-                ? styles.inputSuccess
-                : ""
+              ? styles.inputSuccess
+              : ""
             : errors[item.id]
-              ? styles.inputError
-              : success[item.id]
-                ? styles.inputSuccess
-                : "";
+            ? styles.inputError
+            : success[item.id]
+            ? styles.inputSuccess
+            : "";
 
-          const placeholderText =
-            errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
+          const placeholderText = errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
 
           return (
             <div className={styles.item} key={item.id}>
@@ -532,8 +485,8 @@ export default function ApplyForm({
                       errors[item.id]
                         ? styles.inputError
                         : success[item.id]
-                          ? styles.inputSuccess
-                          : "",
+                        ? styles.inputSuccess
+                        : "",
                     ].join(" ")}
                     value={answers[item.id] || ""}
                     placeholder={item.placeholder}
@@ -551,9 +504,7 @@ export default function ApplyForm({
                         });
                       }
                     }}
-                    onFocus={() =>
-                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
-                    }
+                    onFocus={() => setFocusedFields((prev) => ({ ...prev, [item.id]: true }))}
                     onBlur={() => {
                       setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
                       handleBlur(item.id, safeAllQuestions);
@@ -578,26 +529,41 @@ export default function ApplyForm({
                       {files[item.id] && (
                         <button
                           type="button"
-                          className={styles.deleteButton} // 빨간 텍스트 스타일
+                          className={styles.deleteButton}
                           onClick={() => handleFileDelete(item.id)}
+                          disabled={mode === "view"}
                         >
                           파일 삭제하기
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className={styles.uploadButton}
-                        onClick={() =>
-                          mode === "view" ? undefined : handleFileUpload(item.id)
-                        }
-                        disabled={mode === "view"}
-                      >
-                        {mode === "view"
-                          ? "파일 다운로드"
-                          : files[item.id]
-                            ? "파일 변경하기"
-                            : "파일 업로드"}
-                      </button>
+
+                      {/* ✅ 여기만 변경: view면 다운로드 / edit면 업로드 */}
+                      {(() => {
+                        const downloadUrl = (item.fileLink || answers[item.id] || "").trim();
+                        const canDownload = mode === "view" && !!downloadUrl;
+
+                        return (
+                          <button
+                            type="button"
+                            className={styles.uploadButton}
+                            onClick={() => {
+                              if (mode === "view") {
+                                if (!downloadUrl) return;
+                                onFileDownload?.(downloadUrl, item.question);
+                                return;
+                              }
+                              handleFileUpload(item.id);
+                            }}
+                            disabled={mode === "view" ? !canDownload : false}
+                          >
+                            {mode === "view"
+                              ? "파일 다운로드"
+                              : files[item.id]
+                              ? "파일 변경하기"
+                              : "파일 업로드"}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -615,9 +581,7 @@ export default function ApplyForm({
                     readOnly={mode === "view"}
                     rows={1}
                     style={{ resize: "none", overflow: "hidden" }}
-                    onFocus={() =>
-                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
-                    }
+                    onFocus={() => setFocusedFields((prev) => ({ ...prev, [item.id]: true }))}
                     onBlur={() => {
                       setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
                       handleBlur(item.id, safeAllQuestions);
@@ -638,7 +602,6 @@ export default function ApplyForm({
                           return next;
                         });
                       }
-
 
                       if (isStudentField) {
                         setErrors((prev) => {
@@ -703,18 +666,15 @@ export default function ApplyForm({
                         errors[item.id]
                           ? styles.errorText
                           : studentStatus === "valid"
-                            ? styles.successText
-                            : styles.errorText
+                          ? styles.successText
+                          : styles.errorText
                       }
                     >
-                      {errors[item.id] ||
-                        (studentStatus ? studentMessages[studentStatus] : "")}
+                      {errors[item.id] || (studentStatus ? studentMessages[studentStatus] : "")}
                     </div>
                   ) : (
                     <>
-                      {errors[item.id] && (
-                        <div className={styles.errorText}>{errors[item.id]}</div>
-                      )}
+                      {errors[item.id] && <div className={styles.errorText}>{errors[item.id]}</div>}
                       {success[item.id] && !errors[item.id] && (
                         <div className={styles.successText}>{success[item.id]}</div>
                       )}
@@ -727,337 +687,270 @@ export default function ApplyForm({
         })}
       </div>
 
-      {
-        enableConsent && (
-          <section className={styles.consentSection}>
-            <h2
-              className={[
-                styles.consentTitle,
-                isResult ? styles.consentTitleBlack : "",
-              ].join(" ")}
-            >
-              지원서 제출을 위한
-              <br />
-              개인정보 수집 및 이용 동의서
-            </h2>
+      {enableConsent && (
+        <section className={styles.consentSection}>
+          <h2
+            className={[styles.consentTitle, isResult ? styles.consentTitleBlack : ""].join(" ")}
+          >
+            지원서 제출을 위한
+            <br />
+            개인정보 수집 및 이용 동의서
+          </h2>
 
-            <ol
-              className={[
-                styles.consentList,
-                isResult ? styles.consentListBlack : "",
-              ].join(" ")}
-            >
-              <li>
-                <p
-                  className={[
-                    styles.listTitle,
-                    isResult ? styles.listTitleBlack : "",
-                  ].join(" ")}
-                >
-                  수집하는 개인정보 항목
-                </p>
-                <div
-                  className={[
-                    styles.consentBox,
-                    isResult ? styles.consentBoxBlack : "",
-                  ].join(" ")}
-                >
-                  필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공), 본인확인용 비밀번호
-                </div>
-              </li>
-
-              <li>
-                <p
-                  className={[
-                    styles.listTitle,
-                    isResult ? styles.listTitleBlack : "",
-                  ].join(" ")}
-                >
-                  개인정보의 보유 및 이용 기간
-                </p>
-                <div
-                  className={[
-                    styles.consentBox,
-                    isResult ? styles.consentBoxBlack : "",
-                  ].join(" ")}
-                >
-                  수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후 지체 없이 파기합니다.
-                </div>
-                <div
-                  className={[
-                    styles.consentBox,
-                    isResult ? styles.consentBoxBlack : "",
-                  ].join(" ")}
-                >
-                  지원자가 개인정보 삭제를 요청할 경우 즉시 파기합니다.
-                </div>
-              </li>
-
-              <li>
-                <p
-                  className={[
-                    styles.listTitle,
-                    isResult ? styles.listTitleBlack : "",
-                  ].join(" ")}
-                >
-                  동의 거부 권리 및 불이익 안내
-                </p>
-                <div
-                  className={[
-                    styles.consentBox,
-                    isResult ? styles.consentBoxBlack : "",
-                  ].join(" ")}
-                >
-                  귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
-                </div>
-                <div
-                  className={[
-                    styles.consentBox,
-                    isResult ? styles.consentBoxBlack : "",
-                  ].join(" ")}
-                >
-                  필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수 있습니다.
-                </div>
-              </li>
-            </ol>
-
-            <label className={styles.consentCheck}>
-              <input
-                type="checkbox"
-                checked={!!consentChecked}
-                disabled={mode === "view"}
-                onChange={(e) => onConsentChange?.(e.target.checked)}
-              />
-              <img
-                src={consentChecked ? checkboxChecked : checkboxDefault}
-                className={[
-                  styles.checkboxIcon,
-                  isResult ? styles.checkboxIconResult : "",
-                ].join(" ")}
-                alt=""
-              />
-              <span
-                className={[
-                  styles.checkboxText,
-                  isResult ? styles.checkboxTextBlack : "",
-                ].join(" ")}
-              >
-                위 내용에 동의합니다.
-              </span>
-            </label>
-          </section>
-        )
-      }
-
-      {
-        enableNotice && (
-          <section className={styles.noticeSection}>
-            <h2
-              className={[
-                styles.noticeTitle,
-                isResult ? styles.noticeTitleBlack : "",
-              ].join(" ")}
-            >
-              지원서 제출 시 유의 사항
-            </h2>
-
-            <div className={styles.noticeItems}>
-              <div className={styles.noticeItem}>
-                <img src={noticeIcon} alt="" className={styles.noticeIcon} />
-                <div className={styles.noticeTextGroup}>
-                  <p
-                    className={[
-                      styles.noticeText,
-                      isResult ? styles.noticeTextBlack : "",
-                    ].join(" ")}
-                  >
-                    지원 트랙을 변경하고 싶어요.
-                  </p>
-                  <p
-                    className={[
-                      styles.noticeTextDetail,
-                      isResult ? styles.noticeTextDetailBlack : "",
-                    ].join(" ")}
-                  >
-                    현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은{" "}
-                    <span className={styles.highlight}>불가능</span> 합니다. <br />
-                    작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,{" "}
-                    <br />
-                    변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br />
-                    내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
-                    복사/붙여넣기를 권장 드립니다.
-                  </p>
-                </div>
+          <ol
+            className={[styles.consentList, isResult ? styles.consentListBlack : ""].join(" ")}
+          >
+            <li>
+              <p className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(" ")}>
+                수집하는 개인정보 항목
+              </p>
+              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+                필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공), 본인확인용 비밀번호
               </div>
-              <div className={styles.noticeItem}>
-                <img src={noticeIcon} alt="" className={styles.noticeIcon} />
-                <div className={styles.noticeTextGroup}>
-                  <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
-                  <p className={styles.noticeTextDetail}>
-                    1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다. <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br />
-                    최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
-                    <br /><br />
-                    1차 서류 모집 기간이 끝나면, 지원서 수정 및 열람은 <span className={styles.highlight}>불가능</span> 합니다.
-                  </p>
-                </div>
+            </li>
+
+            <li>
+              <p className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(" ")}>
+                개인정보의 보유 및 이용 기간
+              </p>
+              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+                수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후 지체 없이 파기합니다.
               </div>
-              <div className={styles.noticeItem}>
-                <img src={noticeIcon} alt="" className={styles.noticeIcon} />
-                <div className={styles.noticeTextGroup}>
-                  <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
-                  <p className={styles.noticeTextDetail}>
-                    본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span> 1회만 지원 가능합니다.
-                  </p>
-                </div>
+              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+                지원자가 개인정보 삭제를 요청할 경우 즉시 파기합니다.
+              </div>
+            </li>
+
+            <li>
+              <p className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(" ")}>
+                동의 거부 권리 및 불이익 안내
+              </p>
+              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+                귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
+              </div>
+              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+                필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수 있습니다.
+              </div>
+            </li>
+          </ol>
+
+          <label className={styles.consentCheck}>
+            <input
+              type="checkbox"
+              checked={!!consentChecked}
+              disabled={mode === "view"}
+              onChange={(e) => onConsentChange?.(e.target.checked)}
+            />
+            <img
+              src={consentChecked ? checkboxChecked : checkboxDefault}
+              className={[styles.checkboxIcon, isResult ? styles.checkboxIconResult : ""].join(" ")}
+              alt=""
+            />
+            <span className={[styles.checkboxText, isResult ? styles.checkboxTextBlack : ""].join(" ")}>
+              위 내용에 동의합니다.
+            </span>
+          </label>
+        </section>
+      )}
+
+      {enableNotice && (
+        <section className={styles.noticeSection}>
+          <h2 className={[styles.noticeTitle, isResult ? styles.noticeTitleBlack : ""].join(" ")}>
+            지원서 제출 시 유의 사항
+          </h2>
+
+          <div className={styles.noticeItems}>
+            <div className={styles.noticeItem}>
+              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+              <div className={styles.noticeTextGroup}>
+                <p className={[styles.noticeText, isResult ? styles.noticeTextBlack : ""].join(" ")}>
+                  지원 트랙을 변경하고 싶어요.
+                </p>
+                <p
+                  className={[
+                    styles.noticeTextDetail,
+                    isResult ? styles.noticeTextDetailBlack : "",
+                  ].join(" ")}
+                >
+                  현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은{" "}
+                  <span className={styles.highlight}>불가능</span> 합니다. <br />
+                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,{" "}
+                  <br />
+                  변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br />
+                  내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
+                  복사/붙여넣기를 권장 드립니다.
+                </p>
               </div>
             </div>
 
-            {enableActions && (
-              <ApplyFormActions
-                cancelState={cancelState}
-                draftState={_isDrafting ? "unactive" : draftState}
-                submitState={_isSubmitting ? "unactive" : submitState}
-                hasInput={hasAnyChange}
-                onDraftSave={handleDraftSave}  // API 검증 포함
-                onSubmit={handleSubmit}
-                onCancelConfirmed={() => (window.location.href = "/")}
-                dbStatus={studentStatus === "draft-exists" || studentStatus === "submitted-exists" ? studentStatus : 'none'}
-              />
-            )}
-          </section>
-        )
-      }
+            <div className={styles.noticeItem}>
+              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+              <div className={styles.noticeTextGroup}>
+                <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
+                <p className={styles.noticeTextDetail}>
+                  1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다.{" "}
+                  <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br />
+                  최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
+                  <br />
+                  <br />
+                  1차 서류 모집 기간이 끝나면, 지원서 수정 및 열람은{" "}
+                  <span className={styles.highlight}>불가능</span> 합니다.
+                </p>
+              </div>
+            </div>
 
-      {
-        modalOpen && modalType === "submitted" && (
-          <Modal
-            isOpen={modalOpen}
-            title="이미 최종 제출한 지원서가 있습니다"
-            description={
-              <span>
-                중복 지원은 불가하므로,
-                <br />
-                현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span>{" "}
-                해주세요.
-              </span>
-            }
-            extraText={
-              <span>
-                최종 제출한 지원서는 해당 학번으로 로그인하여,
-                <br />
-                <span style={{ color: "#FF7710" }}>3월 2일 23시 59분까지</span>
-                <br />
-                열람 및 수정이 가능합니다.
-              </span>
-            }
-            primaryButton={{
-              text: "확인",
-              onClick: () => setModalOpen(false),
-            }}
-            onClose={() => setModalOpen(false)}
-          />
-        )
-      }
+            <div className={styles.noticeItem}>
+              <img src={noticeIcon} alt="" className={styles.noticeIcon} />
+              <div className={styles.noticeTextGroup}>
+                <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
+                <p className={styles.noticeTextDetail}>
+                  본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span> 1회만
+                  지원 가능합니다.
+                </p>
+              </div>
+            </div>
+          </div>
 
-      {
-        modalOpen && modalType === "draft" && (
-          <Modal
-            isOpen={modalOpen}
-            title="이미 임시저장된 지원서가 있습니다"
-            description={
-              <span>
-                여러 개의 지원서를 임시저장 할 수 없으므로,
-                <br />
-                현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span>{" "}
-                해주세요.
-              </span>
-            }
-            extraText={
-              <span>
-                해당 학번으로 다시 로그인하여,
-                <br />
-                기존에 임시 저장한 지원서를 다시 확인해 주세요.
-                <br />
-                <br />
-                현재 작성 된 내용은 <span style={{ color: "#FF7710" }}>저장되지 않으니,</span>
-                <br />
-                <span style={{ color: "#FF7710" }}>복사/붙여넣기를 권장 드립니다.</span>
-              </span>
-            }
-            primaryButton={{
-              text: "확인",
-              onClick: () => setModalOpen(false),
-            }}
-            onClose={() => setModalOpen(false)}
-          />
-        )
-      }
+          {enableActions && (
+            <ApplyFormActions
+              cancelState={cancelState}
+              draftState={_isDrafting ? "unactive" : draftState}
+              submitState={_isSubmitting ? "unactive" : submitState}
+              hasInput={hasAnyChange}
+              onDraftSave={handleDraftSave}
+              onSubmit={handleSubmit}
+              onCancelConfirmed={() => (window.location.href = "/")}
+              dbStatus={
+                studentStatus === "draft-exists" || studentStatus === "submitted-exists"
+                  ? studentStatus
+                  : "none"
+              }
+            />
+          )}
+        </section>
+      )}
 
-      {
-        modalOpen && modalType === "leave" && (
-          <Modal
-            isOpen={modalOpen}
-            title="WARNING"
-            description={
-              <span>
-                페이지를 나가면
-                <br />
-                작성 중인 지원서는 저장되지 않습니다.
-              </span>
-            }
-            extraText={
-              <span>
-                지원서 작성을 취소하고, 페이지를 나갈까요?<br />
-                작성된 내용은 저장되지 않습니다.
-              </span>
-            }
-            primaryButton={{
-              text: "나가기",
-              onClick: () => {
-                allowNavigation();   // guard 해제
-                setModalOpen(false);
-                window.history.back(); // 이제 이동 가능
-              },
-            }}
+      {/* ===== 기존 모달들 (원본 유지) ===== */}
+      {modalOpen && modalType === "submitted" && (
+        <Modal
+          isOpen={modalOpen}
+          title="이미 최종 제출한 지원서가 있습니다"
+          description={
+            <span>
+              중복 지원은 불가하므로,
+              <br />
+              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span> 해주세요.
+            </span>
+          }
+          extraText={
+            <span>
+              최종 제출한 지원서는 해당 학번으로 로그인하여,
+              <br />
+              <span style={{ color: "#FF7710" }}>3월 2일 23시 59분까지</span>
+              <br />
+              열람 및 수정이 가능합니다.
+            </span>
+          }
+          primaryButton={{
+            text: "확인",
+            onClick: () => setModalOpen(false),
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
 
-            secondaryButton={{
-              text: "지원서로 돌아가기",
-              onClick: () => setModalOpen(false),
-            }}
-            onClose={() => setModalOpen(false)}
-          />
-        )
-      }
-      {/* ===== DB 상태 모달 ===== */}
+      {modalOpen && modalType === "draft" && (
+        <Modal
+          isOpen={modalOpen}
+          title="이미 임시저장된 지원서가 있습니다"
+          description={
+            <span>
+              여러 개의 지원서를 임시저장 할 수 없으므로,
+              <br />
+              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span> 해주세요.
+            </span>
+          }
+          extraText={
+            <span>
+              해당 학번으로 다시 로그인하여,
+              <br />
+              기존에 임시 저장한 지원서를 다시 확인해 주세요.
+              <br />
+              <br />
+              현재 작성 된 내용은 <span style={{ color: "#FF7710" }}>저장되지 않으니,</span>
+              <br />
+              <span style={{ color: "#FF7710" }}>복사/붙여넣기를 권장 드립니다.</span>
+            </span>
+          }
+          primaryButton={{
+            text: "확인",
+            onClick: () => setModalOpen(false),
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {modalOpen && modalType === "leave" && (
+        <Modal
+          isOpen={modalOpen}
+          title="WARNING"
+          description={
+            <span>
+              페이지를 나가면
+              <br />
+              작성 중인 지원서는 저장되지 않습니다.
+            </span>
+          }
+          extraText={
+            <span>
+              지원서 작성을 취소하고, 페이지를 나갈까요?
+              <br />
+              작성된 내용은 저장되지 않습니다.
+            </span>
+          }
+          primaryButton={{
+            text: "나가기",
+            onClick: () => {
+              allowNavigation();
+              setModalOpen(false);
+              window.history.back();
+            },
+          }}
+          secondaryButton={{
+            text: "지원서로 돌아가기",
+            onClick: () => setModalOpen(false),
+          }}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+
+      {/* ===== 덮어쓰기/성공/로딩 모달 (원본 유지) ===== */}
       {isDraftOverwriteOpen && (
         <Modal
           isOpen={isDraftOverwriteOpen}
           title="이미 작성한 지원서가 있습니다."
           description={
             <span>
-              임시저장 했던 다른 지원서가 있습니다.<br />
-              이전 지원서는 삭제하고,<br />
+              임시저장 했던 다른 지원서가 있습니다.
+              <br />
+              이전 지원서는 삭제하고,
+              <br />
               <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
             </span>
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>{" "}상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>상태로 저장됩니다.
             </span>
           }
-          primaryButton={{ text: '덮어쓰기', onClick: executeDraftOverwrite }}
+          primaryButton={{ text: "덮어쓰기", onClick: executeDraftOverwrite }}
           secondaryButton={{
-            text: '취소',
+            text: "취소",
             onClick: () => {
-              // 덮어쓰기 모달 닫기
               setIsDraftOverwriteOpen(false);
-              // 취소 확인 모달 열기
-
               setIsCancelConfirmOpen(true);
-
             },
           }}
-
           onClose={() => setIsDraftOverwriteOpen(false)}
         />
       )}
@@ -1068,30 +961,26 @@ export default function ApplyForm({
           title="이미 작성한 지원서가 있습니다."
           description={
             <span>
-              임시저장 했던 다른 지원서가 있습니다.<br />
-              이전 지원서는 삭제하고,<br />
+              임시저장 했던 다른 지원서가 있습니다.
+              <br />
+              이전 지원서는 삭제하고,
+              <br />
               <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
             </span>
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>{" "}상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>상태로 저장됩니다.
             </span>
           }
-          primaryButton={{ text: '덮어쓰기', onClick: executeSubmitOverwrite }}
+          primaryButton={{ text: "덮어쓰기", onClick: executeSubmitOverwrite }}
           secondaryButton={{
-            text: '취소',
+            text: "취소",
             onClick: () => {
-              // 덮어쓰기 모달 닫기
               setIsSubmitFromDraftOpen(false);
-
-              // 취소 확인 모달 열기
-
               setIsCancelConfirmOpen(true);
-
             },
           }}
-
           onClose={() => setIsSubmitFromDraftOpen(false)}
         />
       )}
@@ -1102,29 +991,26 @@ export default function ApplyForm({
           title="이미 작성한 지원서가 있습니다."
           description={
             <span>
-              최종제출 했던 다른 지원서가 있습니다.<br />
-              이전 지원서는 삭제하고,<br />
+              최종제출 했던 다른 지원서가 있습니다.
+              <br />
+              이전 지원서는 삭제하고,
+              <br />
               <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
             </span>
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>{" "}상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>상태로 저장됩니다.
             </span>
           }
-          primaryButton={{ text: '덮어쓰기', onClick: executeDraftOverwrite }}
+          primaryButton={{ text: "덮어쓰기", onClick: executeDraftOverwrite }}
           secondaryButton={{
-            text: '취소',
+            text: "취소",
             onClick: () => {
-              // 덮어쓰기 모달 닫기
               setIsDraftFromSubmittedOpen(false);
-              // 취소 확인 모달 열기
-
               setIsCancelConfirmOpen(true);
-
             },
           }}
-
           onClose={() => setIsDraftFromSubmittedOpen(false)}
         />
       )}
@@ -1135,33 +1021,30 @@ export default function ApplyForm({
           title="이미 작성한 지원서가 있습니다."
           description={
             <span>
-              최종제출 했던 다른 지원서가 있습니다.<br />
-              이전 지원서는 삭제하고,<br />
+              최종제출 했던 다른 지원서가 있습니다.
+              <br />
+              이전 지원서는 삭제하고,
+              <br />
               <span style={{ color: "#FF7710" }}>현재 지원서로 덮어쓸까요?</span>{" "}
             </span>
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>{" "}상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>상태로 저장됩니다.
             </span>
           }
-          primaryButton={{ text: '덮어쓰기', onClick: executeSubmitOverwrite }}
+          primaryButton={{ text: "덮어쓰기", onClick: executeSubmitOverwrite }}
           secondaryButton={{
-            text: '취소',
+            text: "취소",
             onClick: () => {
-              // 덮어쓰기 모달 닫기
               setIsSubmitOverwriteOpen(false);
-
-              // 취소 확인 모달 열기
-
               setIsCancelConfirmOpen(true);
-
             },
           }}
-
           onClose={() => setIsSubmitOverwriteOpen(false)}
         />
       )}
+
       {isCancelConfirmOpen && (
         <Modal
           isOpen={isCancelConfirmOpen}
@@ -1170,13 +1053,11 @@ export default function ApplyForm({
           primaryButton={{
             text: "확인",
             onClick: () => {
-              // 모달 닫기
               setIsCancelConfirmOpen(false);
               setCancelTargetModal(null);
               setIsCancelFlow(false);
             },
           }}
-
         />
       )}
 
@@ -1186,11 +1067,11 @@ export default function ApplyForm({
           title="지원해주셔서 감사합니다!"
           extraText="지원서가 정상적으로 접수되었습니다."
           primaryButton={{
-            text: '확인',
+            text: "확인",
             onClick: () => {
               setIsSubmitSuccessOpen(false);
-              window.location.href = '/';
-            }
+              window.location.href = "/";
+            },
           }}
           onClose={() => setIsSubmitSuccessOpen(false)}
         />
@@ -1202,37 +1083,38 @@ export default function ApplyForm({
           title="지원서가 임시 저장되었습니다"
           extraText={
             <span>
-              저장된 지원서는<br />
-              3월 2일 23시 59분 까지<br />
+              저장된 지원서는
+              <br />
+              3월 2일 23시 59분 까지
+              <br />
               열람 및 수정이 가능합니다.
             </span>
           }
           primaryButton={{
-            text: '확인',
+            text: "확인",
             onClick: () => {
               setIsDraftSuccessOpen(false);
-              window.location.href = '/';
-            }
+              window.location.href = "/";
+            },
           }}
           onClose={() => setIsDraftSuccessOpen(false)}
         />
       )}
-      {/* ✅ 로딩 모달 추가 */}
+
       {isLoadingOpen && (
         <Modal
           isOpen={isLoadingOpen}
           title="처리 중입니다..."
           description={
             <span>
-              잠시만 기다려 주세요.<br />
+              잠시만 기다려 주세요.
+              <br />
               지원서를 제출하고 있습니다.
             </span>
           }
-          // 버튼 없이 로딩만 표시
-          onClose={() => { }} // 닫기 비활성화
+          onClose={() => {}}
         />
       )}
-
     </section>
   );
 }
