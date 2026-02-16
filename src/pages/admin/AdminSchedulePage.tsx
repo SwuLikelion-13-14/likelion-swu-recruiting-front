@@ -11,8 +11,14 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 function pad2(n: number) {
   return String(n).padStart(2, "0");
 }
+
 function formatValue(v: DateTimeValue) {
   return `${v.y}.${pad2(v.m)}.${pad2(v.d)} ${v.hh}:${v.mm}`;
+}
+
+// PATCH용 "YYYY-MM-DDTHH:MM"
+function toLocalDateTimeString(v: DateTimeValue) {
+  return `${v.y}-${pad2(v.m)}-${pad2(v.d)}T${v.hh}:${v.mm}`;
 }
 
 function parseOrNow(str?: string | null): DateTimeValue {
@@ -158,20 +164,20 @@ type GetPicResponse = {
   isSuccess: boolean;
   code: string;
   message: string;
-  result: string | null; 
+  result: string | null;
 };
 
 type UploadPicResponse = {
   isSuccess: boolean;
   code: string;
   message: string;
-  result: string | null; 
+  result: string | null;
 };
 
 type ScheduleItem = {
   scheduleId: number;
   scheduleTitle: string;
-  scheduleAt: string;
+  scheduleAt: string; // ISO
 };
 
 type GetScheduleResponse = {
@@ -181,6 +187,18 @@ type GetScheduleResponse = {
   result: ScheduleItem[];
 };
 
+type PatchScheduleBody = {
+  scheduleTitle: string;
+  scheduleAt: string; // "YYYY-MM-DDTHH:MM"
+};
+
+type PatchScheduleResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: ScheduleItem;
+};
+
 function safeJsonParse<T>(raw: string): T {
   const t = raw.trim();
   if (!t) throw new Error("빈 응답(바디 없음)");
@@ -188,9 +206,13 @@ function safeJsonParse<T>(raw: string): T {
   return JSON.parse(t) as T;
 }
 
-function pickScheduleAt(list: ScheduleItem[], keyword: string) {
-  return list.find((x) => x.scheduleTitle.includes(keyword))?.scheduleAt;
+// 키워드로 ScheduleItem 자체를 뽑아야 scheduleId를 저장할 수 있음
+function pickScheduleItem(list: ScheduleItem[], keyword: string) {
+  return list.find((x) => x.scheduleTitle.includes(keyword));
 }
+
+type ScheduleMeta = { scheduleId: number; scheduleTitle: string };
+type ScheduleMap = Record<FieldKey, ScheduleMeta | null>;
 
 export default function AdminSchedulePage() {
   const [values, setValues] = useState<Record<FieldKey, string>>({
@@ -198,6 +220,15 @@ export default function AdminSchedulePage() {
     docResult: "2026.03.02 15:00",
     finalResult: "2026.03.02 15:00",
   });
+
+  // ✅ FieldKey -> scheduleId/title 매핑 저장
+  const [scheduleMap, setScheduleMap] = useState<ScheduleMap>({
+    docDeadline: null,
+    docResult: null,
+    finalResult: null,
+  });
+
+  const [saving, setSaving] = useState(false);
 
   const [openKey, setOpenKey] = useState<FieldKey | null>(null);
   const [anchor, setAnchor] = useState({ left: 0, top: 0 });
@@ -282,12 +313,6 @@ export default function AdminSchedulePage() {
   const onPickDay = (day: number) => setTemp((p) => ({ ...p, y: viewY, m: viewM, d: day }));
   const onPickTime = (hh: string, mm: string) => setTemp((p) => ({ ...p, hh, mm }));
 
-  const onDone = () => {
-    if (!openKey) return;
-    setValues((prev) => ({ ...prev, [openKey]: formatValue(temp) }));
-    closePopup();
-  };
-
   const getSchedule = async () => {
     const url = `${API_BASE}/api/admin/schedule`;
     console.log("ADMIN SCHEDULE GET:", url);
@@ -302,6 +327,28 @@ export default function AdminSchedulePage() {
     return data.result;
   };
 
+  const patchSchedule = async (scheduleId: number, body: PatchScheduleBody) => {
+    const url = `${API_BASE}/api/admin/schedule/${scheduleId}`;
+    console.log("ADMIN SCHEDULE PATCH:", url, body);
+
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    const raw = await res.text().catch(() => "");
+    if (!res.ok) {
+      console.error("[PATCH FAIL]", res.status, raw);
+      throw new Error(`HTTP ${res.status}${raw ? ` - ${raw}` : ""}`);
+    }
+
+    const data = safeJsonParse<PatchScheduleResponse>(raw);
+    if (!data.isSuccess) throw new Error(data.message ?? "일정 수정 실패");
+
+    return data.result;
+  };
+
   useEffect(() => {
     let alive = true;
 
@@ -310,17 +357,40 @@ export default function AdminSchedulePage() {
         const list = await getSchedule();
         if (!alive) return;
 
-        const docDeadlineAt = pickScheduleAt(list, "서류모집") ?? pickScheduleAt(list, "서류 모집");
-        const docResultAt = pickScheduleAt(list, "서류 합격 발표") ?? pickScheduleAt(list, "서류합격");
-        const finalResultAt = pickScheduleAt(list, "최종 합격 발표") ?? pickScheduleAt(list, "최종합격");
+        const docDeadlineItem =
+          pickScheduleItem(list, "서류모집") ??
+          pickScheduleItem(list, "서류 모집") ??
+          pickScheduleItem(list, "서류 제출 마감");
+
+        const docResultItem =
+          pickScheduleItem(list, "서류 합격 발표") ??
+          pickScheduleItem(list, "서류합격") ??
+          pickScheduleItem(list, "서류 합격");
+
+        const finalResultItem =
+          pickScheduleItem(list, "최종 합격 발표") ??
+          pickScheduleItem(list, "최종합격") ??
+          pickScheduleItem(list, "최종 합격");
+
+        setScheduleMap({
+          docDeadline: docDeadlineItem
+            ? { scheduleId: docDeadlineItem.scheduleId, scheduleTitle: docDeadlineItem.scheduleTitle }
+            : null,
+          docResult: docResultItem
+            ? { scheduleId: docResultItem.scheduleId, scheduleTitle: docResultItem.scheduleTitle }
+            : null,
+          finalResult: finalResultItem
+            ? { scheduleId: finalResultItem.scheduleId, scheduleTitle: finalResultItem.scheduleTitle }
+            : null,
+        });
 
         setValues((prev) => ({
-          docDeadline: docDeadlineAt ? isoToDisplay(docDeadlineAt) : prev.docDeadline,
-          docResult: docResultAt ? isoToDisplay(docResultAt) : prev.docResult,
-          finalResult: finalResultAt ? isoToDisplay(finalResultAt) : prev.finalResult,
+          docDeadline: docDeadlineItem?.scheduleAt ? isoToDisplay(docDeadlineItem.scheduleAt) : prev.docDeadline,
+          docResult: docResultItem?.scheduleAt ? isoToDisplay(docResultItem.scheduleAt) : prev.docResult,
+          finalResult: finalResultItem?.scheduleAt ? isoToDisplay(finalResultItem.scheduleAt) : prev.finalResult,
         }));
 
-        const base = parseOrNow(docDeadlineAt ? isoToDisplay(docDeadlineAt) : null);
+        const base = parseOrNow(docDeadlineItem?.scheduleAt ? isoToDisplay(docDeadlineItem.scheduleAt) : null);
         setTemp(base);
         setViewY(base.y);
         setViewM(base.m);
@@ -334,8 +404,49 @@ export default function AdminSchedulePage() {
     };
   }, []);
 
-  const [imageFile, setImageFile] = useState<File | null>(null); 
-  const [serverPicUrl, setServerPicUrl] = useState<string | null>(null); 
+  const onDone = async () => {
+    if (!openKey) return;
+
+    const meta = scheduleMap[openKey];
+    if (!meta) {
+      alert("이 일정의 scheduleId를 찾지 못했어요. (GET 응답의 scheduleTitle 키워드 매칭 확인 필요)");
+      closePopup();
+      return;
+    }
+
+    const displayValue = formatValue(temp);
+    setValues((prev) => ({ ...prev, [openKey]: displayValue }));
+
+    if (saving) return;
+
+    try {
+      setSaving(true);
+
+      const updated = await patchSchedule(meta.scheduleId, {
+        scheduleTitle: meta.scheduleTitle,
+        scheduleAt: toLocalDateTimeString(temp), 
+      });
+
+      setValues((prev) => ({
+        ...prev,
+        [openKey]: updated.scheduleAt ? isoToDisplay(updated.scheduleAt) : prev[openKey],
+      }));
+
+      setScheduleMap((prev) => ({
+        ...prev,
+        [openKey]: { scheduleId: updated.scheduleId, scheduleTitle: updated.scheduleTitle },
+      }));
+    } catch (e: any) {
+      console.error("ADMIN SCHEDULE PATCH ERROR:", e);
+      alert(e?.message ?? "일정 수정에 실패했어요.");
+    } finally {
+      setSaving(false);
+      closePopup();
+    }
+  };
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [serverPicUrl, setServerPicUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -435,8 +546,7 @@ export default function AdminSchedulePage() {
 
   const hasServerPic = Boolean(serverPicUrl);
   const displayText =
-    imageFile?.name ??
-    (serverPicUrl ? serverPicUrl.split("/").pop() ?? serverPicUrl : null);
+    imageFile?.name ?? (serverPicUrl ? serverPicUrl.split("/").pop() ?? serverPicUrl : null);
 
   return (
     <div className="min-w-[980px]">
