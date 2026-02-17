@@ -104,7 +104,6 @@ export default function ApplyForm({
   const [initialFiles, setInitialFiles] = useState<Record<number, File | null>>({});
   const [isSubmitSuccessOpen, setIsSubmitSuccessOpen] = useState(false);
   const [isDraftSuccessOpen, setIsDraftSuccessOpen] = useState(false);
-  const [isUploadFailOpen, setIsUploadFailOpen] = useState(false);
 
 
   const safeAllQuestions = useMemo(
