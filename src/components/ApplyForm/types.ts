@@ -38,4 +38,5 @@ export interface ApplyFormProps {
   studentIdField?: number;
   passwordField?: number;
   dbStatus?: 'none' | 'draft-exists' | 'submitted-exists';
+  isLoaded?: boolean; 
 }
