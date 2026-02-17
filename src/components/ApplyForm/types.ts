@@ -36,6 +36,7 @@ export interface ApplyFormProps {
   onDirectDraftSave?: () => Promise<boolean>;
   studentIdField?: number;
   passwordField?: number;
-  dbStatus?: "none" | "draft-exists" | "submitted-exists";
+  dbStatus?: 'none' | 'draft-exists' | 'submitted-exists';
+  isLoaded?: boolean; 
   onFileDownload?: (url: string, fileName?: string) => void | Promise<void>;
 }

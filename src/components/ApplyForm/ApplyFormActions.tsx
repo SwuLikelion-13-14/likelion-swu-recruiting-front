@@ -24,16 +24,19 @@ const ApplyFormActions = ({
   onDraftSave,
   onSubmit,
   onCancelConfirmed,
-  hasInput = false
+  hasInput = false,
+  dbStatus = 'none'
 }: ApplyFormActionsProps) => {
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
   const [isCancelStep1Open, setIsCancelStep1Open] = useState(false)
   const [isCancelStep2Open, setIsCancelStep2Open] = useState(false)
   const [isSubmitStep1Open, setIsSubmitStep1Open] = useState(false)
-  const [isSubmitStep2Open, setIsSubmitStep2Open] = useState(false)
+  const [_isSubmitStep2Open, setIsSubmitStep2Open] = useState(false)
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false)
   const [isDraftStep1Open, setIsDraftStep1Open] = useState(false)
   const [isDraftStep2Open, setIsDraftStep2Open] = useState(false)
+
+  const isNewApplication = dbStatus === 'none'
 
 
   // 브라우저 새로고침/닫기 경고
@@ -56,14 +59,18 @@ const ApplyFormActions = ({
 
   return (
     <>
+
       <div className={styles.actionRow}>
         {/* 작성 취소 버튼 */}
-        <button
-          className={`${styles.actionButton} ${styles[cancelState]}`}
-          onClick={() => setIsCancelStep1Open(true)}
-        >
-          작성 취소
-        </button>
+        {isNewApplication && (
+          <button
+            className={`${styles.actionButton} ${styles[cancelState]}`}
+            onClick={() => setIsCancelStep1Open(true)}
+          >
+            작성 취소
+          </button>
+        )}
+
 
         {/* 임시 저장 버튼 */}
         <button
@@ -85,7 +92,7 @@ const ApplyFormActions = ({
       </div>
 
       {/* 작성 취소 Step1 */}
-      {isCancelStep1Open && (
+      {isNewApplication && isCancelStep1Open && (
         <Modal
           isOpen={isCancelStep1Open}
           title="작성 취소"
@@ -107,7 +114,8 @@ const ApplyFormActions = ({
       )}
 
       {/* 작성 취소 Step2 */}
-      {isCancelStep2Open && (
+      {isNewApplication && isCancelStep2Open && (
+
         <Modal
           isOpen={isCancelStep2Open}
           title="지원서 작성 취소"
@@ -141,7 +149,7 @@ const ApplyFormActions = ({
               try {
                 const result = await onSubmit?.();
                 if (result === false) {
-                  setIsSubmitStep1Open(false);  
+                  setIsSubmitStep1Open(false);
                   return;
                 }
                 setIsSubmitStep1Open(false);
@@ -161,22 +169,6 @@ const ApplyFormActions = ({
         />
       )}
 
-      {/* 제출 Step2 */}
-      {isSubmitStep2Open && (
-        <Modal
-          isOpen={isSubmitStep2Open}
-          title="지원해주셔서 감사합니다!"
-          extraText="지원서가 정상적으로 접수되었습니다."
-          primaryButton={{
-            text: '확인',
-            onClick: () => {
-              setIsSubmitStep2Open(false)
-              window.location.href = '/'
-            }
-          }}
-          onClose={() => setIsSubmitStep2Open(false)}
-        />
-      )}
 
       {/* 경고 모달 */}
       {isWarningModalOpen && (
@@ -225,7 +217,7 @@ const ApplyFormActions = ({
               try {
                 const result = await onDraftSave?.({ skipValidation: false });
                 if (result === false) {
-                  setIsDraftStep1Open(false);  
+                  setIsDraftStep1Open(false);
                   return;
                 }
                 setIsDraftStep1Open(false);

@@ -8,6 +8,8 @@ import styles from './TrackApplyPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS } from '@/constants/applyQuestions'
 import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
 import { useLocation } from 'react-router-dom';
+import Modal from '@/components/Modal/Modal'
+
 
 
 const FrontPage = () => {
@@ -31,6 +33,10 @@ const FrontPage = () => {
     useEffect(() => {
         allQuestionsRef.current = allQuestions
     }, [allQuestions])
+
+    const [isFileErrorModalOpen, setIsFileErrorModalOpen] = useState(false);
+    const [fileErrorMessage, setFileErrorMessage] = useState('');
+
 
 
     useEffect(() => {
@@ -244,6 +250,16 @@ const FrontPage = () => {
 
         } catch (err: any) {
             console.error('제출 실패:', err)
+
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('제출 중 오류가 발생했습니다.');
+            }
+            setIsFileErrorModalOpen(true);
             return false
         }
     }
@@ -303,6 +319,17 @@ const FrontPage = () => {
 
         } catch (err: any) {
             console.error('임시 저장 실패:', err)
+
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('임시 저장 중 오류가 발생했습니다.');
+            }
+            setIsFileErrorModalOpen(true);
+
             return false
         }
     }
@@ -339,11 +366,27 @@ const FrontPage = () => {
                         onDraftSave={handleDraftSave}
                         onDirectSubmit={handleFinalSubmit}
                         onDirectDraftSave={handleDraftSave}
+                        isLoaded={!!applicationData} 
                     >
                     </ApplyForm>
                 ))}
 
                 <ApplyFooter />
+
+                {isFileErrorModalOpen && (
+                    <Modal
+                        isOpen={isFileErrorModalOpen}
+                        title="업로드 실패"
+                        description={fileErrorMessage}
+                        primaryButton={{
+                            text: '확인',
+                            onClick: () => setIsFileErrorModalOpen(false),
+                        }}
+                        onClose={() => setIsFileErrorModalOpen(false)}
+                    />
+                )}
+
+
             </div>
         </div>
     )
