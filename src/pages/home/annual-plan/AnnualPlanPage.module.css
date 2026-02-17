@@ -203,19 +203,31 @@ h1 {
   transform: translateX(-50%);
   color: #DDD;
   font-family: 'Pretendard', sans-serif;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 500;
 }
 
 /* 행 내부 전용 이벤트 컨테이너 */
 .rowEventsContainer {
   position: absolute;
-  top: 50px;
+  top: 30px;
   left: 0;
   width: 100%;
-  height: calc(100% - 50px);
+  height: calc(100% - 30px);
   pointer-events: none;
   overflow: hidden;
+}
+
+/* 첫 번째 행만 적용 (상반기) - 원래 간격 유지 */
+.gridRow:first-child .rowEventsContainer {
+  top: 50px;
+  height: calc(100% - 50px);
+}
+
+/* 두 번째 행만 적용 (하반기) */
+.gridRow:last-child .rowEventsContainer {
+  top: 20px;
+  height: calc(100% - 50px);
 }
 
 /* Event Bar */

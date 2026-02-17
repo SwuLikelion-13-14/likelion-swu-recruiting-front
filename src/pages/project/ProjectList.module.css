@@ -675,6 +675,20 @@ h1 {
   justify-self: end;
 }
 
+/* 반응형 디자인 추가 */
+@media (max-width: 1024px) {
+  .projectGrid {
+    grid-template-columns: repeat(2, 1fr);  /* 태블릿: 2열 */
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .projectGrid {
+    grid-template-columns: 1fr;  /* 모바일: 1열 */
+    gap: 20px;
+  }
+}
 
 /* 12th Projects */
 .project12 {

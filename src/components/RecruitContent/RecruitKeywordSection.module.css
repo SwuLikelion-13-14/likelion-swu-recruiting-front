@@ -36,13 +36,34 @@
   grid-template-columns: 160px 1fr 160px 1fr 160px;
   align-items: center;
   justify-items: center;
-
-  /* 원/선 전체 글로우는 여기서만 */
-  filter: drop-shadow(0 0 50px rgba(214, 11, 3, 0.7));
+  position: relative;
 
   /* wave config */
   --waveDuration: 5400ms;
   --waveStagger: 520ms;
+}
+
+/* 전체 글로우 레이어 */
+.keywordRow::before {
+  content: '';
+  position: absolute;
+  inset: -60px;
+  pointer-events: none;
+  z-index: 0;
+
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(214, 11, 3, 0.55) 0%,
+    rgba(214, 11, 3, 0) 60%
+  );
+  filter: blur(30px);
+  opacity: 0.9;
+}
+
+/* 실제 원/선은 글로우 위로 */
+.keywordRow > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* 원 */
@@ -51,13 +72,17 @@
   height: 160px;
   border-radius: 1000px;
 
-  background: var(--Alpha-black-50, rgba(0, 0, 0, 0.5));
-  outline: 1px solid var(--element-Stroke-white-alpha25, rgba(255, 255, 255, 0.2));
+  /* 글래스 */
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
   outline-offset: -0.5px;
 
   box-shadow:
-    2px 2px 8.1px rgba(255, 255, 255, 0.5) inset,
-    -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
+    inset 2px 2px 8.1px rgb(var(--alpha-white-50)),
+    inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
+
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
 
   display: flex;
   align-items: center;
@@ -65,10 +90,17 @@
 
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 
   /* wave motion */
   will-change: transform, box-shadow, outline-color, filter;
   animation: waveGlow var(--waveDuration) ease-in-out infinite;
+}
+
+/* 원 안 텍스트/컨텐츠는 가장 위 */
+.keywordCircle > * {
+  position: relative;
+  z-index: 2;
 }
 
 /* 가장자리 빛 번짐(확 퍼지는 느낌) */
@@ -88,6 +120,7 @@
   );
   opacity: 0;
   filter: blur(10px);
+  z-index: 1;
 
   will-change: opacity, transform, filter;
   animation: edgeBloom var(--waveDuration) ease-in-out infinite;
@@ -161,10 +194,21 @@
   padding: 28px 54px;
   border-radius: 20px;
 
-  background: var(--Alpha-black-50, rgba(0, 0, 0, 0.5));
+  /* 글래스 */
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+
   box-shadow:
-    2px 2px 8.1px rgba(255, 255, 255, 0.5) inset,
-    -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
+    inset 2px 2px 8.1px rgb(var(--alpha-white-50)),
+    inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
+
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 
   display: flex;
   flex-direction: column;
@@ -212,16 +256,16 @@
 
 /* ====== keyframes ====== */
 @keyframes waveGlow {
-  /* 기본 상태 */
+  /* 기본 상태(확정 글래스 shadow로 통일) */
   0%,
   55%,
   100% {
     transform: translateY(0) scale(1);
-    outline-color: rgba(255, 255, 255, 0.20);
+    outline-color: rgb(var(--alpha-white-25));
     filter: brightness(1);
     box-shadow:
-      2px 2px 8.1px rgba(255, 255, 255, 0.5) inset,
-      -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
+      inset 2px 2px 8.1px rgb(var(--alpha-white-50)),
+      inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
   }
 
   /* 파도 피크(가장자리 빛 + 살짝 떠오름) */
@@ -230,8 +274,8 @@
     outline-color: rgba(255, 255, 255, 0.36);
     filter: brightness(1.05);
     box-shadow:
-      2px 2px 10px rgba(255, 255, 255, 0.62) inset,
-      -10px -10px 10px 2px rgba(255, 74, 67, 0.34) inset,
+      inset 2px 2px 10px rgb(var(--alpha-white-50)),
+      inset -10px -10px 10px 2px rgb(var(--secondary-50) / 0.34),
       0 0 22px rgba(255, 255, 255, 0.16);
   }
 

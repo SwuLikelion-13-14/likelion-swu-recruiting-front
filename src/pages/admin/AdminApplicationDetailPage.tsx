@@ -85,6 +85,153 @@ function toViewQuestion(a: ApiAnswer): Question {
   };
 }
 
+function normalizePath(raw?: string | null) {
+  const s = (raw ?? "").trim();
+  if (!s) return null;
+
+  if (/^https?:\/\//i.test(s)) return s;
+
+  const path = s.startsWith("/") ? s : `/${s}`;
+
+  const alreadyEncoded = /%[0-9A-Fa-f]{2}/.test(path);
+  if (alreadyEncoded) return path;
+
+  const encoded = path
+    .split("/")
+    .map((seg) => encodeURIComponent(seg))
+    .join("/");
+
+  return encoded;
+}
+
+function buildDownloadCandidates(raw?: string | null) {
+  const normalized = normalizePath(raw);
+  if (!normalized) return [];
+
+  if (/^https?:\/\//i.test(normalized)) return [normalized];
+
+  const origin = new URL(API_BASE).origin;
+  const apiBase = API_BASE.replace(/\/+$/, ""); 
+
+  const isPortfolio = normalized.startsWith("/portfolio/");
+  const portfolioPath = isPortfolio ? normalized : normalized; 
+
+  const candidates: string[] = [];
+
+  candidates.push(`${origin}${portfolioPath}`);
+
+  if (isPortfolio) candidates.push(`${origin}/api${portfolioPath}`);
+  else candidates.push(`${origin}/api${portfolioPath}`);
+
+  candidates.push(`${apiBase}${portfolioPath}`);
+  if (isPortfolio) candidates.push(`${apiBase}/api${portfolioPath}`);
+
+  return Array.from(new Set(candidates));
+}
+
+function pickPortfolioPath(detail: ApiDetailResult | null) {
+  if (!detail) return null;
+
+  if ((detail.fileUrl ?? "").trim()) return detail.fileUrl!.trim();
+
+  const ans = detail.answers ?? [];
+
+  const q14 = ans.find((a) => a.questionId === 14)?.responseText?.trim();
+  if (q14) return q14;
+
+  const anyPortfolio = ans
+    .find((a) => (a.responseText ?? "").includes("portfolio/"))
+    ?.responseText?.trim();
+  if (anyPortfolio) return anyPortfolio;
+
+  const anyUrl = ans
+    .find((a) => /^https?:\/\//i.test((a.responseText ?? "").trim()))
+    ?.responseText?.trim();
+
+  return anyUrl ?? null;
+}
+
+function pickStudentId(detail: ApiDetailResult | null) {
+  if (!detail) return "";
+
+  const basics = (detail.answers ?? []).filter((a) => a.part === "BASIC");
+
+  const byId2 = basics.find((a) => a.questionId === 2)?.responseText?.trim();
+  if (byId2) return byId2;
+
+  const byQuestion = basics
+    .find((a) => (a.question ?? "").includes("학번"))
+    ?.responseText?.trim();
+  if (byQuestion) return byQuestion;
+
+  const byNo2 = basics.find((a) => a.no === 2)?.responseText?.trim();
+  return byNo2 ?? "";
+}
+
+async function forceDownloadWithFallback(
+  rawOrUrl: string,
+  fallbackName?: string
+) {
+  const candidates = buildDownloadCandidates(rawOrUrl);
+  if (candidates.length === 0) throw new Error("다운로드 URL이 비어있어요.");
+
+  let lastErr: any = null;
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) {
+        lastErr = new Error(`HTTP ${res.status}`);
+        continue;
+      }
+
+      const blob = await res.blob();
+
+      const cd = res.headers.get("content-disposition") ?? "";
+      const match =
+        cd.match(/filename\*=UTF-8''([^;]+)/i) ||
+        cd.match(/filename="?([^"]+)"?/i);
+
+      const nameFromHeader = match?.[1] ? decodeURIComponent(match[1]) : null;
+
+      const nameFromUrl = (() => {
+        try {
+          const u = new URL(url);
+          return u.pathname.split("/").pop() || null;
+        } catch {
+          return url.split("/").pop() || null;
+        }
+      })();
+
+      const fileName =
+        (nameFromHeader && nameFromHeader.trim()) ||
+        (fallbackName && fallbackName.trim()) ||
+        (nameFromUrl && nameFromUrl.trim()) ||
+        "download";
+
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+
+      return; 
+    } catch (e) {
+      lastErr = e;
+      continue;
+    }
+  }
+
+  throw new Error(
+    `파일 다운로드 경로를 찾지 못했어요. (시도: ${candidates.length}개, 마지막 에러: ${
+      lastErr?.message ?? "unknown"
+    })`
+  );
+}
+
 export default function AdminApplicationDetailPage() {
   const navigate = useNavigate();
   const { code } = useParams<{ code: string }>();
@@ -99,7 +246,6 @@ export default function AdminApplicationDetailPage() {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const [detail, setDetail] = useState<ApiDetailResult | null>(null);
 
   const [status, setStatus] = useState<ResultStatus>(
@@ -166,6 +312,17 @@ export default function AdminApplicationDetailPage() {
     return "지원자";
   }, [detail?.track, applicantFromState?.partLabel, state?.partLabel]);
 
+  const displayName = detail?.name || applicantFromState?.name || code || "";
+
+  const studentIdFromBasic = useMemo(() => pickStudentId(detail), [detail]);
+
+  const portfolioRaw = useMemo(() => pickPortfolioPath(detail) ?? "", [detail]);
+
+  const portfolioCandidates = useMemo(
+    () => buildDownloadCandidates(portfolioRaw),
+    [portfolioRaw]
+  );
+
   const requiredQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
 
@@ -185,7 +342,6 @@ export default function AdminApplicationDetailPage() {
         },
       ];
     }
-
     return basics;
   }, [detail]);
 
@@ -199,20 +355,17 @@ export default function AdminApplicationDetailPage() {
         return String(a.part).localeCompare(String(b.part));
       })
       .map(toViewQuestion);
-
-    const hasFile = !!detail.fileUrl;
-    if (hasFile) {
-      others.push({
-        id: 999999,
-        question: `포트폴리오 (${detail.fileName ?? "파일"})`,
-        type: "file",
-        answer: detail.fileUrl ?? "",
-        placeholder: "",
-      });
-    }
+    others.push({
+      id: 999999,
+      question: `포트폴리오 (${detail.fileName ?? "파일"})`,
+      type: "file",
+      answer: portfolioRaw, // 표시용
+      fileLink: portfolioCandidates[0] ?? "", 
+      placeholder: "",
+    });
 
     return others;
-  }, [detail]);
+  }, [detail, portfolioRaw, portfolioCandidates]);
 
   const finalCheckQuestions: Question[] = useMemo(
     () => [
@@ -220,14 +373,12 @@ export default function AdminApplicationDetailPage() {
         id: 201,
         question: "학번",
         type: "text",
-        answer: "",
+        answer: studentIdFromBasic,
         placeholder: "학번 10자리를 입력해 주세요",
       },
     ],
-    []
+    [studentIdFromBasic]
   );
-
-  const displayName = detail?.name || applicantFromState?.name || code || "";
 
   if (!responseId) {
     return (
@@ -334,41 +485,21 @@ export default function AdminApplicationDetailPage() {
               enableNotice={false}
               enableActions={false}
               allQuestions={commonQuestions}
+              onFileDownload={async (_urlFromApplyForm, fileName) => {
+                try {
+                  await forceDownloadWithFallback(
+                    portfolioRaw || _urlFromApplyForm,
+                    fileName
+                  );
+                } catch (e: any) {
+                  alert(e?.message ?? "파일을 다운로드하지 못했어요.");
+                  console.log("download candidates:", portfolioCandidates);
+                  console.log("raw:", portfolioRaw);
+                }
+              }}
             />
 
             <div className="mt-16" />
-
-            {detail?.fileUrl && (
-              <div className="flex items-center justify-end mb-8">
-                <a
-                  href={detail.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  download
-                  className="
-                    flex
-                    h-[43px]
-                    min-w-[99px]
-                    px-[16px]
-                    py-[12px]
-                    justify-center
-                    items-center
-                    gap-[10px]
-                    rounded-[12px]
-                    border
-                    border-[rgba(255,255,255,0.20)]
-                    bg-[rgba(0,0,0,0.75)]
-                    text-[#F5F5F5]
-                    text-[16px]
-                    font-normal
-                    leading-[120%]
-                    whitespace-nowrap
-                  "
-                >
-                  파일 다운로드
-                </a>
-              </div>
-            )}
 
             <ApplyForm
               mode="view"
