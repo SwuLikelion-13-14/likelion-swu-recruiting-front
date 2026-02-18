@@ -22,7 +22,7 @@ type ApiAnswer = {
 
 type ApiDetailResult = {
   responseId: number;
-  name: string;
+  name: string | null;
   track: Track;
   answers: ApiAnswer[];
   fileName?: string | null;
@@ -75,85 +75,30 @@ function getStatusChipClass(status: ResultStatus) {
   }
 }
 
-function toViewQuestion(a: ApiAnswer): Question {
-  return {
-    id: a.questionId,
-    question: a.question,
-    type: "text",
-    answer: a.responseText ?? "",
-    placeholder: "",
-  };
+function isHttpUrl(s: string) {
+  return /^https?:\/\//i.test((s ?? "").trim());
 }
 
-function normalizePath(raw?: string | null) {
-  const s = (raw ?? "").trim();
-  if (!s) return null;
-
-  if (/^https?:\/\//i.test(s)) return s;
-
-  const path = s.startsWith("/") ? s : `/${s}`;
-
-  const alreadyEncoded = /%[0-9A-Fa-f]{2}/.test(path);
-  if (alreadyEncoded) return path;
-
-  const encoded = path
-    .split("/")
-    .map((seg) => encodeURIComponent(seg))
-    .join("/");
-
-  return encoded;
+function isPortfolioQuestionText(q: string) {
+  const t = (q ?? "").replace(/\s+/g, "");
+  return t.includes("포트폴리오") || t.includes("깃허브") || t.includes("github");
 }
 
-function buildDownloadCandidates(raw?: string | null) {
-  const normalized = normalizePath(raw);
-  if (!normalized) return [];
-
-  if (/^https?:\/\//i.test(normalized)) return [normalized];
-
-  const origin = new URL(API_BASE).origin;
-  const apiBase = API_BASE.replace(/\/+$/, ""); 
-
-  const isPortfolio = normalized.startsWith("/portfolio/");
-  const portfolioPath = isPortfolio ? normalized : normalized; 
-
-  const candidates: string[] = [];
-
-  candidates.push(`${origin}${portfolioPath}`);
-
-  if (isPortfolio) candidates.push(`${origin}/api${portfolioPath}`);
-  else candidates.push(`${origin}/api${portfolioPath}`);
-
-  candidates.push(`${apiBase}${portfolioPath}`);
-  if (isPortfolio) candidates.push(`${apiBase}/api${portfolioPath}`);
-
-  return Array.from(new Set(candidates));
-}
-
-function pickPortfolioPath(detail: ApiDetailResult | null) {
-  if (!detail) return null;
-
-  if ((detail.fileUrl ?? "").trim()) return detail.fileUrl!.trim();
-
-  const ans = detail.answers ?? [];
-
-  const q14 = ans.find((a) => a.questionId === 14)?.responseText?.trim();
-  if (q14) return q14;
-
-  const anyPortfolio = ans
-    .find((a) => (a.responseText ?? "").includes("portfolio/"))
-    ?.responseText?.trim();
-  if (anyPortfolio) return anyPortfolio;
-
-  const anyUrl = ans
-    .find((a) => /^https?:\/\//i.test((a.responseText ?? "").trim()))
-    ?.responseText?.trim();
-
-  return anyUrl ?? null;
+function safeAdminQuestionId(part: string, originalQuestionId: number) {
+  if (part === "BASIC") return originalQuestionId;
+  const base =
+    part === "COMMON"
+      ? 1000000
+      : part === "FRONT"
+      ? 2000000
+      : part === "BACK"
+      ? 3000000
+      : 4000000;
+  return base + originalQuestionId;
 }
 
 function pickStudentId(detail: ApiDetailResult | null) {
   if (!detail) return "";
-
   const basics = (detail.answers ?? []).filter((a) => a.part === "BASIC");
 
   const byId2 = basics.find((a) => a.questionId === 2)?.responseText?.trim();
@@ -166,70 +111,6 @@ function pickStudentId(detail: ApiDetailResult | null) {
 
   const byNo2 = basics.find((a) => a.no === 2)?.responseText?.trim();
   return byNo2 ?? "";
-}
-
-async function forceDownloadWithFallback(
-  rawOrUrl: string,
-  fallbackName?: string
-) {
-  const candidates = buildDownloadCandidates(rawOrUrl);
-  if (candidates.length === 0) throw new Error("다운로드 URL이 비어있어요.");
-
-  let lastErr: any = null;
-
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, { method: "GET" });
-      if (!res.ok) {
-        lastErr = new Error(`HTTP ${res.status}`);
-        continue;
-      }
-
-      const blob = await res.blob();
-
-      const cd = res.headers.get("content-disposition") ?? "";
-      const match =
-        cd.match(/filename\*=UTF-8''([^;]+)/i) ||
-        cd.match(/filename="?([^"]+)"?/i);
-
-      const nameFromHeader = match?.[1] ? decodeURIComponent(match[1]) : null;
-
-      const nameFromUrl = (() => {
-        try {
-          const u = new URL(url);
-          return u.pathname.split("/").pop() || null;
-        } catch {
-          return url.split("/").pop() || null;
-        }
-      })();
-
-      const fileName =
-        (nameFromHeader && nameFromHeader.trim()) ||
-        (fallbackName && fallbackName.trim()) ||
-        (nameFromUrl && nameFromUrl.trim()) ||
-        "download";
-
-      const objUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(objUrl);
-
-      return; 
-    } catch (e) {
-      lastErr = e;
-      continue;
-    }
-  }
-
-  throw new Error(
-    `파일 다운로드 경로를 찾지 못했어요. (시도: ${candidates.length}개, 마지막 에러: ${
-      lastErr?.message ?? "unknown"
-    })`
-  );
 }
 
 export default function AdminApplicationDetailPage() {
@@ -256,8 +137,9 @@ export default function AdminApplicationDetailPage() {
 
   const goBackToList = () => {
     const fallback = "/admin/applications";
-    const to = state?.from || fallback;
-    navigate(to, { replace: true });
+    const from = typeof state?.from === "string" ? state.from.trim() : "";
+    const to = from.startsWith("/") ? from : fallback;
+    navigate(to);
   };
 
   useEffect(() => {
@@ -313,15 +195,7 @@ export default function AdminApplicationDetailPage() {
   }, [detail?.track, applicantFromState?.partLabel, state?.partLabel]);
 
   const displayName = detail?.name || applicantFromState?.name || code || "";
-
   const studentIdFromBasic = useMemo(() => pickStudentId(detail), [detail]);
-
-  const portfolioRaw = useMemo(() => pickPortfolioPath(detail) ?? "", [detail]);
-
-  const portfolioCandidates = useMemo(
-    () => buildDownloadCandidates(portfolioRaw),
-    [portfolioRaw]
-  );
 
   const requiredQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
@@ -329,52 +203,88 @@ export default function AdminApplicationDetailPage() {
     const basics = (detail.answers ?? [])
       .filter((a) => a.part === "BASIC")
       .sort((a, b) => a.no - b.no)
-      .map(toViewQuestion);
+      .map((a) => ({
+        id: safeAdminQuestionId(a.part, a.questionId),
+        question: `${a.no}. ${a.question}`,
+        type: "text" as const,
+        answer: a.responseText ?? "",
+        placeholder: "",
+      }));
 
     if (basics.length === 0) {
       return [
         {
           id: 1,
-          question: "이름",
-          type: "text",
+          question: "1. 이름",
+          type: "text" as const,
           answer: detail.name ?? "",
           placeholder: "",
         },
       ];
     }
+
     return basics;
   }, [detail]);
 
   const commonQuestions: Question[] = useMemo(() => {
+    if (!detail || !responseId) return [];
+
+    const fileEndpoint = `${API_BASE}/api/admin/response/${responseId}/file`;
+
+    return (detail.answers ?? [])
+      .filter((a) => a.part === "COMMON")
+      .sort((a, b) => a.no - b.no)
+      .map((a) => {
+        const answer = (a.responseText ?? "").trim();
+        const qText = a.question ?? "";
+
+        if (isPortfolioQuestionText(qText)) {
+          const link = isHttpUrl(answer) ? answer : fileEndpoint;
+          return {
+            id: safeAdminQuestionId(a.part, a.questionId),
+            question: `${a.no}. ${qText}`,
+            type: "file" as const,
+            answer,
+            fileLink: link,
+            placeholder: "",
+          };
+        }
+
+        return {
+          id: safeAdminQuestionId(a.part, a.questionId),
+          question: `${a.no}. ${qText}`,
+          type: "text" as const,
+          answer,
+          placeholder: "",
+        };
+      });
+  }, [detail, responseId]);
+
+  const trackQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
 
-    const others = (detail.answers ?? [])
-      .filter((a) => a.part !== "BASIC")
-      .sort((a, b) => {
-        if (a.part === b.part) return a.no - b.no;
-        return String(a.part).localeCompare(String(b.part));
-      })
-      .map(toViewQuestion);
-    others.push({
-      id: 999999,
-      question: `포트폴리오 (${detail.fileName ?? "파일"})`,
-      type: "file",
-      answer: portfolioRaw, // 표시용
-      fileLink: portfolioCandidates[0] ?? "", 
-      placeholder: "",
-    });
+    const trackPart = detail.track;
 
-    return others;
-  }, [detail, portfolioRaw, portfolioCandidates]);
+    return (detail.answers ?? [])
+      .filter((a) => a.part === trackPart)
+      .sort((a, b) => a.no - b.no)
+      .map((a) => ({
+        id: safeAdminQuestionId(a.part, a.questionId),
+        question: `${a.no}. ${a.question}`,
+        type: "text" as const,
+        answer: a.responseText ?? "",
+        placeholder: "",
+      }));
+  }, [detail]);
 
   const finalCheckQuestions: Question[] = useMemo(
     () => [
       {
         id: 201,
         question: "학번",
-        type: "text",
+        type: "text" as const,
         answer: studentIdFromBasic,
-        placeholder: "학번 10자리를 입력해 주세요",
+        placeholder: "",
       },
     ],
     [studentIdFromBasic]
@@ -485,19 +395,30 @@ export default function AdminApplicationDetailPage() {
               enableNotice={false}
               enableActions={false}
               allQuestions={commonQuestions}
-              onFileDownload={async (_urlFromApplyForm, fileName) => {
-                try {
-                  await forceDownloadWithFallback(
-                    portfolioRaw || _urlFromApplyForm,
-                    fileName
-                  );
-                } catch (e: any) {
-                  alert(e?.message ?? "파일을 다운로드하지 못했어요.");
-                  console.log("download candidates:", portfolioCandidates);
-                  console.log("raw:", portfolioRaw);
-                }
+              onFileDownload={(url) => {
+                const u = (url ?? "").trim();
+                if (!u) return;
+                window.open(u, "_blank");
               }}
             />
+
+            {trackQuestions.length > 0 && (
+              <>
+                <div className="mt-16" />
+
+                <ApplyForm
+                  mode="view"
+                  variant="result"
+                  title={`${TRACK_LABEL[detail!.track]} 추가 질문`}
+                  subtitle="트랙별 추가 질문 답변 항목입니다"
+                  questions={trackQuestions}
+                  enableConsent={false}
+                  enableNotice={false}
+                  enableActions={false}
+                  allQuestions={trackQuestions}
+                />
+              </>
+            )}
 
             <div className="mt-16" />
 

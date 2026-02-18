@@ -31,6 +31,16 @@ const mockCheckStudentId = (id: string): StudentStatus => {
 
 type ButtonState = "default" | "unactive";
 
+function isHttpUrl(s: string) {
+  return /^https?:\/\//i.test(s.trim());
+}
+
+function openInNewTab(url: string) {
+  const u = url.trim();
+  if (!u) return;
+  window.open(u, "_blank", "noopener,noreferrer");
+}
+
 export default function ApplyForm({
   mode,
   variant,
@@ -80,7 +90,8 @@ export default function ApplyForm({
 
   const [isDraftOverwriteOpen, setIsDraftOverwriteOpen] = useState(false);
   const [isSubmitFromDraftOpen, setIsSubmitFromDraftOpen] = useState(false);
-  const [isDraftFromSubmittedOpen, setIsDraftFromSubmittedOpen] = useState(false);
+  const [isDraftFromSubmittedOpen, setIsDraftFromSubmittedOpen] =
+    useState(false);
   const [isSubmitOverwriteOpen, setIsSubmitOverwriteOpen] = useState(false);
   const [isLoadingOpen, setIsLoadingOpen] = useState(false);
 
@@ -92,7 +103,9 @@ export default function ApplyForm({
   >(null);
   const [_isCancelFlow, setIsCancelFlow] = useState(false);
 
-  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>({});
+  const [focusedFields, setFocusedFields] = useState<Record<number, boolean>>(
+    {}
+  );
 
   const { allowNavigation } = useNavigationGuard();
   const { setDirty, registerValidator } = useNavigationGuard();
@@ -100,8 +113,12 @@ export default function ApplyForm({
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [files, setFiles] = useState<Record<number, File | null>>({});
 
-  const [initialAnswers, setInitialAnswers] = useState<Record<number, string>>({});
-  const [initialFiles, setInitialFiles] = useState<Record<number, File | null>>({});
+  const [initialAnswers, setInitialAnswers] = useState<Record<number, string>>(
+    {}
+  );
+  const [initialFiles, setInitialFiles] = useState<Record<number, File | null>>(
+    {}
+  );
   const [isSubmitSuccessOpen, setIsSubmitSuccessOpen] = useState(false);
   const [isDraftSuccessOpen, setIsDraftSuccessOpen] = useState(false);
 
@@ -131,12 +148,29 @@ export default function ApplyForm({
     const studentQ = questions.find((q) => q.id === STUDENT_ID);
     if (studentQ?.answer) {
       if (isLoaded) {
-        setStudentStatus("valid"); // 검증 없이 valid만 세팅, 텍스트/테두리는 아래서 제어
+        setStudentStatus("valid"); 
       } else {
         setStudentStatus(mockCheckStudentId(studentQ.answer));
       }
     }
-  }, [questions, STUDENT_ID]);
+  }, [questions, STUDENT_ID, mode]);
+
+  useEffect(() => {
+    if (mode !== "view") return;
+
+    const raf = requestAnimationFrame(() => {
+      const nodes = document.querySelectorAll(
+        'textarea[data-autosize="1"]'
+      ) as NodeListOf<HTMLTextAreaElement>;
+
+      nodes.forEach((ta) => {
+        ta.style.height = "auto";
+        ta.style.height = `${ta.scrollHeight}px`;
+      });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [mode, answers, questions]);
 
   const executeDraftOverwrite = async () => {
     setIsDraftOverwriteOpen(false);
@@ -144,8 +178,8 @@ export default function ApplyForm({
     setIsLoadingOpen(true);
     setIsDrafting(true);
     try {
-      const success = await onDirectDraftSave?.(); // ← 반환값 체크
-      setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
+      const success = await onDirectDraftSave?.(); 
+      setIsLoadingOpen(false); 
       if (success) setIsDraftSuccessOpen(true);
     } catch (error) {
       setIsLoadingOpen(false);
@@ -161,9 +195,9 @@ export default function ApplyForm({
     setIsLoadingOpen(true);
     setIsSubmitting(true);
     try {
-      const success = await onDirectSubmit?.(); // ← 반환값 체크
-      setIsLoadingOpen(false); // ✅ 로딩 모달 닫기
-      if (success) setIsSubmitSuccessOpen(true); // ← 성공일 때만
+      const success = await onDirectSubmit?.(); 
+      setIsLoadingOpen(false); 
+      if (success) setIsSubmitSuccessOpen(true); 
     } catch (error) {
       setIsLoadingOpen(false);
       console.error("최종제출 실패:", error);
@@ -187,8 +221,12 @@ export default function ApplyForm({
   }, [questions, answers, files, initialAnswers, initialFiles]);
 
   useEffect(() => {
+    if (mode === "view") {
+      setDirty(false);
+      return;
+    }
     setDirty(hasAnyChange);
-  }, [hasAnyChange, setDirty]);
+  }, [mode, hasAnyChange, setDirty]);
 
   const checkStudentIdAPI = async (studentId: string): Promise<StudentStatus> => {
     try {
@@ -198,7 +236,9 @@ export default function ApplyForm({
       if (!data.isSuccess) return "invalid";
 
       if (data.result.exist) {
-        return data.result.applicationField2 === 1 ? "submitted-exists" : "draft-exists";
+        return data.result.applicationField2 === 1
+          ? "submitted-exists"
+          : "draft-exists";
       }
 
       return "valid";
@@ -209,6 +249,8 @@ export default function ApplyForm({
   };
 
   const handleBlur = (currentId: number, allQ: Question[]) => {
+    if (mode === "view") return;
+
     const newErrors: Record<number, string> = {};
     const newSuccess: Record<number, string> = {};
 
@@ -219,12 +261,10 @@ export default function ApplyForm({
       const q = allQ[i];
       const answer = answers[q.id] || "";
 
-      if (q.id === STUDENT_ID || q.id === PASSWORD_ID) continue;
-
       if (q.type === "file") {
         const hasFileOrLink = !!files[q.id] || answer.trim() !== "";
         if (q.required && !hasFileOrLink) {
-          newErrors[q.id] = "기획디자인 트랙 지원자는 필수 답변 항목입니다.";
+          newErrors[q.id] = "필수 답변 항목입니다.";
         }
         continue;
       }
@@ -382,6 +422,8 @@ export default function ApplyForm({
   };
 
   const validateInfoSection = () => {
+    if (mode === "view") return true;
+
     const studentOk = studentStatus === "valid";
     const passwordOk = /^\d{4}$/.test(passwordAnswer);
 
@@ -410,9 +452,10 @@ export default function ApplyForm({
   };
 
   useEffect(() => {
+    if (mode === "view") return;
     registerValidator(validateInfoSection);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentStatus, passwordAnswer]);
+  }, [mode, studentStatus, passwordAnswer, registerValidator]);
+  
 
   const requiredQuestions = safeAllQuestions.filter(
     (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
@@ -425,8 +468,8 @@ export default function ApplyForm({
       if (!question) return false;
 
       return q.type === "file"
-        ? !!question.file || question.answer?.trim() !== ""
-        : question.answer?.trim() !== "";
+        ? !!question.file || (question.answer?.trim() ?? "") !== ""
+        : (question.answer?.trim() ?? "") !== "";
     });
 
   const studentValid = studentStatus === "valid";
@@ -434,13 +477,19 @@ export default function ApplyForm({
   const consentOk = !!consentChecked;
 
   const cancelState: ButtonState = "default";
-  const draftState: ButtonState = studentValid && passwordValid && consentOk ? "default" : "unactive";
+  const draftState: ButtonState =
+    studentValid && passwordValid && consentOk ? "default" : "unactive";
   const submitState: ButtonState =
-    requiredFilled && studentValid && passwordValid && consentOk ? "default" : "unactive";
+    requiredFilled && studentValid && passwordValid && consentOk
+      ? "default"
+      : "unactive";
 
   return (
     <section
-      className={[styles.wrapper, isSurvey ? styles.bgDark : styles.bgResult].join(" ")}
+      className={[
+        styles.wrapper,
+        isSurvey ? styles.bgDark : styles.bgResult,
+      ].join(" ")}
       data-variant={variant}
     >
       <header className={styles.header}>
@@ -453,7 +502,12 @@ export default function ApplyForm({
           {title}
         </h1>
         {subtitle && (
-          <p className={[styles.subtitle, isResult ? styles.subtitleBlack : ""].join(" ")}>
+          <p
+            className={[
+              styles.subtitle,
+              isResult ? styles.subtitleBlack : "",
+            ].join(" ")}
+          >
             {subtitle}
           </p>
         )}
@@ -476,7 +530,8 @@ export default function ApplyForm({
             ? styles.inputSuccess
             : "";
 
-          const placeholderText = errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
+          const placeholderText =
+            errors[item.id] || focusedFields[item.id] ? "" : item.placeholder;
 
           return (
             <div className={styles.item} key={item.id}>
@@ -506,6 +561,8 @@ export default function ApplyForm({
                     placeholder={item.placeholder}
                     readOnly={mode === "view"}
                     onChange={(e) => {
+                      if (mode === "view") return;
+
                       const value = e.target.value;
                       setAnswers((prev) => ({ ...prev, [item.id]: value }));
                       onChange?.(item.id, value);
@@ -518,9 +575,14 @@ export default function ApplyForm({
                         });
                       }
                     }}
-                    onFocus={() => setFocusedFields((prev) => ({ ...prev, [item.id]: true }))}
+                    onFocus={() =>
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
+                    }
                     onBlur={() => {
-                      setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
+                      setFocusedFields((prev) => ({
+                        ...prev,
+                        [item.id]: false,
+                      }));
                       handleBlur(item.id, safeAllQuestions);
                     }}
                   />
@@ -528,12 +590,22 @@ export default function ApplyForm({
                   <div className={styles.fileBottomRow}>
                     <div>
                       {errors[item.id] && (
-                        <div className={[styles.errorText, styles.fileErrorText].join(" ")}>
+                        <div
+                          className={[
+                            styles.errorText,
+                            styles.fileErrorText,
+                          ].join(" ")}
+                        >
                           {errors[item.id]}
                         </div>
                       )}
                       {success[item.id] && !errors[item.id] && (
-                        <div className={[styles.successText, styles.fileErrorText].join(" ")}>
+                        <div
+                          className={[
+                            styles.successText,
+                            styles.fileErrorText,
+                          ].join(" ")}
+                        >
                           {success[item.id]}
                         </div>
                       )}
@@ -551,10 +623,17 @@ export default function ApplyForm({
                         </button>
                       )}
 
-                      {/* ✅ 여기만 변경: view면 다운로드 / edit면 업로드 */}
                       {(() => {
-                        const downloadUrl = (item.fileLink || answers[item.id] || "").trim();
-                        const canDownload = mode === "view" && !!downloadUrl;
+                        const url = (item.fileLink || answers[item.id] || "").trim();
+                        const canOpen = mode === "view" && !!url;
+                        const label =
+                          mode === "view"
+                            ? isHttpUrl(url)
+                              ? "링크 열기"
+                              : "파일 열기"
+                            : files[item.id]
+                            ? "파일 변경하기"
+                            : "파일 업로드";
 
                         return (
                           <button
@@ -562,19 +641,19 @@ export default function ApplyForm({
                             className={styles.uploadButton}
                             onClick={() => {
                               if (mode === "view") {
-                                if (!downloadUrl) return;
-                                onFileDownload?.(downloadUrl, item.question);
+                                if (!url) return;
+                                if (onFileDownload) {
+                                  onFileDownload(url, item.question);
+                                  return;
+                                }
+                                openInNewTab(url);
                                 return;
                               }
                               handleFileUpload(item.id);
                             }}
-                            disabled={mode === "view" ? !canDownload : false}
+                            disabled={mode === "view" ? !canOpen : false}
                           >
-                            {mode === "view"
-                              ? "파일 다운로드"
-                              : files[item.id]
-                              ? "파일 변경하기"
-                              : "파일 업로드"}
+                            {label}
                           </button>
                         );
                       })()}
@@ -584,6 +663,7 @@ export default function ApplyForm({
               ) : (
                 <>
                   <textarea
+                    data-autosize="1"
                     id={`field-${item.id}`}
                     className={[
                       styles.input,
@@ -595,12 +675,19 @@ export default function ApplyForm({
                     readOnly={mode === "view" || (isLoaded && (isStudentField || isPasswordField))}
                     rows={1}
                     style={{ resize: "none", overflow: "hidden" }}
-                    onFocus={() => setFocusedFields((prev) => ({ ...prev, [item.id]: true }))}
+                    onFocus={() =>
+                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
+                    }
                     onBlur={() => {
-                      setFocusedFields((prev) => ({ ...prev, [item.id]: false }));
+                      setFocusedFields((prev) => ({
+                        ...prev,
+                        [item.id]: false,
+                      }));
                       handleBlur(item.id, safeAllQuestions);
                     }}
                     onChange={(e) => {
+                      if (mode === "view") return;
+
                       const value = e.target.value;
                       setAnswers((prev) => ({ ...prev, [item.id]: value }));
                       onChange?.(item.id, value);
@@ -656,7 +743,8 @@ export default function ApplyForm({
                         if (!/^\d{4}$/.test(value.trim())) {
                           setErrors((prev) => ({
                             ...prev,
-                            [PASSWORD_ID]: "형식이 다릅니다. 숫자 4자리를 입력하세요.",
+                            [PASSWORD_ID]:
+                              "형식이 다릅니다. 숫자 4자리를 입력하세요.",
                           }));
                           setSuccess((prev) => {
                             const next = { ...prev };
@@ -674,7 +762,7 @@ export default function ApplyForm({
                     }}
                   />
 
-                  {isStudentField ? (
+                  {mode !== "view" && isStudentField ? (
                     <div
                       className={
                         errors[item.id]
@@ -687,14 +775,18 @@ export default function ApplyForm({
                       {errors[item.id] ||
                         (!isLoaded && studentStatus ? studentMessages[studentStatus] : "")}
                     </div>
-                  ) : (
+                  ) : mode !== "view" ? (
                     <>
-                      {errors[item.id] && <div className={styles.errorText}>{errors[item.id]}</div>}
+                      {errors[item.id] && (
+                        <div className={styles.errorText}>{errors[item.id]}</div>
+                      )}
                       {success[item.id] && !errors[item.id] && (
-                        <div className={styles.successText}>{success[item.id]}</div>
+                        <div className={styles.successText}>
+                          {success[item.id]}
+                        </div>
                       )}
                     </>
-                  )}
+                  ) : null}
                 </>
               )}
             </div>
@@ -705,7 +797,10 @@ export default function ApplyForm({
       {enableConsent && (
         <section className={styles.consentSection}>
           <h2
-            className={[styles.consentTitle, isResult ? styles.consentTitleBlack : ""].join(" ")}
+            className={[
+              styles.consentTitle,
+              isResult ? styles.consentTitleBlack : "",
+            ].join(" ")}
           >
             지원서 제출을 위한
             <br />
@@ -713,38 +808,84 @@ export default function ApplyForm({
           </h2>
 
           <ol
-            className={[styles.consentList, isResult ? styles.consentListBlack : ""].join(" ")}
+            className={[
+              styles.consentList,
+              isResult ? styles.consentListBlack : "",
+            ].join(" ")}
           >
             <li>
-              <p className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(" ")}>
+              <p
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
+              >
                 수집하는 개인정보 항목
               </p>
-              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
-                필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공), 본인확인용 비밀번호
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
+                필수 항목 : 이름, 학번, 전화번호, 이메일 주소, 학과(본전공, 복수전공),
+                본인확인용 비밀번호
               </div>
             </li>
 
             <li>
-              <p className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(" ")}>
+              <p
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
+              >
                 개인정보의 보유 및 이용 기간
               </p>
-              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
-                수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후 지체 없이 파기합니다.
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
+                수집된 개인정보는 지원 기간 종료 및 선발 완료 후 6개월간 보관하며, 이후
+                지체 없이 파기합니다.
               </div>
-              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 지원자가 개인정보 삭제를 요청할 경우 즉시 파기합니다.
               </div>
             </li>
 
             <li>
-              <p className={[styles.listTitle, isResult ? styles.listTitleBlack : ""].join(" ")}>
+              <p
+                className={[
+                  styles.listTitle,
+                  isResult ? styles.listTitleBlack : "",
+                ].join(" ")}
+              >
                 동의 거부 권리 및 불이익 안내
               </p>
-              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
                 귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다.
               </div>
-              <div className={[styles.consentBox, isResult ? styles.consentBoxBlack : ""].join(" ")}>
-                필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수 있습니다.
+              <div
+                className={[
+                  styles.consentBox,
+                  isResult ? styles.consentBoxBlack : "",
+                ].join(" ")}
+              >
+                필수 항목에 대한 동의를 거부하실 경우, 지원 및 심사 대상에서 제외될 수
+                있습니다.
               </div>
             </li>
           </ol>
@@ -758,10 +899,18 @@ export default function ApplyForm({
             />
             <img
               src={consentChecked ? checkboxChecked : checkboxDefault}
-              className={[styles.checkboxIcon, isResult ? styles.checkboxIconResult : ""].join(" ")}
+              className={[
+                styles.checkboxIcon,
+                isResult ? styles.checkboxIconResult : "",
+              ].join(" ")}
               alt=""
             />
-            <span className={[styles.checkboxText, isResult ? styles.checkboxTextBlack : ""].join(" ")}>
+            <span
+              className={[
+                styles.checkboxText,
+                isResult ? styles.checkboxTextBlack : "",
+              ].join(" ")}
+            >
               위 내용에 동의합니다.
             </span>
           </label>
@@ -770,7 +919,12 @@ export default function ApplyForm({
 
       {enableNotice && (
         <section className={styles.noticeSection}>
-          <h2 className={[styles.noticeTitle, isResult ? styles.noticeTitleBlack : ""].join(" ")}>
+          <h2
+            className={[
+              styles.noticeTitle,
+              isResult ? styles.noticeTitleBlack : "",
+            ].join(" ")}
+          >
             지원서 제출 시 유의 사항
           </h2>
 
@@ -778,7 +932,12 @@ export default function ApplyForm({
             <div className={styles.noticeItem}>
               <img src={noticeIcon} alt="" className={styles.noticeIcon} />
               <div className={styles.noticeTextGroup}>
-                <p className={[styles.noticeText, isResult ? styles.noticeTextBlack : ""].join(" ")}>
+                <p
+                  className={[
+                    styles.noticeText,
+                    isResult ? styles.noticeTextBlack : "",
+                  ].join(" ")}
+                >
                   지원 트랙을 변경하고 싶어요.
                 </p>
                 <p
@@ -789,8 +948,8 @@ export default function ApplyForm({
                 >
                   현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은{" "}
                   <span className={styles.highlight}>불가능</span> 합니다. <br />
-                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,{" "}
-                  <br />
+                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를
+                  누른 후, <br />
                   변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br />
                   내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
                   복사/붙여넣기를 권장 드립니다.
@@ -803,8 +962,10 @@ export default function ApplyForm({
               <div className={styles.noticeTextGroup}>
                 <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
                 <p className={styles.noticeTextDetail}>
-                  1차 서류 모집 기간 내에 한하여 <span className={styles.highlight}>수정 가능</span> 합니다.{" "}
-                  <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를 입력 후, <br />
+                  1차 서류 모집 기간 내에 한하여{" "}
+                  <span className={styles.highlight}>수정 가능</span> 합니다.{" "}
+                  <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를
+                  입력 후, <br />
                   최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
                   <br />
                   <br />
@@ -819,8 +980,8 @@ export default function ApplyForm({
               <div className={styles.noticeTextGroup}>
                 <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
                 <p className={styles.noticeTextDetail}>
-                  본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span> 1회만
-                  지원 가능합니다.
+                  본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span>{" "}
+                  1회만 지원 가능합니다.
                 </p>
               </div>
             </div>
@@ -843,66 +1004,6 @@ export default function ApplyForm({
             />
           )}
         </section>
-      )}
-
-      {/* ===== 기존 모달들 (원본 유지) ===== */}
-      {modalOpen && modalType === "submitted" && (
-        <Modal
-          isOpen={modalOpen}
-          title="이미 최종 제출한 지원서가 있습니다"
-          description={
-            <span>
-              중복 지원은 불가하므로,
-              <br />
-              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span> 해주세요.
-            </span>
-          }
-          extraText={
-            <span>
-              최종 제출한 지원서는 해당 학번으로 로그인하여,
-              <br />
-              <span style={{ color: "#FF7710" }}>3월 2일 23시 59분까지</span>
-              <br />
-              열람 및 수정이 가능합니다.
-            </span>
-          }
-          primaryButton={{
-            text: "확인",
-            onClick: () => setModalOpen(false),
-          }}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
-
-      {modalOpen && modalType === "draft" && (
-        <Modal
-          isOpen={modalOpen}
-          title="이미 임시저장된 지원서가 있습니다"
-          description={
-            <span>
-              여러 개의 지원서를 임시저장 할 수 없으므로,
-              <br />
-              현재 작성 중인 지원서는 <span style={{ color: "#FF7710" }}>‘작성 취소’</span> 해주세요.
-            </span>
-          }
-          extraText={
-            <span>
-              해당 학번으로 다시 로그인하여,
-              <br />
-              기존에 임시 저장한 지원서를 다시 확인해 주세요.
-              <br />
-              <br />
-              현재 작성 된 내용은 <span style={{ color: "#FF7710" }}>저장되지 않으니,</span>
-              <br />
-              <span style={{ color: "#FF7710" }}>복사/붙여넣기를 권장 드립니다.</span>
-            </span>
-          }
-          primaryButton={{
-            text: "확인",
-            onClick: () => setModalOpen(false),
-          }}
-          onClose={() => setModalOpen(false)}
-        />
       )}
 
       {modalOpen && modalType === "leave" && (
@@ -939,7 +1040,6 @@ export default function ApplyForm({
         />
       )}
 
-      {/* ===== 덮어쓰기/성공/로딩 모달 (원본 유지) ===== */}
       {isDraftOverwriteOpen && (
         <Modal
           isOpen={isDraftOverwriteOpen}
@@ -955,7 +1055,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>
+              상태로 저장됩니다.
             </span>
           }
           primaryButton={{ text: "덮어쓰기", onClick: executeDraftOverwrite }}
@@ -985,7 +1086,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>
+              상태로 저장됩니다.
             </span>
           }
           primaryButton={{ text: "덮어쓰기", onClick: executeSubmitOverwrite }}
@@ -1015,7 +1117,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>
+              상태로 저장됩니다.
             </span>
           }
           primaryButton={{ text: "덮어쓰기", onClick: executeDraftOverwrite }}
@@ -1045,7 +1148,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>상태로 저장됩니다.
+              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>
+              상태로 저장됩니다.
             </span>
           }
           primaryButton={{ text: "덮어쓰기", onClick: executeSubmitOverwrite }}
