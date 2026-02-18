@@ -516,3 +516,8 @@ textarea.inputSuccess,
 input.inputSuccess {
   border: 1px solid #10b981 !important;
 }
+
+.input[readonly] {
+  cursor: default;
+  opacity: 0.8;  /* 또는 원하는 스타일 */
+}

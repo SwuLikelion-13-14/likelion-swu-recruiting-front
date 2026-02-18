@@ -16,9 +16,9 @@ type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
 const studentMessages: Record<StudentStatus, string> = {
   invalid: "형식이 다릅니다. 숫자 10자리를 입력하세요.",
   "draft-exists":
-    "임시저장 된 지원서가 이미 있습니다. 여러 개의 지원서를 임시저장할 수 없습니다.",
+    "",
   "submitted-exists":
-    "이미 최종 제출한 기록이 존재합니다. 중복 지원은 불가합니다.",
+    "",
   valid: "지원 가능한 학번입니다.",
 };
 
@@ -61,7 +61,8 @@ export default function ApplyForm({
   passwordField,
   onDirectSubmit,
   onDirectDraftSave,
-  onFileDownload,
+  isLoaded,
+  onFileDownload, 
 }: ApplyFormProps) {
   const isSurvey = variant === "survey";
   const isResult = variant === "result";
@@ -121,6 +122,7 @@ export default function ApplyForm({
   const [isSubmitSuccessOpen, setIsSubmitSuccessOpen] = useState(false);
   const [isDraftSuccessOpen, setIsDraftSuccessOpen] = useState(false);
 
+
   const safeAllQuestions = useMemo(
     () => (allQuestions && allQuestions.length ? allQuestions : questions),
     [allQuestions, questions]
@@ -144,8 +146,12 @@ export default function ApplyForm({
     setInitialFiles(initFiles);
 
     const studentQ = questions.find((q) => q.id === STUDENT_ID);
-    if (studentQ?.answer && mode !== "view") {
-      setStudentStatus(mockCheckStudentId(studentQ.answer));
+    if (studentQ?.answer) {
+      if (isLoaded) {
+        setStudentStatus("valid"); 
+      } else {
+        setStudentStatus(mockCheckStudentId(studentQ.answer));
+      }
     }
   }, [questions, STUDENT_ID, mode]);
 
@@ -172,9 +178,9 @@ export default function ApplyForm({
     setIsLoadingOpen(true);
     setIsDrafting(true);
     try {
-      await onDirectDraftSave?.();
-      setIsLoadingOpen(false);
-      setIsDraftSuccessOpen(true);
+      const success = await onDirectDraftSave?.(); 
+      setIsLoadingOpen(false); 
+      if (success) setIsDraftSuccessOpen(true);
     } catch (error) {
       setIsLoadingOpen(false);
       console.error("임시저장 실패:", error);
@@ -189,9 +195,9 @@ export default function ApplyForm({
     setIsLoadingOpen(true);
     setIsSubmitting(true);
     try {
-      await onDirectSubmit?.();
-      setIsLoadingOpen(false);
-      setIsSubmitSuccessOpen(true);
+      const success = await onDirectSubmit?.(); 
+      setIsLoadingOpen(false); 
+      if (success) setIsSubmitSuccessOpen(true); 
     } catch (error) {
       setIsLoadingOpen(false);
       console.error("최종제출 실패:", error);
@@ -308,13 +314,17 @@ export default function ApplyForm({
     if (status === "valid") {
       setIsLoadingOpen(true);
       try {
-        await onSubmit?.();
+        const success = await onSubmit?.();
+
         setIsLoadingOpen(false);
+
+        if (!success) return false; // ❗ 실패면 성공모달 금지
+
         setIsSubmitSuccessOpen(true);
         return true;
       } catch (error) {
         setIsLoadingOpen(false);
-        console.error("제출 실패:", error);
+        console.error('제출 실패:', error);
         return false;
       }
     } else if (status === "draft-exists") {
@@ -339,8 +349,12 @@ export default function ApplyForm({
     if (status === "valid") {
       setIsLoadingOpen(true);
       try {
-        await onDraftSave?.();
+        const success = await onDraftSave?.();
+
         setIsLoadingOpen(false);
+
+        if (!success) return false;
+
         setIsDraftSuccessOpen(true);
         return true;
       } catch (error) {
@@ -507,9 +521,9 @@ export default function ApplyForm({
           const inputStateClass = isStudentField
             ? errors[item.id]
               ? styles.inputError
-              : studentStatus === "valid"
-              ? styles.inputSuccess
-              : ""
+              : studentStatus === "valid" && !isLoaded 
+                ? styles.inputSuccess
+                : ""
             : errors[item.id]
             ? styles.inputError
             : success[item.id]
@@ -658,7 +672,7 @@ export default function ApplyForm({
                     ].join(" ")}
                     value={answers[item.id] || ""}
                     placeholder={placeholderText}
-                    readOnly={mode === "view"}
+                    readOnly={mode === "view" || (isLoaded && (isStudentField || isPasswordField))}
                     rows={1}
                     style={{ resize: "none", overflow: "hidden" }}
                     onFocus={() =>
@@ -759,7 +773,7 @@ export default function ApplyForm({
                       }
                     >
                       {errors[item.id] ||
-                        (studentStatus ? studentMessages[studentStatus] : "")}
+                        (!isLoaded && studentStatus ? studentMessages[studentStatus] : "")}
                     </div>
                   ) : mode !== "view" ? (
                     <>
@@ -1205,7 +1219,7 @@ export default function ApplyForm({
           onClose={() => setIsDraftSuccessOpen(false)}
         />
       )}
-
+      {/* 로딩 모달 추가 */}
       {isLoadingOpen && (
         <Modal
           isOpen={isLoadingOpen}

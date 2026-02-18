@@ -8,6 +8,7 @@ import styles from './TrackApplyPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS, BACKEND_QUESTIONS } from '@/constants/applyQuestions'
 import ApplyFooter from '@/components/Layout/Footer/ApplyFooter'
 import { useLocation } from 'react-router-dom'
+import Modal from '@/components/Modal/Modal'
 
 type ResponseDTO = {
     questionId: number
@@ -34,6 +35,9 @@ type ApiQuestion = {
 const BackPage = () => {
     const location = useLocation()
     const applicationData = location.state?.applicationData
+    const [isFileErrorModalOpen, setIsFileErrorModalOpen] = useState(false);
+    const [fileErrorMessage, setFileErrorMessage] = useState('');
+
 
     const [sets, setSets] = useState<
         { title: string; subtitle?: string; questions: MergedQuestion[] }[]
@@ -70,60 +74,60 @@ const BackPage = () => {
         dummy.map((d) => ({ ...d, file: undefined, fileLink: undefined }))
 
     // mergeQuestionsWithAnswer 내부 수정
-const mergeQuestionsWithAnswer = (
-    dummy: Question[],
-    apiQuestions: ApiQuestion[],
-    responses: ResponseDTO[] | undefined
-): MergedQuestion[] => {
-    return dummy.map((d, i) => {
-        const apiQ = apiQuestions[i]
-        const serverId = apiQ?.id || d.id
+    const mergeQuestionsWithAnswer = (
+        dummy: Question[],
+        apiQuestions: ApiQuestion[],
+        responses: ResponseDTO[] | undefined
+    ): MergedQuestion[] => {
+        return dummy.map((d, i) => {
+            const apiQ = apiQuestions[i]
+            const serverId = apiQ?.id || d.id
 
-        let answer = ''
-        if (responses) {
-            const existing = responses.find((r) => r.questionId === serverId)
-            if (existing) answer = existing.responseText || ''
-        }
+            let answer = ''
+            if (responses) {
+                const existing = responses.find((r) => r.questionId === serverId)
+                if (existing) answer = existing.responseText || ''
+            }
 
-        // 기본 정보 (1~7)
-        if (applicationData?.userInfo) {
-            const u = applicationData.userInfo
-            if (d.id === 1) answer = u.name || ''
-            else if (d.id === 2) answer = u.studentId || ''
-            else if (d.id === 3) answer = u.major || ''
-            else if (d.id === 4) answer = u.doubleMajor || ''
-            else if (d.id === 5) answer = u.schoolStatus || ''
-            else if (d.id === 6) answer = u.phone || ''
-            else if (d.id === 7) answer = u.email || ''
-            else if (d.id === 15) answer = u.studentId || ''
-            else if (d.id === 16 && applicationData.password) answer = applicationData.password
-        }
+            // 기본 정보 (1~7)
+            if (applicationData?.userInfo) {
+                const u = applicationData.userInfo
+                if (d.id === 1) answer = u.name || ''
+                else if (d.id === 2) answer = u.studentId || ''
+                else if (d.id === 3) answer = u.major || ''
+                else if (d.id === 4) answer = u.doubleMajor || ''
+                else if (d.id === 5) answer = u.schoolStatus || ''
+                else if (d.id === 6) answer = u.phone || ''
+                else if (d.id === 7) answer = u.email || ''
+                else if (d.id === 15) answer = u.studentId || ''
+                else if (d.id === 16 && applicationData.password) answer = applicationData.password
+            }
 
-        // 응답 병합 후, CHECK_QUESTIONS id 15/16만 강제 채움
-        if (d.id === 15) {
-            answer = applicationData?.userInfo?.studentId || ''
-        }
-        if (d.id === 16 && applicationData?.password) {
-            answer = applicationData.password
-        }
+            // 응답 병합 후, CHECK_QUESTIONS id 15/16만 강제 채움
+            if (d.id === 15) {
+                answer = applicationData?.userInfo?.studentId || ''
+            }
+            if (d.id === 16 && applicationData?.password) {
+                answer = applicationData.password
+            }
 
-        // 포트폴리오 처리 (id 14)
-        let fileLink = ''
-        if (d.id === 14 && applicationData?.portfolioLink) {
-            fileLink = applicationData.portfolioLink
-            answer = applicationData.portfolioLink
-        }
+            // 포트폴리오 처리 (id 14)
+            let fileLink = ''
+            if (d.id === 14 && applicationData?.portfolioLink) {
+                fileLink = applicationData.portfolioLink
+                answer = applicationData.portfolioLink
+            }
 
-        return {
-            ...d,
-            question: apiQ?.questionText || d.question,
-            serverId,
-            answer,
-            file: undefined,
-            fileLink,
-        }
-    })
-}
+            return {
+                ...d,
+                question: apiQ?.questionText || d.question,
+                serverId,
+                answer,
+                file: undefined,
+                fileLink,
+            }
+        })
+    }
 
 
     // 질문 불러오기(useEffect)
@@ -246,8 +250,19 @@ const mergeQuestionsWithAnswer = (
             const res = await api.post('/api/recruit/application/BACK/', formData)
             console.log(res.data)
             return true
-        } catch (err) {
+        } catch (err: any) {
             console.error('제출 실패:', err)
+
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('제출 중 오류가 발생했습니다.');
+            }
+
+            setIsFileErrorModalOpen(true); // 모달 열기
             return false
         }
     }
@@ -259,8 +274,19 @@ const mergeQuestionsWithAnswer = (
             const res = await api.post('/api/recruit/application/BACK/', formData)
             console.log(res.data)
             return true
-        } catch (err) {
+        } catch (err: any) {
             console.error('임시 저장 실패:', err)
+
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('임시 저장 중 오류가 발생했습니다.');
+            }
+
+            setIsFileErrorModalOpen(true); // ✅ 모달 열기
             return false
         }
     }
@@ -294,10 +320,25 @@ const mergeQuestionsWithAnswer = (
                         onDraftSave={handleDraftSave}
                         onDirectSubmit={handleFinalSubmit}
                         onDirectDraftSave={handleDraftSave}
+                        isLoaded={!!applicationData}
                     />
                 ))}
 
                 <ApplyFooter />
+
+                {isFileErrorModalOpen && (
+                    <Modal
+                        isOpen={isFileErrorModalOpen}
+                        title="업로드 실패"
+                        description={fileErrorMessage}
+                        primaryButton={{
+                            text: '확인',
+                            onClick: () => setIsFileErrorModalOpen(false),
+                        }}
+                        onClose={() => setIsFileErrorModalOpen(false)}
+                    />
+                )}
+
             </div>
         </div>
     )
