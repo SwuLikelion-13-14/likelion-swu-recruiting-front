@@ -39,7 +39,9 @@ const ApplyEndPage = () => {
                         >@likelion_swu</a>
                     </p>
 
-                    <RecruitInfoButton />
+                    <div className={styles.infoSpacing}>
+                        <RecruitInfoButton />
+                    </div>
 
                 </div>
             </Layout>

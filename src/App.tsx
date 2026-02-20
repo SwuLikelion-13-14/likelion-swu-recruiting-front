@@ -9,7 +9,6 @@ import ActivityContentPage from "./pages/home/ActivityContentPage";
 import LeadersPage from "./pages/home/LeadersPage";
 import RecruitPage from "./pages/recruit/RecruitPage";
 
-import ApplyPage from "@/pages/apply/ApplyPage";
 import RecruitTrackPage from "./pages/apply/RecruitTrackPage";
 import FrontPage from "@/pages/apply/FrontPage";
 import DesignPage from "./pages/apply/DesignPage";
@@ -23,8 +22,10 @@ import AdminSchedulePage from "@/pages/admin/AdminSchedulePage";
 import ApplyEndPage from "@/pages/applyclosing/ApplyEndPage";
 import BeforeResultPage from "@/pages/applyclosing/BeforeResultPage";
 import RecruitClosingPage from "@/pages/applyclosing/RecruitClosingPage";
+import ResultCheckPage from "@/pages/applyclosing/ResultCheckPage";
 
 import MobileGuardModal from "@/components/MobileGuardModal";
+import RecruitGate from "@/pages/applyclosing/RecruitGatePage";
 
 const ProtectedAdmin = ({ children }: { children: React.ReactNode }) => {
   const isAuth = localStorage.getItem("admin-auth") === "true";
@@ -42,7 +43,7 @@ const App = () => {
         <Route path="/annual-plan" element={<AnnualPlanPage />} />
         <Route path="/project-list" element={<ProjectListPage />} />
         <Route path="/faq" element={<FaqPage />} />
-        <Route path="/apply" element={<ApplyPage />} />
+        <Route path="/apply" element={<RecruitGate />} />
         <Route path="/activity-content" element={<ActivityContentPage />} />
         <Route path="/leaders" element={<LeadersPage />} />
         <Route path="/recruit" element={<RecruitPage />} />
@@ -53,6 +54,8 @@ const App = () => {
         <Route path="/apply-end" element={<ApplyEndPage />} />
         <Route path="/before-result" element={<BeforeResultPage />} />
         <Route path="/recruit-close" element={<RecruitClosingPage />} />
+        <Route path="/result-check" element={<ResultCheckPage />} />
+
 
         <Route
           path="/admin"

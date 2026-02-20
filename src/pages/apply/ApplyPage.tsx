@@ -16,7 +16,9 @@ const ApplyPage = () => {
                 <div className={styles.pageWrapper}>
                     {/* 중앙 사각형 박스 */}
                     <ApplyBox />
-                    <RecruitInfoButton />
+                    <div className={styles.infoSpacingLarge}>
+                        <RecruitInfoButton />
+                    </div>
                 </div>
             </Layout>
         </div>
