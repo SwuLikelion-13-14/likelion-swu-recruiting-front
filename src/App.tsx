@@ -20,6 +20,10 @@ import AdminApplicationsPage from "@/pages/admin/AdminApplicationsPage";
 import AdminApplicationDetailPage from "@/pages/admin/AdminApplicationDetailPage";
 import AdminSchedulePage from "@/pages/admin/AdminSchedulePage";
 
+import ApplyEndPage from "@/pages/applyclosing/ApplyEndPage";
+import BeforeResultPage from "@/pages/applyclosing/BeforeResultPage";
+import RecruitClosingPage from "@/pages/applyclosing/RecruitClosingPage";
+
 import MobileGuardModal from "@/components/MobileGuardModal";
 
 const ProtectedAdmin = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +50,9 @@ const App = () => {
         <Route path="/front" element={<FrontPage />} />
         <Route path="/design" element={<DesignPage />} />
         <Route path="/back" element={<BackPage />} />
+        <Route path="/apply-end" element={<ApplyEndPage />} />
+        <Route path="/before-result" element={<BeforeResultPage />} />
+        <Route path="/recruit-close" element={<RecruitClosingPage />} />
 
         <Route
           path="/admin"
