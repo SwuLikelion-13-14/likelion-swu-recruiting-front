@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import styles from './ApplyForm.module.css'
 import Modal from '@/components/Modal/Modal'
 
@@ -24,7 +24,6 @@ const ApplyFormActions = ({
   onDraftSave,
   onSubmit,
   onCancelConfirmed,
-  hasInput = false,
   dbStatus = 'none'
 }: ApplyFormActionsProps) => {
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
@@ -39,17 +38,6 @@ const ApplyFormActions = ({
   const isNewApplication = dbStatus === 'none'
 
 
-  // 브라우저 새로고침/닫기 경고
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasInput) {
-        e.preventDefault()
-        e.returnValue = ''
-      }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [hasInput])
 
 
   const handleDraftSave = () => {
