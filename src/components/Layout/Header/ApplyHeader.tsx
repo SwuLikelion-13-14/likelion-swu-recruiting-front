@@ -63,14 +63,12 @@ export const ApplyHeader: React.FC = () => {
 
     const handleLeave = () => {
         const url = pendingUrl;
-        console.log('handleLeave 실행, url:', url); // 추가
 
         setWarningOpen(false);
         setPendingUrl(null);
 
         if (url) {
-            console.log('navigate 호출:', url); // 추가
-            setShouldNavigate(url);
+            window.location.href = url;
         }
     };
 
