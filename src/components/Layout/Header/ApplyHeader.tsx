@@ -9,7 +9,7 @@ import Modal from '@/components/Modal/Modal';
 // 지원폼 전용 헤더
 export const ApplyHeader: React.FC = () => {
     const navigate = useNavigate();
-    
+
     const [activeItem, setActiveItem] = useState<string | null>(null);
     const [pendingUrl, setPendingUrl] = useState<string | null>(null);
     const [warningOpen, setWarningOpen] = useState(false);
@@ -53,11 +53,12 @@ export const ApplyHeader: React.FC = () => {
 
     const handleLeave = () => {
         const url = pendingUrl;
+
         setWarningOpen(false);
         setPendingUrl(null);
 
         if (url) {
-            setTimeout(() => navigate(url), 0);
+            navigate(url);
         }
     };
 

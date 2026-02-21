@@ -6,6 +6,7 @@ import styles from './RecruitClosingPage.module.css';
 import applyStyles from '@/components/ApplyBox/ApplyBox.module.css';
 import RecruitInfoButton from '@/components/ActivityContent/RecruitInfoButton';
 import Logo from '@/assets/icon/logo_small_orange.svg';
+import { api } from '@/api/client';
 
 const ResultCheckPage = () => {
     const navigate = useNavigate();
@@ -31,30 +32,19 @@ const ResultCheckPage = () => {
         }
 
         try {
-            const response = await fetch('/api/result', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    student_id: studentId,
-                    password: password,
-                }),
+            const { data } = await api.post('/api/result', {
+                student_id: studentId,
+                password: password,
             });
 
-            // 비밀번호 틀림 (401)
-            if (response.status === 401) {
-                const errorData = await response.json();
-                setPasswordError(errorData.message);
+            navigate('/result', { state: data });
+
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                setPasswordError(error.response.data.message);
                 return;
             }
 
-            const data = await response.json();
-
-            // 결과 페이지로 이동 + 데이터 전달
-            navigate('/result', { state: data });
-
-        } catch (error) {
             console.error(error);
             alert('서버 오류가 발생했습니다.');
         }
