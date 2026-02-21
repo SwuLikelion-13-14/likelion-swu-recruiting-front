@@ -23,6 +23,7 @@ import ApplyEndPage from "@/pages/applyclosing/ApplyEndPage";
 import BeforeResultPage from "@/pages/applyclosing/BeforeResultPage";
 import RecruitClosingPage from "@/pages/applyclosing/RecruitClosingPage";
 import ResultCheckPage from "@/pages/applyclosing/ResultCheckPage";
+import ResultPage from "@/pages/applyclosing/ResultPage";
 
 import MobileGuardModal from "@/components/MobileGuardModal";
 import RecruitGate from "@/pages/applyclosing/RecruitGatePage";
@@ -55,6 +56,7 @@ const App = () => {
         <Route path="/before-result" element={<BeforeResultPage />} />
         <Route path="/recruit-close" element={<RecruitClosingPage />} />
         <Route path="/result-check" element={<ResultCheckPage />} />
+        <Route path="/result" element={<ResultPage />} />
 
 
         <Route
