@@ -5,9 +5,11 @@ import App from './App'
 import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext'
 
 createRoot(document.getElementById('root')!).render(
-  <NavigationGuardProvider>
-    <BrowserRouter>
+
+  <BrowserRouter>
+    <NavigationGuardProvider>
       <App />
-    </BrowserRouter>
-  </NavigationGuardProvider>
+    </NavigationGuardProvider>
+  </BrowserRouter>
+
 )
