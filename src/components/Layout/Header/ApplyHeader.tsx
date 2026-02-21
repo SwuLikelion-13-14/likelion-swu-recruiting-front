@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
@@ -13,9 +13,18 @@ export const ApplyHeader: React.FC = () => {
     const [activeItem, setActiveItem] = useState<string | null>(null);
     const [pendingUrl, setPendingUrl] = useState<string | null>(null);
     const [warningOpen, setWarningOpen] = useState(false);
+    const [shouldNavigate, setShouldNavigate] = useState<string | null>(null);
+
 
     // 항상 최신 상태 참조
     const isDirtyRef = useRef(true); // 지원폼 전용이라 무조건 작성 중으로 취급
+
+    useEffect(() => {
+        if (shouldNavigate) {
+            navigate(shouldNavigate);
+            setShouldNavigate(null);
+        }
+    }, [shouldNavigate, navigate]);
 
     // 화면 이동 요청
     const requestNavigation = (url: string) => {
@@ -58,7 +67,7 @@ export const ApplyHeader: React.FC = () => {
         setPendingUrl(null);
 
         if (url) {
-            navigate(url);
+            setShouldNavigate(url);
         }
     };
 
