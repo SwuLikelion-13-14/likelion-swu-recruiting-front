@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect  } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HomeHeaderBtn } from './HomeHeaderBtn';
 import CombinedButton from './CombinedButton';
@@ -21,6 +21,7 @@ export const ApplyHeader: React.FC = () => {
 
     useEffect(() => {
         if (shouldNavigate) {
+            console.log('useEffect navigate 실행:', shouldNavigate); // 추가
             navigate(shouldNavigate);
             setShouldNavigate(null);
         }
@@ -62,11 +63,13 @@ export const ApplyHeader: React.FC = () => {
 
     const handleLeave = () => {
         const url = pendingUrl;
+        console.log('handleLeave 실행, url:', url); // 추가
 
         setWarningOpen(false);
         setPendingUrl(null);
 
         if (url) {
+            console.log('navigate 호출:', url); // 추가
             setShouldNavigate(url);
         }
     };
