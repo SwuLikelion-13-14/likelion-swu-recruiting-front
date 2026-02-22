@@ -60,22 +60,29 @@
 .keyword {
     font-weight: 400;
     margin-right: 16px;
+    font-size: 18px;
+    color: #DDDDDD;
 }
 
 .middleText {
     margin-right: 4px;
     font-weight: 400;
+    color: #DDDDDD;
+    font-size: 18px;
 }
 
 /* hover */
 .instagram {
     font-weight: 600;
     cursor: pointer;
+    font-size: 18px;
+    color: #DDDDDD;
 }
 
 .instagram:hover {
     color: #FF7710;
 }
+
 
 /* 최종발표페이지 텍스트 */
 .text1 {

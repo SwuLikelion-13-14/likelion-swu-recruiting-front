@@ -1,0 +1,155 @@
+/* stateTitle (합격/불합격) */
+.titlePass {
+  font-size: 42px;
+  font-weight: 600;
+  margin-top: 120px;
+  text-align: center;
+}
+
+.titleFail {
+  font-size: 28px;
+  font-weight: 500;
+  margin-top: 120px;
+  text-align: center;
+}
+
+/* 합격 페이지 */
+.textPassContent1 {
+  font-size: 42px;      /* content1은 크게 */
+  font-weight: 600;     /* 볼드 강조 */
+  text-align: center;
+  margin-top: 120px;
+}
+
+.textPassContent2 {
+  font-size: 24px;      /* content2는 조금 작게 */
+  font-weight: 400;     /* 일반 폰트 */
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* 최종 합격 notice 전용 텍스트 그룹 */
+.textGroupFinalPass {
+  width: 1000px;           /* 기존 textGroupPass와 동일 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;  /* notice 아래 텍스트들도 왼쪽 정렬 */
+  margin-top: 0px;         /* stateTitle과 notice 간격 */
+  margin-bottom: 80px;         /* 하단 텍스트와 간격은 notice div에서 따로 */
+}
+
+/* 불합격 페이지 */
+.textFailContent1 {
+  font-size: 28px;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 80px;
+}
+
+.textFailContent2 {
+  font-size: 28px;
+  font-weight: 300;
+  text-align: center;
+  margin-top: 24px;
+  margin-bottom: 80px;
+}
+
+/* 배너 */
+.bannerContainer {
+  margin-bottom: 40px;
+}
+
+/* 결과 이미지 */
+.resultImage {
+  margin-top: 24px;
+  width: 1000px;
+  height: 800px;
+  border-radius: 32px;
+  margin-bottom: 80px;
+}
+
+/* 기타 공통 레이아웃 */
+.container {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.centerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+
+/* 문의 */
+.keyword {
+    font-weight: 400;
+    margin-right: 16px;
+    font-size: 18px;
+    color: #DDDDDD;
+}
+
+.middleText {
+    margin-right: 4px;
+    font-weight: 400;
+    color: #DDDDDD;
+    font-size: 18px;
+}
+
+/* hover */
+.instagram {
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 18px;
+    color: #DDDDDD;
+}
+
+.instagram:hover {
+    color: #FF7710;
+}
+
+/* 합격 페이지 */
+.textGroupPass {
+  width: 1000px;              /* 이미지와 동일 폭 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;     /* 왼쪽 정렬 */
+  margin-top: 80px;
+}
+
+/* 불합격 페이지 */
+.textGroupFail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;         /* 중앙 정렬 유지 */
+  margin-top: 24px;
+}
+
+/* 한 줄(row) */
+.infoRow {
+  display: flex;
+  margin-top: 12px;
+  justify-content: flex-start; /* 왼쪽 정렬 */
+}
+
+/* 라벨 */
+.label {
+  font-weight: 700;
+  font-size: 24px;
+  min-width: 88px; /* 왼쪽 기준선 통일 */
+  margin-right: 20px; /* 라벨과 값 사이 간격 */
+  text-align: left;
+  color: #FFFFFF;
+}
+
+/* 값 */
+.value {
+  font-weight: 400;
+  font-size: 24px;
+  color: FFFFFF;
+  text-align: left;
+}
