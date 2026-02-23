@@ -2,6 +2,10 @@
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
+    screens: {
+      tablet: '440px',   // 440px 이상
+      pc: '1200px',      // 1200px 이상
+    },
     extend: {
       fontFamily: {
         pretendard: ["Pretendard", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
