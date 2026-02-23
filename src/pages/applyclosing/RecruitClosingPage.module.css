@@ -11,11 +11,20 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+    
 }
 
 .centerBox {
     margin-top: 147px;
+    width: 100%;   
 }
+
+@media (max-width: 1200px) {
+  .centerBox {
+    margin-top: 40px;
+  }
+}
+
 
 .banner {
     margin-bottom: 40px;
