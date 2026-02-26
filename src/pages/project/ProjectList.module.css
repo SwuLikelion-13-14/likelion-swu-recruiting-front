@@ -1,0 +1,686 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: black;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Skeleton Loader Styles */
+.skeletonContainer {
+  width: 100%;
+  max-width: 1143px;
+  margin: 0 auto;
+  padding: 20px 50px;
+}
+
+.skeletonTitle {
+  width: 200px;
+  height: 48px;
+  background-color: #424242;
+  margin: 0 auto 20px;
+  border-radius: 8px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonSubtitle {
+  width: 300px;
+  height: 28px;
+  background-color: #424242;
+  margin: 0 auto 60px;
+  border-radius: 8px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonCohort {
+  margin-bottom: 60px;
+}
+
+.skeletonCohortHeader {
+  width: 150px;
+  height: 36px;
+  background-color: #424242;
+  margin-bottom: 20px;
+  border-radius: 6px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonProjects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.skeletonProjectCard {
+  background-color: #242424;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.skeletonImage {
+  width: 100%;
+  padding-bottom: 60%;
+  background-color: #424242;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonContent {
+  padding: 16px;
+}
+
+.skeletonText {
+  height: 16px;
+  background-color: #424242;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonText:last-child {
+  width: 80%;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
+
+/* 메인 컨테이너 스타일 */
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #000;
+}
+
+/* 배경 이미지 */
+.backgroundImage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../../assets/img/long_background.png');
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 배경 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.5) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+
+
+/* 콘텐츠 영역 스타일 */
+.content {
+  width: 100%;
+  max-width: 100%;
+  padding: 60px 140px;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+  overflow: visible;
+  color: #333;
+}
+
+/* 제목 섹션 스타일 */
+.titleSection {
+  text-align: center;
+  margin-bottom: 86px;
+}
+
+h1 {
+  color: #FF7710;
+  font-family: 'Pretendard', sans-serif;
+  font-size: 48px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 130%;
+  letter-spacing: -1px;
+  margin: 0;
+  padding: 0;
+}
+
+.subtitle {
+  color: #F5F5F5;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 120%;
+}
+
+/* 프로젝트 컨테이너 */
+.projectsContainer {
+  width: 100%;
+  max-width: 1143px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  padding: 20px 50px;
+  box-sizing: border-box;
+}
+
+/* 프로젝트 섹션 */
+.projectSection {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+
+}
+
+/* 프로젝트 콘텐츠 공통 스타일 */
+.projectContent {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0 50px; /* 타이틀 컨테이너와 좌우 간격 */
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.3s ease;
+  min-height: 80px; /* Set a minimum height */
+}
+
+/* Collapsed state for project content */
+.projectContent.collapsed {
+  padding-bottom: 0;
+}
+
+
+
+/* Filter Bar Styles */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 50px;
+  margin: 20px 0;
+  width: 100%;
+}
+
+.filterItem {
+  display: flex;
+  align-items: center;
+  color: #FFFFFF;
+  font-size: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterItem input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  cursor: pointer;
+  border: 1px solid #FFFFFF;
+  border-radius: 4px;
+  background-color: transparent;
+  position: relative;
+  transition: all 0.2s ease;
+  vertical-align: middle;
+}
+
+.filterItem input[type="checkbox"]:checked {
+  background-color: #FF7710;
+  border-color: #FF7710;
+}
+
+.filterItem input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left:5.5px;
+  top: 5px;
+  width: 13px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg);
+  box-sizing: border-box;
+}
+
+.filterSpacer {
+  width: 20px;
+  height: 1px;
+  display: none; /* 스페이서 숨기기 */
+}
+
+/* 프로젝트 타이틀 */
+.projectInfo {
+  margin-top: 16px;
+  color: #FFFFFF;
+  font-family: 'Pretendard', sans-serif;
+  z-index: 2;
+  position: relative;
+  padding: 0 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 제목 컨테이너 */
+.titleContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 20px 0; /* project 프로젝트 컨테이너와 상하 간격 */
+  position: relative;
+}
+/* 프로젝트 타이틀 (몇기 project)*/
+.projectTitle {
+  color: #FFFFFF;
+  font-family: 'Pretendard', sans-serif;
+  font-weight: 500;
+  font-size: 28px;
+  letter-spacing: -2%;
+  margin: 0;
+}
+
+/* 셰브론 아이콘 컨테이너 */
+.chevronContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* 셰브론 아이콘 */
+.chevronIcon {
+  width: 30px;
+  height: 20px;
+}
+
+/* Rotated state for chevron */
+.chevronIcon.rotated {
+  transform: rotate(180deg);
+}
+
+/* Project section 높이 */
+.project13,
+.project12,
+.project11 {
+  min-height: 80px; 
+  height: auto; 
+  transition: min-height 0.3s ease, height 0.3s ease;
+  overflow: hidden;
+}
+
+/* Expanded state */
+.project13:not(.collapsed),
+.project12:not(.collapsed),
+.project11:not(.collapsed) {
+  min-height: 600px; 
+  height: auto;
+}
+
+/* Collapsed state */
+.project13.collapsed,
+.project12.collapsed,
+.project11.collapsed {
+  padding-bottom: 0;
+}
+
+/* 프로젝트 그리드 스타일 */
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 40px;
+  padding-bottom: 40px;
+  width: 100%;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* 기본 카드 스타일 */
+.projectCard {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  z-index: 1;
+  transform-origin: center;
+  will-change: transform, z-index;
+  transform: scale(1);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  margin-bottom: 100px; 
+  padding: 20px;
+  margin-top: -20px; 
+  margin-left: -20px;
+  margin-right: -20px;
+  box-sizing: border-box;
+}
+
+/* 호버된 카드 스타일 */
+.hoveredCard {
+  /*transform: scale(1.35) !important; 이거땜에 전체적으로 카드가 커짐@@@@@@@@@*/
+  z-index: 10 !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+  border-radius: 12px;
+  position: relative;
+  overflow: visible;
+  margin: -10% -10% 0 -10%;
+  padding: 10%;
+  margin-bottom: 30px !important;
+  transform-origin: center;
+  overflow: visible;
+}
+
+/* 카드 이미지 스타일 */
+.projectImage {
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 비율 유지 */
+  background: none;
+  border-radius: 12px;
+  overflow: visible; 
+  position: relative;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+  transform-box: fill-box;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.hoveredCard .projectImage {
+  transform: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  overflow: visible;
+}
+
+.hoveredCard .projectImage img {
+  transform: scale(1.35) ;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+
+
+.projectImage {
+  width: 260px;
+  height: 146px;
+  background: none;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+}
+
+.projectInfo {
+    flex: 1;
+  width: 100%;
+
+  width: 100%;
+  padding: 12px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+
+.projectFilter {
+  display: flex;
+  align-items: center;
+  width: 140px;
+  height: 22px;
+  background: rgba(255, 119, 16, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #FF7710;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Project Card Styles */
+.projectCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: none;
+  border-radius: 0;
+  overflow: visible;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  height: auto;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  transform-origin: center;
+  will-change: transform, z-index;
+}
+
+.projectCard:hover {
+  z-index: 10;
+  /*transform: scale(1.05);*/
+}
+
+/* 이미지 및 텍스트는 비율에 따라 자연스럽게 커지게 됨 */
+.projectImage {
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 비율 유지 */
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.projectImage img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+.projectCard:hover .projectImage img {
+  transform: scale(1.2) translateZ(1px);
+  z-index: 10;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.projectImage {
+  position: relative;
+  overflow: visible;
+  border-radius: 12px;
+  z-index: 1;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  transition: all 0.3s ease;
+  transform-origin: center center;
+}
+
+.projectImage img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+  transform-origin: inherit;
+  will-change: transform;
+  display: block;
+}
+
+
+
+
+.projectCard { /*왼쪽 카드*/
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease, z-index 0.3s ease;
+  transform-origin: top left;
+  will-change: transform, z-index;
+}
+
+/* Middle card (3n+2) - 중앙카드*/
+.projectCard:nth-child(3n+2) {
+  transform-origin: top center;
+}
+
+/* Right card (3n) - 오른쪽카드*/
+.projectCard:nth-child(3n) {
+  transform-origin: top right;
+}
+
+.thumbnailImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  transform-origin: top left;
+}
+
+.projectCard:hover {
+/*  transform: scale(1.2); 카드 전체적으로 20% 확대*/
+  z-index: 10;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
+  will-change: transform;
+}
+
+
+.projectHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  position: relative;
+}
+
+.projectTitleWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.projectCategory {
+  background: #FFFFFF1A;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  width: fit-content;
+  margin: 0;
+  display: block;
+  line-height: 1;
+  order: -1;
+  transition: all 0.3s ease;
+}
+
+.projectName {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #FFFFFF;
+}
+
+
+.projectDescription {
+  color: #DDDDDD;
+  font-size: 18px;
+  margin-top: 8px;
+  display: block;
+  line-height: 1.4;
+  opacity: 0;
+  font-weight: 400;
+  max-height: 0;
+  overflow: visible;
+  white-space: normal;
+  transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.projectCard:hover .projectDescription {
+  opacity: 1;
+  max-height: 100px;
+  margin: 4px 0 0 0;
+}
+
+
+
+/* Responsive Grid */
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px 130px; 
+  margin-top: 30px;
+  align-items: start;
+  padding: 40px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.projectGrid > :nth-child(3n+2) {
+  justify-self: center;
+}
+
+.projectGrid > :nth-child(3n) {
+  justify-self: end;
+}
+
+
+/* 12th Projects */
+.project12 {
+  height: auto;
+  min-height: 0;
+}
+
+/* 11th Projects */
+.project11 {
+  height: auto;
+  min-height: 0;
+}
