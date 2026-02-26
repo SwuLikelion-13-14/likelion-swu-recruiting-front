@@ -1,0 +1,202 @@
+.wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 96px; /* 위/아래 간격 (이미지 느낌) */
+}
+
+/* 공통 row */
+.row {
+  width: 100%;
+  max-width: 963px; /* 피그마 그룹 폭 느낌 */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px; /* 카드 사이 간격 */
+}
+
+/* 위 row: 작은 카드가 왼쪽 */
+.rowTop {
+  flex-direction: row;
+}
+
+/* 아래 row: 큰 카드가 왼쪽 */
+.rowBottom {
+  flex-direction: row;
+}
+
+/* 공통 글래스 카드 */
+.card {
+  background: var(--Alpha-black-50, rgba(0, 0, 0, 0.50));
+  border-radius: 20px;
+  outline: 1px var(--element-Stroke-white-alpha25, rgba(255, 255, 255, 0.20)) solid;
+  outline-offset: -0.5px;
+
+  box-shadow:
+    2px 2px 8.1000003815px rgba(255, 255, 255, 0.50) inset,
+    -10px -10px 8px 2px rgba(255, 74, 67, 0.20) inset;
+
+  /* 글래스감 보강 */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.smallCard {
+  width: 234px;
+  height: 234px;
+  padding: 50px 47px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  position: relative;
+}
+
+.bigCard {
+  width: 669px;
+  height: 234px;
+  padding: 40px 60px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+}
+
+/* 아이콘 살짝 위로 올라가게 */
+.floatIcon {
+  width: 148px;
+  height: 120px;
+  object-fit: contain;
+  transform: translateY(-10px);
+  user-select: none;
+  pointer-events: none;
+}
+
+.smallTitle {
+  color: var(--text-light-gray, #DDDDDD);
+  font-family: var(--font-pretendard, Pretendard);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 33.6px;
+}
+
+/* 수료조건 리스트 */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.listItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.itemText {
+  color: var(--text-light-gray, #DDDDDD);
+  font-family: var(--font-pretendard, Pretendard);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 28.8px;
+  word-break: keep-all;
+}
+
+/* 체크 아이콘(피그마처럼 외곽선 체크) */
+.checkIcon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.checkIcon::before {
+  content: '';
+  width: 18px;
+  height: 10px;
+  border-left: 3px solid var(--element-Secondary, #D60B03);
+  border-bottom: 3px solid var(--element-Secondary, #D60B03);
+  transform: rotate(-45deg);
+  margin-top: -2px;
+}
+
+/* 회비 안내 텍스트 박스 */
+.feeBox {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 체크 아이콘을 기준으로 정렬되게 2컬럼 고정 */
+.feeRow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 28px; /* 텍스트 / 체크(고정) */
+  align-items: center;
+  column-gap: 14px;
+}
+
+.feeText {
+  color: var(--text-light-gray, #DDDDDD);
+  font-family: var(--font-pretendard, Pretendard);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 28.8px;
+  word-break: keep-all;
+  justify-self: end; /* 체크 아이콘 기준으로 우측 정렬 */
+  text-align: right;
+}
+
+.checkIcon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+/* 카드 사이 연결선/점 */
+.connector {
+  position: absolute;
+  top: 50%;
+  left: 234px;      /* 왼쪽 카드 폭 */
+  width: 60px;      /* gap */
+  transform: translateY(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.rowBottom .connector {
+  left: 669px;      /* 아래 row는 큰 카드가 왼쪽 */
+}
+
+.line {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.30);
+}
+
+.dotLeft,
+.dotRight {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.80);
+}
