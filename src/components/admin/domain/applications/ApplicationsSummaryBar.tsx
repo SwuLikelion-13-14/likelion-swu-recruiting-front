@@ -1,9 +1,11 @@
 import ChipDropdown from "@/components/admin/ui/ChipDropdown";
 
-export type ResultFilter = "all" | "pass" | "fail";
+export type ResultStatus = "pending" | "pass" | "fail";
+export type ResultFilter = "all" | ResultStatus;
 
 const filterLabel: Record<ResultFilter, string> = {
   all: "전체",
+  pending: "선택",
   pass: "합격",
   fail: "불합격",
 };
@@ -14,6 +16,9 @@ function getFilterChipClass(filter: ResultFilter) {
       return "bg-[#10B981] text-[#1A1A1A]";
     case "fail":
       return "bg-[#FF9A9A] text-[#1A1A1A]";
+    case "pending":
+      return "bg-[#EBF3FF] text-[#1A1A1A]";
+    case "all":
     default:
       return "bg-[#D1D1D1] text-[#1A1A1A]";
   }
@@ -30,7 +35,8 @@ export default function ApplicationsSummaryBar({
   filter,
   onChangeFilter,
 }: ApplicationsSummaryBarProps) {
-  const options: ResultFilter[] = ["all", "pass", "fail"];
+  // ✅ 전체가 첫 번째
+  const options: ResultFilter[] = ["all", "pending", "pass", "fail"];
 
   return (
     <div className="flex items-center justify-between w-[741px]">

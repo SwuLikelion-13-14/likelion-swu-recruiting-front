@@ -20,6 +20,15 @@ const ApplyBox = () => {
     const handleCheck = async () => {
         setStudentError('');
         setPasswordError('');
+        if (!studentId.trim()) {
+            setStudentError('학번을 입력해주세요.');
+            return; // API 호출하지 않음
+        }
+        if (!password.trim()) {
+            setPasswordError('비밀번호를 입력해주세요.');
+            return; // API 호출하지 않음
+        }
+
         setLoading(true);
 
         try {
@@ -47,7 +56,12 @@ const ApplyBox = () => {
                     else path = '/front'; // 그 외는 프론트로 fallback
 
                     navigate(path, {
-                        state: { applicationData: data.result.applicationRsDTO } // 답안 데이터 전달
+                        state: {
+                            applicationData: {
+                                ...data.result.applicationRsDTO,
+                                password: data.result.password  // ✅ 이 한 줄 추가
+                            }
+                        }
                     });
                 } else {
                     setStudentError('지원서 정보가 없습니다. 관리자에게 문의하세요.');

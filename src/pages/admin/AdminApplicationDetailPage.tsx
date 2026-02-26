@@ -22,7 +22,7 @@ type ApiAnswer = {
 
 type ApiDetailResult = {
   responseId: number;
-  name: string;
+  name: string | null;
   track: Track;
   answers: ApiAnswer[];
   fileName?: string | null;
@@ -75,14 +75,42 @@ function getStatusChipClass(status: ResultStatus) {
   }
 }
 
-function toViewQuestion(a: ApiAnswer): Question {
-  return {
-    id: a.questionId,
-    question: a.question,
-    type: "text",
-    answer: a.responseText ?? "",
-    placeholder: "",
-  };
+function isHttpUrl(s: string) {
+  return /^https?:\/\//i.test((s ?? "").trim());
+}
+
+function isPortfolioQuestionText(q: string) {
+  const t = (q ?? "").replace(/\s+/g, "");
+  return t.includes("포트폴리오") || t.includes("깃허브") || t.includes("github");
+}
+
+function safeAdminQuestionId(part: string, originalQuestionId: number) {
+  if (part === "BASIC") return originalQuestionId;
+  const base =
+    part === "COMMON"
+      ? 1000000
+      : part === "FRONT"
+      ? 2000000
+      : part === "BACK"
+      ? 3000000
+      : 4000000;
+  return base + originalQuestionId;
+}
+
+function pickStudentId(detail: ApiDetailResult | null) {
+  if (!detail) return "";
+  const basics = (detail.answers ?? []).filter((a) => a.part === "BASIC");
+
+  const byId2 = basics.find((a) => a.questionId === 2)?.responseText?.trim();
+  if (byId2) return byId2;
+
+  const byQuestion = basics
+    .find((a) => (a.question ?? "").includes("학번"))
+    ?.responseText?.trim();
+  if (byQuestion) return byQuestion;
+
+  const byNo2 = basics.find((a) => a.no === 2)?.responseText?.trim();
+  return byNo2 ?? "";
 }
 
 export default function AdminApplicationDetailPage() {
@@ -99,7 +127,6 @@ export default function AdminApplicationDetailPage() {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   const [detail, setDetail] = useState<ApiDetailResult | null>(null);
 
   const [status, setStatus] = useState<ResultStatus>(
@@ -110,8 +137,9 @@ export default function AdminApplicationDetailPage() {
 
   const goBackToList = () => {
     const fallback = "/admin/applications";
-    const to = state?.from || fallback;
-    navigate(to, { replace: true });
+    const from = typeof state?.from === "string" ? state.from.trim() : "";
+    const to = from.startsWith("/") ? from : fallback;
+    navigate(to);
   };
 
   useEffect(() => {
@@ -166,20 +194,29 @@ export default function AdminApplicationDetailPage() {
     return "지원자";
   }, [detail?.track, applicantFromState?.partLabel, state?.partLabel]);
 
+  const displayName = detail?.name || applicantFromState?.name || code || "";
+  const studentIdFromBasic = useMemo(() => pickStudentId(detail), [detail]);
+
   const requiredQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
 
     const basics = (detail.answers ?? [])
       .filter((a) => a.part === "BASIC")
       .sort((a, b) => a.no - b.no)
-      .map(toViewQuestion);
+      .map((a) => ({
+        id: safeAdminQuestionId(a.part, a.questionId),
+        question: `${a.no}. ${a.question}`,
+        type: "text" as const,
+        answer: a.responseText ?? "",
+        placeholder: "",
+      }));
 
     if (basics.length === 0) {
       return [
         {
           id: 1,
-          question: "이름",
-          type: "text",
+          question: "1. 이름",
+          type: "text" as const,
           answer: detail.name ?? "",
           placeholder: "",
         },
@@ -190,28 +227,54 @@ export default function AdminApplicationDetailPage() {
   }, [detail]);
 
   const commonQuestions: Question[] = useMemo(() => {
+    if (!detail || !responseId) return [];
+
+    const fileEndpoint = `${API_BASE}/api/admin/response/${responseId}/file`;
+
+    return (detail.answers ?? [])
+      .filter((a) => a.part === "COMMON")
+      .sort((a, b) => a.no - b.no)
+      .map((a) => {
+        const answer = (a.responseText ?? "").trim();
+        const qText = a.question ?? "";
+
+        if (isPortfolioQuestionText(qText)) {
+          const link = isHttpUrl(answer) ? answer : fileEndpoint;
+          return {
+            id: safeAdminQuestionId(a.part, a.questionId),
+            question: `${a.no}. ${qText}`,
+            type: "file" as const,
+            answer,
+            fileLink: link,
+            placeholder: "",
+          };
+        }
+
+        return {
+          id: safeAdminQuestionId(a.part, a.questionId),
+          question: `${a.no}. ${qText}`,
+          type: "text" as const,
+          answer,
+          placeholder: "",
+        };
+      });
+  }, [detail, responseId]);
+
+  const trackQuestions: Question[] = useMemo(() => {
     if (!detail) return [];
 
-    const others = (detail.answers ?? [])
-      .filter((a) => a.part !== "BASIC")
-      .sort((a, b) => {
-        if (a.part === b.part) return a.no - b.no;
-        return String(a.part).localeCompare(String(b.part));
-      })
-      .map(toViewQuestion);
+    const trackPart = detail.track;
 
-    const hasFile = !!detail.fileUrl;
-    if (hasFile) {
-      others.push({
-        id: 999999,
-        question: `포트폴리오 (${detail.fileName ?? "파일"})`,
-        type: "file",
-        answer: detail.fileUrl ?? "",
+    return (detail.answers ?? [])
+      .filter((a) => a.part === trackPart)
+      .sort((a, b) => a.no - b.no)
+      .map((a) => ({
+        id: safeAdminQuestionId(a.part, a.questionId),
+        question: `${a.no}. ${a.question}`,
+        type: "text" as const,
+        answer: a.responseText ?? "",
         placeholder: "",
-      });
-    }
-
-    return others;
+      }));
   }, [detail]);
 
   const finalCheckQuestions: Question[] = useMemo(
@@ -219,15 +282,13 @@ export default function AdminApplicationDetailPage() {
       {
         id: 201,
         question: "학번",
-        type: "text",
-        answer: "",
-        placeholder: "학번 10자리를 입력해 주세요",
+        type: "text" as const,
+        answer: studentIdFromBasic,
+        placeholder: "",
       },
     ],
-    []
+    [studentIdFromBasic]
   );
-
-  const displayName = detail?.name || applicantFromState?.name || code || "";
 
   if (!responseId) {
     return (
@@ -334,41 +395,32 @@ export default function AdminApplicationDetailPage() {
               enableNotice={false}
               enableActions={false}
               allQuestions={commonQuestions}
+              onFileDownload={(url) => {
+                const u = (url ?? "").trim();
+                if (!u) return;
+                window.open(u, "_blank");
+              }}
             />
 
-            <div className="mt-16" />
+            {trackQuestions.length > 0 && (
+              <>
+                <div className="mt-16" />
 
-            {detail?.fileUrl && (
-              <div className="flex items-center justify-end mb-8">
-                <a
-                  href={detail.fileUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  download
-                  className="
-                    flex
-                    h-[43px]
-                    min-w-[99px]
-                    px-[16px]
-                    py-[12px]
-                    justify-center
-                    items-center
-                    gap-[10px]
-                    rounded-[12px]
-                    border
-                    border-[rgba(255,255,255,0.20)]
-                    bg-[rgba(0,0,0,0.75)]
-                    text-[#F5F5F5]
-                    text-[16px]
-                    font-normal
-                    leading-[120%]
-                    whitespace-nowrap
-                  "
-                >
-                  파일 다운로드
-                </a>
-              </div>
+                <ApplyForm
+                  mode="view"
+                  variant="result"
+                  title={`${TRACK_LABEL[detail!.track]} 추가 질문`}
+                  subtitle="트랙별 추가 질문 답변 항목입니다"
+                  questions={trackQuestions}
+                  enableConsent={false}
+                  enableNotice={false}
+                  enableActions={false}
+                  allQuestions={trackQuestions}
+                />
+              </>
             )}
+
+            <div className="mt-16" />
 
             <ApplyForm
               mode="view"

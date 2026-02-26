@@ -1,37 +1,8 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-/* 메인 컨테이너 스타일 */
-.container {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  overflow: hidden;
-}
-
-.pageWrapper {
-  width: 100vw;
-  flex-direction: column;
-  display: flex;
-  justify-content: center; /* 가로 중앙 */
-  align-items: center;     /* 세로 중앙 */
-  margin-top: 42px;
-}
 
 .bottomButton {
   position: relative;
   width: 554px;
-  height: 76px;
-  margin-top: 48px;          /* ApplyBox와 간격 */
+  height: 76px;   
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 12px 50px;
@@ -42,12 +13,10 @@ html, body {
   background: rgba(0, 0, 0, 0.75);
   overflow: hidden;
   cursor: pointer;
-
   /* 글라스 그림자 */
   box-shadow:
     2px 2px 8.1px 0 rgba(255, 255, 255, 0.5) inset,
     -10px -10px 8px 2px rgba(255, 74, 67, 0.2) inset;
-
   /* outline */
   outline: 1px rgba(255, 255, 255, 0.2) solid;
   outline-offset: -1px;
@@ -84,8 +53,4 @@ html, body {
   justify-content: center;
   align-items: center;
   z-index: 10;
-}
-
-.infoSpacingLarge {
-  margin-top: 48px; 
 }

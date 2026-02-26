@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Header } from '@/components/Layout/Header/Header';
+import { useState, useEffect, useRef } from 'react'
+import { ApplyHeader } from '@/components/Layout/Header/ApplyHeader';
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
 import styles from './TrackApplyPage.module.css'
@@ -8,10 +8,14 @@ import ApplyFooter from '@/components/Layout/Footer/ApplyFooter';
 import { api } from '@/api/client'
 import type { Question } from '@/components/ApplyForm/types'
 import { useLocation } from 'react-router-dom'
+import { useNavigationGuard } from '@/contexts/NavigationGuardContext'
+import Modal from '@/components/Modal/Modal'
 
 const DesignPage = () => {
     const location = useLocation();
     const applicationData = location.state?.applicationData;
+    const { setDirty } = useNavigationGuard();
+    const isInitialLoad = useRef(true);
 
     type ResponseDTO = {
         questionId: number
@@ -26,14 +30,23 @@ const DesignPage = () => {
         { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: [] },
         { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: [] },
     ])
-    const [consentChecked, setConsentChecked] = useState(false)
 
+    useEffect(() => {
+        // 페이지 진입 시 dirty를 false로 초기화
+        setDirty(false);
+    }, []);
+
+    const [consentChecked, setConsentChecked] = useState(false)
+    const [isFileErrorModalOpen, setIsFileErrorModalOpen] = useState(false);
+    const [fileErrorMessage, setFileErrorMessage] = useState('');
 
 
     // 페이지 전체 질문(flat)
     const allQuestions = sets.flatMap(set => set.questions)
 
-    // ✅ 답안 초기화(useEffect)
+
+
+    // 답안 초기화(useEffect)
     useEffect(() => {
         const fetchQuestions = async () => {
             console.log("applicationData:", applicationData)
@@ -50,7 +63,7 @@ const DesignPage = () => {
                     ids.map((id, idx) => {
                         const apiQ = apiQuestions.find(q => q.id === id)
 
-                        // ✅ 기본정보에서 답변 가져오기
+                        // 기본정보에서 답변 가져오기
                         let answerFromState = ''
 
                         if (applicationData?.userInfo) {
@@ -63,10 +76,13 @@ const DesignPage = () => {
                             else if (id === 6) answerFromState = userInfo.phone || ''
                             else if (id === 7) answerFromState = userInfo.email || ''
                             else if (id === 15) answerFromState = userInfo.studentId || ''
-                            else if (id === 16) answerFromState = userInfo.password || ''
+                            else if (id === 16 && applicationData?.password) {
+                                answerFromState = applicationData.password
+                            }
+
                         }
 
-                        // ✅ 질문 답변에서 가져오기
+                        // 질문 답변에서 가져오기
                         const existingAnswer = (applicationData?.responses as ResponseDTO[] | undefined)
                             ?.find(r => r.questionId === id)
 
@@ -74,7 +90,7 @@ const DesignPage = () => {
                             answerFromState = existingAnswer.responseText || ''
                         }
 
-                        // ✅ 포트폴리오 처리
+                        // 포트폴리오 처리
                         let fileLink = ''
                         if (id === 14 && applicationData?.portfolioLink) {
                             fileLink = applicationData.portfolioLink
@@ -96,15 +112,18 @@ const DesignPage = () => {
                     { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: mapDummy(BASIC_QUESTIONS_DESIGN, [8, 9, 10, 11, 12, 13, 14]) },
                     { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapDummy(CHECK_QUESTIONS, [15, 16]) },
                 ])
+                setTimeout(() => {
+                    isInitialLoad.current = false;
+                }, 100);
             } catch (err) {
                 console.error('질문 불러오기 실패:', err)
 
-                // ✅ API 실패 시에도 applicationData 반영!
+                // API 실패 시에도 applicationData 반영!
                 const mapDummyWithData = (dummy: Question[], ids: number[]) =>
                     ids.map((id, idx) => {
                         let answerFromState = ''
 
-                        // ✅ 기본정보
+                        // 기본정보
                         if (applicationData?.userInfo) {
                             const userInfo = applicationData.userInfo
                             if (id === 1) answerFromState = userInfo.name || ''
@@ -116,7 +135,7 @@ const DesignPage = () => {
                             else if (id === 7) answerFromState = userInfo.email || ''
                         }
 
-                        // ✅ 질문 답변
+                        // 질문 답변
                         const existingAnswer = (applicationData?.responses as ResponseDTO[] | undefined)
                             ?.find(r => r.questionId === id)
 
@@ -124,7 +143,7 @@ const DesignPage = () => {
                             answerFromState = existingAnswer.responseText || ''
                         }
 
-                        // ✅ 포트폴리오
+                        // 포트폴리오
                         let fileLink = ''
                         if (id === 14 && applicationData?.portfolioLink) {
                             fileLink = applicationData.portfolioLink
@@ -145,12 +164,18 @@ const DesignPage = () => {
                     { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mapDummyWithData(CHECK_QUESTIONS, [15, 16]) },
                 ])
             }
+            setTimeout(() => {
+                isInitialLoad.current = false;
+            }, 100);
         }
 
         fetchQuestions()
     }, [applicationData])
 
     const handleChange = (_setIndex: number, id: number, value: string) => {
+        if (!isInitialLoad.current) {
+            setDirty(true);
+        }
         setSets(prev =>
             prev.map((set, _i) => ({
                 ...set,
@@ -175,6 +200,9 @@ const DesignPage = () => {
 
 
     const handleFileChange = (setIndex: number, id: number, file: File | null) => {
+        if (!isInitialLoad.current) {
+            setDirty(true);
+        }
         setSets(prev =>
             prev.map((set, i) =>
                 i === setIndex
@@ -186,7 +214,7 @@ const DesignPage = () => {
                                     ...q,
                                     file: file ?? undefined,
                                     // 파일이 없으면 기존 fileLink를 그대로 유지
-                                    answer: file ? file.name : '',  // ✅ null이면 무조건 빈 문자열
+                                    answer: file ? file.name : '',  // null이면 무조건 빈 문자열
                                     fileLink: file ? q.fileLink : '',
                                 }
                             }
@@ -198,42 +226,43 @@ const DesignPage = () => {
         )
     }
 
+    const allQuestionsRef = useRef(allQuestions)
+    useEffect(() => {
+        allQuestionsRef.current = allQuestions
+    }, [allQuestions])
 
 
-    const handleFinalSubmit = async () => {
-        console.log('=== allQuestions 전체 ===')
-    allQuestions.forEach(q => {
-        console.log(`id:${q.id} | answer:"${q.answer}" | file:${q.file} | fileLink:"${q.fileLink}"`)
-    })
+    const handleFinalSubmit = async (): Promise<boolean> => {
+        const currentQuestions = allQuestionsRef.current
         try {
-            // 1️⃣ 기본정보 (id 2번을 사용!)
+            // 기본정보 (id 2번을 사용!)
             const userInfoDTO = {
-                name: allQuestions.find(q => q.id === 1)?.answer || '',
-                studentId: allQuestions.find(q => q.id === 2)?.answer || '', // ✅ 15번 아니라 2번!
-                password: allQuestions.find(q => q.id === 16)?.answer || '',
-                major: allQuestions.find(q => q.id === 3)?.answer || '',
-                doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
-                schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
-                phone: allQuestions.find(q => q.id === 6)?.answer || '',
-                email: allQuestions.find(q => q.id === 7)?.answer || '',
+                name: currentQuestions.find(q => q.id === 1)?.answer || '',
+                studentId: currentQuestions.find(q => q.id === 2)?.answer || '', //15번 아니라 2번!
+                password: currentQuestions.find(q => q.id === 16)?.answer || '',
+                major: currentQuestions.find(q => q.id === 3)?.answer || '',
+                doubleMajor: currentQuestions.find(q => q.id === 4)?.answer || '',
+                schoolStatus: currentQuestions.find(q => q.id === 5)?.answer || '',
+                phone: currentQuestions.find(q => q.id === 6)?.answer || '',
+                email: currentQuestions.find(q => q.id === 7)?.answer || '',
             }
 
-            // 2️⃣ 질문 답변 (8~14번)
-            const responses = allQuestions
+            // 질문 답변 (8~14번)
+            const responses = currentQuestions
                 .filter(q => q.id >= 8 && q.id <= 14)
                 .map(q => ({
                     questionId: q.id,
                     responseText: q.answer || '',
                 }))
 
-            // 3️⃣ 포트폴리오 처리
-            const portfolioQuestion = allQuestions.find(q => q.id === 14)
+            // 포트폴리오 처리
+            const portfolioQuestion = currentQuestions.find(q => q.id === 14)
             const portfolioFile = portfolioQuestion?.file
             const portfolioLink = portfolioFile
                 ? '' // 파일이 있으면 링크는 비워서 파일 전송
                 : portfolioQuestion?.fileLink || portfolioQuestion?.answer || '' // 파일 없으면 기존 link 또는 answer 사용
 
-            // 4️⃣ dto 객체
+            // dto 객체
             const dtoPayload = {
                 applicationId: applicationData?.id,
                 applicationField2: 1, // 1=최종제출
@@ -242,59 +271,71 @@ const DesignPage = () => {
                 portfolioLink: portfolioFile ? '' : portfolioLink, // 파일 있으면 링크는 빈값
             }
 
-            // 5️⃣ FormData 생성
+            // FormData 생성
             const formData = new FormData()
             formData.append(
                 'dto',
                 new Blob([JSON.stringify(dtoPayload)], { type: 'application/json' })
             )
 
-            // 6️⃣ 파일 첨부
+            // 파일 첨부
             if (portfolioFile) {
                 formData.append('portfolioFile', portfolioFile)
             }
 
-            // 7️⃣ API 호출
+            // API 호출
             const res = await api.post('/api/recruit/application/PND/', formData)
-            alert('지원서가 성공적으로 제출되었습니다!')
             console.log('최종 제출 성공:', res.data)
+            setDirty(false);
+            return true
         } catch (err: any) {
             console.error('제출 실패:', err)
-            alert('제출 중 오류가 발생했습니다.')
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('제출 중 오류가 발생했습니다.');
+            }
+
+            setIsFileErrorModalOpen(true);
+            return false
         }
     }
 
     // 임시저장
 
-    const handleDraftSave = async () => {
+    const handleDraftSave = async (): Promise<boolean> => {
+        const currentQuestions = allQuestionsRef.current
         try {
             // 🔍 임시저장 시에는 학번, 비밀번호만 검증
-            const studentId = allQuestions.find(q => q.id === 15)?.answer || ''
-            const password = allQuestions.find(q => q.id === 16)?.answer || ''
+            const studentId = currentQuestions.find(q => q.id === 15)?.answer || ''
+            const password = currentQuestions.find(q => q.id === 16)?.answer || ''
 
             if (!studentId || !password) {
-                return
+                return false
             }
 
             const userInfoDTO = {
-                name: allQuestions.find(q => q.id === 1)?.answer || '',
+                name: currentQuestions.find(q => q.id === 1)?.answer || '',
                 studentId: studentId,
                 password: password,
-                major: allQuestions.find(q => q.id === 3)?.answer || '',
-                doubleMajor: allQuestions.find(q => q.id === 4)?.answer || '',
-                schoolStatus: allQuestions.find(q => q.id === 5)?.answer || '',
-                phone: allQuestions.find(q => q.id === 6)?.answer || '',
-                email: allQuestions.find(q => q.id === 7)?.answer || '',
+                major: currentQuestions.find(q => q.id === 3)?.answer || '',
+                doubleMajor: currentQuestions.find(q => q.id === 4)?.answer || '',
+                schoolStatus: currentQuestions.find(q => q.id === 5)?.answer || '',
+                phone: currentQuestions.find(q => q.id === 6)?.answer || '',
+                email: currentQuestions.find(q => q.id === 7)?.answer || '',
             }
 
-            const responses = allQuestions
+            const responses = currentQuestions
                 .filter(q => q.id >= 8 && q.id <= 13)
                 .map(q => ({
                     questionId: q.id,
                     responseText: q.answer || '',
                 }))
 
-            const portfolioQuestion = allQuestions.find(q => q.id === 14)
+            const portfolioQuestion = currentQuestions.find(q => q.id === 14)
             const portfolioFile = portfolioQuestion?.file
             const portfolioLink = portfolioQuestion?.answer || ''
 
@@ -322,15 +363,23 @@ const DesignPage = () => {
                 },
             })
 
-            console.log('✅ 임시저장 성공:', res.data)
+            console.log('임시저장 성공:', res.data)
+            setDirty(false);
+            return true
 
         } catch (err: any) {
             console.error('❌ 임시저장 실패:', err)
-            console.error('에러 응답:', err.response?.data)
-
-            if (err.response?.data?.message) {
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
             } else {
+                setFileErrorMessage('임시 저장 중 오류가 발생했습니다.');
             }
+
+            setIsFileErrorModalOpen(true);
+            return true
         }
     }
 
@@ -338,7 +387,7 @@ const DesignPage = () => {
     return (
         <div className={styles.page}>
             <div className={styles['page-content']}>
-                <Header />
+                <ApplyHeader />
                 <Banner line1="기획 디자인" line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서" />
 
                 {sets.map((set, idx) => (
@@ -359,10 +408,26 @@ const DesignPage = () => {
                         onFileChange={(id, file) => handleFileChange(idx, id, file)}
                         onSubmit={handleFinalSubmit}
                         onDraftSave={handleDraftSave}
+                        onDirectSubmit={handleFinalSubmit}
+                        onDirectDraftSave={handleDraftSave}
+                        isLoaded={!!applicationData}
                     />
                 ))}
 
                 <ApplyFooter />
+                {isFileErrorModalOpen && (
+                    <Modal
+                        isOpen={isFileErrorModalOpen}
+                        title="업로드 실패"
+                        description={fileErrorMessage}
+                        primaryButton={{
+                            text: '확인',
+                            onClick: () => setIsFileErrorModalOpen(false),
+                        }}
+                        onClose={() => setIsFileErrorModalOpen(false)}
+                    />
+                )}
+
             </div>
         </div>
     )

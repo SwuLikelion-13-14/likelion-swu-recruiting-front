@@ -137,7 +137,7 @@ html, body {
 .content {
   width: 100%;
   max-width: 100%;
-  padding: 60px 140px;
+  padding: 80px 140px;
   position: relative;
   z-index: 10;
   box-sizing: border-box;
@@ -196,9 +196,12 @@ h1 {
 /* 프로젝트 콘텐츠 공통 스타일 */
 .projectContent {
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgb(var(--alpha-black-25));
+  outline: 1px solid rgb(var(--alpha-white-25));
+  outline-offset: -1px;
+  box-shadow: inset 2px 2px 8.1px rgb(var(--alpha-white-50)), inset -10px -10px 8px 2px rgb(var(--secondary-50) / 0.2);
   padding: 0 50px; /* 타이틀 컨테이너와 좌우 간격 */
   box-sizing: border-box;
   position: relative;
@@ -228,7 +231,7 @@ h1 {
   display: flex;
   align-items: center;
   color: #FFFFFF;
-  font-size: 16px;
+  font-size: 20px;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -292,14 +295,14 @@ h1 {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  padding: 20px 0; /* project 프로젝트 컨테이너와 상하 간격 */
+  padding: 25px 0; /* project 프로젝트 컨테이너와 상하 간격 */
   position: relative;
 }
 /* 프로젝트 타이틀 (몇기 project)*/
 .projectTitle {
   color: #FFFFFF;
   font-family: 'Pretendard', sans-serif;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 28px;
   letter-spacing: -2%;
   margin: 0;
@@ -672,6 +675,20 @@ h1 {
   justify-self: end;
 }
 
+/* 반응형 디자인 추가 */
+@media (max-width: 1024px) {
+  .projectGrid {
+    grid-template-columns: repeat(2, 1fr);  /* 태블릿: 2열 */
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .projectGrid {
+    grid-template-columns: 1fr;  /* 모바일: 1열 */
+    gap: 20px;
+  }
+}
 
 /* 12th Projects */
 .project12 {

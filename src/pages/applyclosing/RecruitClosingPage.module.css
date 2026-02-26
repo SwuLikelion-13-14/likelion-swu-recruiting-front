@@ -1,0 +1,114 @@
+.container {
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.centerContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    
+}
+
+.centerBox {
+    margin-top: 147px;
+    width: 100%;   
+}
+
+@media (max-width: 1200px) {
+  .centerBox {
+    margin-top: 40px;
+  }
+}
+
+
+.banner {
+    margin-bottom: 40px;
+}
+
+.textGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+}
+
+/* 각 줄 디자인 다르게 */
+.textLine1 {
+    font-size: 28px;
+    font-weight: 500;
+    margin-top: 120px;
+}
+
+.textLine2 {
+    font-size: 42px;
+    font-weight: 600;
+}
+
+.orangeText {
+    color: #FF7710;
+}
+
+.whiteText {
+    color: #F5F5F5;
+}
+
+.textinsta {
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    margin-top: 64px;
+    color: #DDDDDD;
+}
+
+/* 문의 */
+.keyword {
+    font-weight: 400;
+    margin-right: 16px;
+    font-size: 18px;
+    color: #DDDDDD;
+}
+
+.middleText {
+    margin-right: 4px;
+    font-weight: 400;
+    color: #DDDDDD;
+    font-size: 18px;
+}
+
+/* hover */
+.instagram {
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 18px;
+    color: #DDDDDD;
+}
+
+.instagram:hover {
+    color: #FF7710;
+}
+
+
+/* 최종발표페이지 텍스트 */
+.text1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin-top: 120px;
+}
+
+.text2 {
+    font-size: 30px;
+    font-weight: 600;
+}
+
+.infoSpacing {
+  margin-top: 64px; 
+}
+
+.infoSpacingLarge {
+  margin-top: 48px; 
+}

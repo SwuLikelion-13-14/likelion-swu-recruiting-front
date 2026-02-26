@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from '@/api/client'
 import type { Question } from '@/components/ApplyForm/types'
-import { Header } from '@/components/Layout/Header/Header'
+import { ApplyHeader } from '@/components/Layout/Header/ApplyHeader'
 import ApplyForm from '@/components/ApplyForm/ApplyForm'
 import Banner from '@/components/ActivityContent/Banner'
 import styles from './TrackApplyPage.module.css'
 import { BASIC_INFO_QUESTIONS, BASIC_QUESTIONS, CHECK_QUESTIONS, BACKEND_QUESTIONS } from '@/constants/applyQuestions'
 import ApplyFooter from '@/components/Layout/Footer/ApplyFooter'
 import { useLocation } from 'react-router-dom'
+import Modal from '@/components/Modal/Modal'
 
 type ResponseDTO = {
     questionId: number
@@ -34,6 +35,9 @@ type ApiQuestion = {
 const BackPage = () => {
     const location = useLocation()
     const applicationData = location.state?.applicationData
+    const [isFileErrorModalOpen, setIsFileErrorModalOpen] = useState(false);
+    const [fileErrorMessage, setFileErrorMessage] = useState('');
+
 
     const [sets, setSets] = useState<
         { title: string; subtitle?: string; questions: MergedQuestion[] }[]
@@ -59,12 +63,17 @@ const BackPage = () => {
 
     const [consentChecked, setConsentChecked] = useState(false)
     const allQuestions = sets.flatMap((set) => set.questions)
+    const allQuestionsRef = useRef(allQuestions)
 
-    // ✅ dummy Question -> MergedQuestion 초기화
+    useEffect(() => {
+        allQuestionsRef.current = allQuestions
+    }, [allQuestions])
+
+    // dummy Question -> MergedQuestion 초기화
     const toMerged = (dummy: Question[]): MergedQuestion[] =>
         dummy.map((d) => ({ ...d, file: undefined, fileLink: undefined }))
 
-    // ✅ API 질문 + 기존 답변 병합
+    // mergeQuestionsWithAnswer 내부 수정
     const mergeQuestionsWithAnswer = (
         dummy: Question[],
         apiQuestions: ApiQuestion[],
@@ -90,6 +99,16 @@ const BackPage = () => {
                 else if (d.id === 5) answer = u.schoolStatus || ''
                 else if (d.id === 6) answer = u.phone || ''
                 else if (d.id === 7) answer = u.email || ''
+                else if (d.id === 15) answer = u.studentId || ''
+                else if (d.id === 16 && applicationData.password) answer = applicationData.password
+            }
+
+            // 응답 병합 후, CHECK_QUESTIONS id 15/16만 강제 채움
+            if (d.id === 15) {
+                answer = applicationData?.userInfo?.studentId || ''
+            }
+            if (d.id === 16 && applicationData?.password) {
+                answer = applicationData.password
             }
 
             // 포트폴리오 처리 (id 14)
@@ -110,7 +129,8 @@ const BackPage = () => {
         })
     }
 
-    // ✅ 질문 불러오기(useEffect)
+
+    // 질문 불러오기(useEffect)
     useEffect(() => {
         const fetchQuestions = async () => {
             try {
@@ -126,7 +146,7 @@ const BackPage = () => {
                     { title: '필수 기본 정보', questions: mergeQuestionsWithAnswer(BASIC_INFO_QUESTIONS, basicApi, applicationData?.responses) },
                     { title: '서류 공통 질문', subtitle: '모든 지원자에게 공통으로 적용되는 필수 답변 항목입니다', questions: mergeQuestionsWithAnswer(BASIC_QUESTIONS, commonApi, applicationData?.responses) },
                     { title: '트랙 별 추가 질문', subtitle: '백엔드 트랙 지원자를 위한 필수 답변 항목입니다', questions: mergeQuestionsWithAnswer(BACKEND_QUESTIONS, backApi, applicationData?.responses) },
-                    { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: toMerged(CHECK_QUESTIONS) },
+                    { title: '지원서 최종 제출을 위한 정보 확인', subtitle: '추후 지원서 열람 및 수정을 위해 필요한 정보를 재확인합니다', questions: mergeQuestionsWithAnswer(CHECK_QUESTIONS, [], applicationData?.responses) },
                 ])
             } catch (err) {
                 console.error('질문 불러오기 실패:', err)
@@ -135,7 +155,7 @@ const BackPage = () => {
                     { title: '필수 기본 정보', questions: toMerged(BASIC_INFO_QUESTIONS) },
                     { title: '서류 공통 질문', questions: toMerged(BASIC_QUESTIONS) },
                     { title: '트랙 별 추가 질문', questions: toMerged(BACKEND_QUESTIONS) },
-                    { title: '지원서 최종 제출을 위한 정보 확인', questions: toMerged(CHECK_QUESTIONS) },
+                    { title: '지원서 최종 제출을 위한 정보 확인', questions: mergeQuestionsWithAnswer(CHECK_QUESTIONS, [], applicationData?.responses) },
                 ])
             }
         }
@@ -226,29 +246,55 @@ const BackPage = () => {
     const handleFinalSubmit = async () => {
         try {
             const formData = buildPayload(1)
-            if (!formData) return
+            if (!formData) return false
             const res = await api.post('/api/recruit/application/BACK/', formData)
             console.log(res.data)
-        } catch (err) {
+            return true
+        } catch (err: any) {
             console.error('제출 실패:', err)
+
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('제출 중 오류가 발생했습니다.');
+            }
+
+            setIsFileErrorModalOpen(true); // 모달 열기
+            return false
         }
     }
 
     const handleDraftSave = async () => {
         try {
             const formData = buildPayload(2)
-            if (!formData) return
+            if (!formData) return false
             const res = await api.post('/api/recruit/application/BACK/', formData)
             console.log(res.data)
-        } catch (err) {
+            return true
+        } catch (err: any) {
             console.error('임시 저장 실패:', err)
+
+            if (
+                err.response?.status === 413 ||
+                err.message?.includes('Network Error')
+            ) {
+                setFileErrorMessage('파일 크기가 너무 큽니다.');
+            } else {
+                setFileErrorMessage('임시 저장 중 오류가 발생했습니다.');
+            }
+
+            setIsFileErrorModalOpen(true); // ✅ 모달 열기
+            return false
         }
     }
 
     return (
         <div className={styles.page}>
             <div className={styles['page-content']}>
-                <Header />
+                <ApplyHeader />
                 <Banner
                     line1="백엔드 개발"
                     line2="서울여대 멋쟁이사자처럼 14기 아기사자 지원서"
@@ -272,10 +318,27 @@ const BackPage = () => {
                         onFileChange={(id, file) => handleFileChange(idx, id, file)}
                         onSubmit={handleFinalSubmit}
                         onDraftSave={handleDraftSave}
+                        onDirectSubmit={handleFinalSubmit}
+                        onDirectDraftSave={handleDraftSave}
+                        isLoaded={!!applicationData}
                     />
                 ))}
 
                 <ApplyFooter />
+
+                {isFileErrorModalOpen && (
+                    <Modal
+                        isOpen={isFileErrorModalOpen}
+                        title="업로드 실패"
+                        description={fileErrorMessage}
+                        primaryButton={{
+                            text: '확인',
+                            onClick: () => setIsFileErrorModalOpen(false),
+                        }}
+                        onClose={() => setIsFileErrorModalOpen(false)}
+                    />
+                )}
+
             </div>
         </div>
     )

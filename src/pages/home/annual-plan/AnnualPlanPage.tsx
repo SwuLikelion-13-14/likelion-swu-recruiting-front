@@ -47,8 +47,8 @@ const getPreciseEndMonth = (dateString: string): number => {
 };
 
 const getTopPosition = (type: string, index: number): number => {
-  const baseTop = type.toLowerCase() === 'hackathon' ? 80 : 25;
-  return baseTop + (index % 3) * 45;
+  const baseTop = type.toLowerCase() === 'hackathon' ? 90 : 25;
+  return baseTop + (index % 4) * 25;
 };
 
 const AnnualPlanPage = () => {
@@ -118,7 +118,9 @@ const AnnualPlanPage = () => {
       // 막대기 너비가 0보다 클 때만 렌더링
       if (widthVal <= 0) return null;
 
-      const width = widthVal < 120 ? '120px' : `${widthVal}px`;
+      // 화살표 너비(6.5px)를 제외한 실제 너비 계산
+      const actualWidth = widthVal - 6.5;
+      const width = actualWidth < 120 ? '120px' : `${actualWidth}px`;
 
       return (
         <div
