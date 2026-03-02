@@ -5,7 +5,7 @@ export const getRecruitState = () => {
     {
       state: "APPLY",
       start: new Date("2026-02-16T00:00:00"),
-      end: new Date("2026-03-02T11:59:59"),
+      end: new Date("2026-03-02T23:59:59"),
     },
     {
       state: "DOCUMENT",
