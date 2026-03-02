@@ -129,7 +129,7 @@ export default function ActivityContentPage() {
 
   const navigate = useNavigate();
   // 배너 상태 여부
-  const isRecruiting = false;
+  const isRecruiting = true;
 
   // 배경 이미지 조절은 여기서만
   const BG_ZOOM = 1;
