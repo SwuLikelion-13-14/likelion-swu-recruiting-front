@@ -35,7 +35,6 @@ export default function ApplicationsSummaryBar({
   filter,
   onChangeFilter,
 }: ApplicationsSummaryBarProps) {
-
   const options: ResultFilter[] = ["all", "pending", "pass", "fail"];
 
   return (

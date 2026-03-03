@@ -58,13 +58,13 @@ type PatchResponse = {
 export type Applicant = {
   responseId: number;
   userId: number;
-
   code: string;
   name: string;
   phone: string;
   part: Part;
   status: ResultStatus;
 
+  // 상세 페이지에서 추가로 쓰고 싶으면 optional로 유지
   studentId?: string;
   major?: string;
   doubleMajor?: string;
@@ -81,7 +81,7 @@ function mapFinalResultToStatus(v: ApiListItem["finalResult"]): ResultStatus {
 function stateFilterFromUI(filter: ResultFilter): number | undefined {
   if (filter === "pass") return 1;
   if (filter === "fail") return 0;
-  return undefined;
+  return undefined; // all / pending 는 stateFilter 안 보냄
 }
 
 function statusToFinalResult(status: ResultStatus): 0 | 1 | null {
@@ -104,12 +104,14 @@ export default function AdminApplicationsPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // ✅ URL querystring -> 상태(part) 동기화
   useEffect(() => {
     const qs = new URLSearchParams(location.search);
     const p = qs.get("part");
     if (isPart(p)) setPart(p);
   }, [location.search]);
 
+  // ✅ 상태(part) -> URL querystring 동기화
   useEffect(() => {
     const qs = new URLSearchParams(location.search);
     qs.set("part", part);
@@ -119,6 +121,7 @@ export default function AdminApplicationsPage() {
     );
   }, [part, location.pathname, location.search, navigate]);
 
+  // ✅ 목록 fetch
   useEffect(() => {
     const controller = new AbortController();
 
@@ -132,24 +135,18 @@ export default function AdminApplicationsPage() {
 
         const qs = new URLSearchParams();
         qs.set("applyTrack", applyTrack);
-        if (stateFilter !== undefined) {
-          qs.set("stateFilter", String(stateFilter));
-        }
+        if (stateFilter !== undefined) qs.set("stateFilter", String(stateFilter));
 
         const url = `${API_BASE}/api/admin/list?${qs.toString()}`;
         console.log("ADMIN LIST URL:", url);
 
         const res = await fetch(url, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           signal: controller.signal,
         });
 
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const raw = await res.text();
 
@@ -160,9 +157,7 @@ export default function AdminApplicationsPage() {
 
         const data: ApiResponse = JSON.parse(raw);
 
-        if (!data.isSuccess) {
-          throw new Error(data.message ?? "요청 실패");
-        }
+        if (!data.isSuccess) throw new Error(data.message ?? "요청 실패");
 
         const mapped: Applicant[] = data.result.map((r) => {
           const mappedPart: Part =
@@ -195,7 +190,6 @@ export default function AdminApplicationsPage() {
     }
 
     fetchList();
-
     return () => controller.abort();
   }, [part, filter]);
 
@@ -206,6 +200,7 @@ export default function AdminApplicationsPage() {
 
   const filtered = useMemo(() => {
     if (filter === "all") return byPart;
+    // ApplicationsSummaryBar의 filter가 ResultFilter("all" | "pass" | "fail" | "pending") 형태라면
     return byPart.filter((it) => it.status === (filter as ResultStatus));
   }, [byPart, filter]);
 
@@ -215,12 +210,12 @@ export default function AdminApplicationsPage() {
   };
 
   const handleChangeStatus = async (applicationId: number, next: ResultStatus) => {
-    const prevStatus = items.find((x) => x.responseId === applicationId)?.status ?? "pending";
+    const prevStatus =
+      items.find((x) => x.responseId === applicationId)?.status ?? "pending";
 
+    // optimistic update
     setItems((prev) =>
-      prev.map((x) =>
-        x.responseId === applicationId ? { ...x, status: next } : x
-      )
+      prev.map((x) => (x.responseId === applicationId ? { ...x, status: next } : x))
     );
 
     try {
@@ -228,9 +223,7 @@ export default function AdminApplicationsPage() {
 
       const res = await fetch(url, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           finalResult: statusToFinalResult(next),
         } satisfies PatchBody),
@@ -249,13 +242,12 @@ export default function AdminApplicationsPage() {
 
       if (raw.trim()) {
         const data: PatchResponse = JSON.parse(raw);
-        if (!data.isSuccess) {
-          throw new Error(data.message ?? "요청 실패");
-        }
+        if (!data.isSuccess) throw new Error(data.message ?? "요청 실패");
       }
     } catch (e: any) {
       console.error("ADMIN RESULT PATCH ERROR:", e);
 
+      // rollback
       setItems((prev) =>
         prev.map((x) =>
           x.responseId === applicationId ? { ...x, status: prevStatus } : x
@@ -274,17 +266,17 @@ export default function AdminApplicationsPage() {
     <div className="min-w-[980px]">
       <div className="pl-[40px] pt-6">
         <div className="flex items-center gap-6">
-          <button onClick={() => onChangePart("frontend")}>
+          <button type="button" onClick={() => onChangePart("frontend")}>
             <Label variant={part === "frontend" ? "active" : "inactive"}>
               프론트엔드
             </Label>
           </button>
-          <button onClick={() => onChangePart("backend")}>
+          <button type="button" onClick={() => onChangePart("backend")}>
             <Label variant={part === "backend" ? "active" : "inactive"}>
               백엔드
             </Label>
           </button>
-          <button onClick={() => onChangePart("design")}>
+          <button type="button" onClick={() => onChangePart("design")}>
             <Label variant={part === "design" ? "active" : "inactive"}>
               기획/디자인
             </Label>
