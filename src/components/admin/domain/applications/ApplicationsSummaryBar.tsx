@@ -35,7 +35,6 @@ export default function ApplicationsSummaryBar({
   filter,
   onChangeFilter,
 }: ApplicationsSummaryBarProps) {
-  // ✅ 전체가 첫 번째
   const options: ResultFilter[] = ["all", "pending", "pass", "fail"];
 
   return (

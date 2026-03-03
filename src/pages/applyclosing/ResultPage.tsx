@@ -13,7 +13,7 @@ const ResultPage = () => {
         return <div>잘못된 접근입니다.</div>;
     }
 
-    const { stateTitle, content1, content2, image } = data;
+    const { stateTitle, content1, content2 } = data;
 
     // content2 JSON 문자열 처리
     let parsedContent2: any = content2;
@@ -156,15 +156,6 @@ const ResultPage = () => {
                             </div>
                         )}
                     </div>
-
-                    {/* 결과 이미지 */}
-                    {image && (
-                        <img
-                            src={image}
-                            alt="결과 이미지"
-                            className={styles.resultImage}
-                        />
-                    )}
 
                     {/* 문의 */}
                     <p className={styles.textinsta}>
