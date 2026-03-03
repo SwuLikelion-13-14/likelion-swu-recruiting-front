@@ -10,11 +10,11 @@ export const getRecruitState = () => {
     {
       state: "DOCUMENT",
       start: new Date("2026-03-03T22:00:00"),
-      end: new Date("2026-03-04T09:59:59"),
+      end: new Date("2026-03-04T01:52:59"),
     },
     {
       state: "FIRST_PASSED",
-      start: new Date("2026-03-04T10:00:00"),
+      start: new Date("2026-03-04T01:53:00"),
       end: new Date("2026-03-05T23:59:59"),
     },
     {
