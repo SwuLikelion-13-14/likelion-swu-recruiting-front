@@ -12,7 +12,7 @@ import RecruitBanner from '../../components/ActivityContent/RecruitBanner';
 export default function RecruitPage() {
     const navigate = useNavigate();
   // 배너 상태 여부
-    const isRecruiting = true;
+    const isRecruiting = false;
 
   // 배경 이미지 조절은 여기서만
   const BG_ZOOM = 1;
