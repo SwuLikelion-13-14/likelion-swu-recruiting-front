@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import ApplyForm from "@/components/ApplyForm/ApplyForm";
@@ -50,6 +50,17 @@ type LocationState = {
   applicant?: ApplicantDetailFromState;
   partLabel?: string;
   from?: string;
+};
+
+type PatchBody = {
+  finalResult: 0 | 1 | null;
+};
+
+type PatchResponse = {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: null;
 };
 
 const TRACK_LABEL: Record<Track, string> = {
@@ -113,6 +124,11 @@ function pickStudentId(detail: ApiDetailResult | null) {
   return byNo2 ?? "";
 }
 
+function statusToFinalResult(status: ResultStatus): 0 | 1 | null {
+  if (status === "pending") return null;
+  return status === "pass" ? 1 : 0;
+}
+
 export default function AdminApplicationDetailPage() {
   const navigate = useNavigate();
   const { code } = useParams<{ code: string }>();
@@ -132,6 +148,10 @@ export default function AdminApplicationDetailPage() {
   const [status, setStatus] = useState<ResultStatus>(
     applicantFromState?.status ?? "pending"
   );
+  const prevStatusRef = useRef<ResultStatus>(status);
+
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const [consentChecked, setConsentChecked] = useState<boolean>(true);
 
@@ -141,6 +161,10 @@ export default function AdminApplicationDetailPage() {
     const to = from.startsWith("/") ? from : fallback;
     navigate(to);
   };
+
+  useEffect(() => {
+    prevStatusRef.current = status;
+  }, [status]);
 
   useEffect(() => {
     if (!responseId) {
@@ -229,23 +253,35 @@ export default function AdminApplicationDetailPage() {
   const commonQuestions: Question[] = useMemo(() => {
     if (!detail || !responseId) return [];
 
-    const fileEndpoint = `${API_BASE}/api/admin/response/${responseId}/file`;
-
     return (detail.answers ?? [])
       .filter((a) => a.part === "COMMON")
       .sort((a, b) => a.no - b.no)
       .map((a) => {
-        const answer = (a.responseText ?? "").trim();
         const qText = a.question ?? "";
+        const answerText = (a.responseText ?? "").trim();
 
         if (isPortfolioQuestionText(qText)) {
-          const link = isHttpUrl(answer) ? answer : fileEndpoint;
+          const urlFromAnswer =
+            isHttpUrl(answerText) && answerText ? answerText : "";
+
+          const urlFromDetail =
+            isHttpUrl(detail.fileUrl ?? "") && detail.fileUrl
+              ? detail.fileUrl.trim()
+              : "";
+
+          const candidateUrl = urlFromAnswer || urlFromDetail;
+          const hasAnyLink = Boolean(candidateUrl);
+
+          const display = hasAnyLink
+            ? answerText || (detail.fileName ?? "").trim() || candidateUrl
+            : "첨부 파일이 없습니다.";
+
           return {
             id: safeAdminQuestionId(a.part, a.questionId),
             question: `${a.no}. ${qText}`,
             type: "file" as const,
-            answer,
-            fileLink: link,
+            answer: display,
+            fileLink: hasAnyLink ? candidateUrl : undefined,
             placeholder: "",
           };
         }
@@ -254,7 +290,7 @@ export default function AdminApplicationDetailPage() {
           id: safeAdminQuestionId(a.part, a.questionId),
           question: `${a.no}. ${qText}`,
           type: "text" as const,
-          answer,
+          answer: answerText,
           placeholder: "",
         };
       });
@@ -289,6 +325,67 @@ export default function AdminApplicationDetailPage() {
     ],
     [studentIdFromBasic]
   );
+
+  const updateStatusApi = async (next: ResultStatus) => {
+    if (!responseId) return;
+
+    const url = `${API_BASE}/api/admin/result/${responseId}`;
+
+    const res = await fetch(url, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        finalResult: statusToFinalResult(next),
+      } satisfies PatchBody),
+    });
+
+    if (!res.ok) {
+      const rawErr = await res.text().catch(() => "");
+      throw new Error(`HTTP ${res.status}${rawErr ? ` - ${rawErr}` : ""}`);
+    }
+
+    const raw = await res.text();
+
+    if (raw.trim().startsWith("<")) {
+      throw new Error("API 대신 HTML을 받았습니다. URL/서버 라우팅 확인 필요.");
+    }
+
+    if (raw.trim()) {
+      const data: PatchResponse = JSON.parse(raw);
+      if (!data.isSuccess) {
+        throw new Error(data.message ?? "요청 실패");
+      }
+    }
+  };
+
+  const handleChangeStatus = async (next: ResultStatus) => {
+    if (statusSaving) return;
+
+    setStatusError(null);
+
+    const prev = prevStatusRef.current;
+    setStatus(next);
+
+    setStatusSaving(true);
+
+    try {
+      await updateStatusApi(next);
+      prevStatusRef.current = next;
+    } catch (e: any) {
+      setStatus(prev);
+      prevStatusRef.current = prev;
+
+      const msg =
+        next === "pending"
+          ? "서버에서 '선택' 저장을 지원하지 않는 것 같아요. (null 불가)\n백엔드에서 finalResult를 null로 받을 수 있게 해주세요."
+          : e?.message ?? "합/불 상태 변경에 실패했어요.";
+
+      setStatusError(msg);
+      alert(msg);
+    } finally {
+      setStatusSaving(false);
+    }
+  };
 
   if (!responseId) {
     return (
@@ -338,16 +435,28 @@ export default function AdminApplicationDetailPage() {
               합/불합 여부
             </div>
 
-            <ChipDropdown<ResultStatus>
-              value={status}
-              options={["pending", "pass", "fail"]}
-              labelMap={STATUS_LABEL}
-              onChange={setStatus}
-              chipClass={getStatusChipClass}
-              panelWidthClass="w-[200px]"
-              optionHeightClass="h-[50px]"
-              panelAlignClass="right-0"
-            />
+            <div className="flex flex-col items-end">
+              <ChipDropdown<ResultStatus>
+                value={status}
+                options={["pending", "pass", "fail"]}
+                labelMap={STATUS_LABEL}
+                onChange={handleChangeStatus}
+                chipClass={getStatusChipClass}
+                panelWidthClass="w-[200px]"
+                optionHeightClass="h-[50px]"
+                panelAlignClass="right-0"
+              />
+
+              {(statusSaving || statusError) && (
+                <div className="mt-1 text-[12px]">
+                  {statusSaving ? (
+                    <span className="text-[#6B6B6B]">저장 중…</span>
+                  ) : (
+                    <span className="text-[#FF3B30]">{statusError}</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
