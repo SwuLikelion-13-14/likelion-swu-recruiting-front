@@ -5,11 +5,11 @@ export const getRecruitState = () => {
     {
       state: "APPLY",
       start: new Date("2026-02-16T00:00:00"),
-      end: new Date("2026-03-02T23:59:59"),
+      end: new Date("2026-03-03T21:59:59"),
     },
     {
       state: "DOCUMENT",
-      start: new Date("2026-03-03T00:00:00"),
+      start: new Date("2026-03-03T22:00:00"),
       end: new Date("2026-03-04T09:59:59"),
     },
     {
@@ -37,4 +37,3 @@ export const getRecruitState = () => {
 
   return "CLOSED";
 };
-
