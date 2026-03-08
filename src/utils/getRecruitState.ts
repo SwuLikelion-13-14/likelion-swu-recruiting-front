@@ -20,11 +20,11 @@ export const getRecruitState = () => {
     {
       state: "INTERVIEW",
       start: new Date("2026-03-06T00:00:00"),
-      end: new Date("2026-03-08T020:29:59"),
+      end: new Date("2026-03-09T09:59:59"),
     },
     {
       state: "FINAL_PASSED",
-      start: new Date("2026-03-08T20:30:00"),
+      start: new Date("2026-03-09T10:00:00"),
       end: new Date("2026-03-12T23:59:59"),
     },
   ];
@@ -37,5 +37,4 @@ export const getRecruitState = () => {
 
   return "CLOSED";
 };
-
 
