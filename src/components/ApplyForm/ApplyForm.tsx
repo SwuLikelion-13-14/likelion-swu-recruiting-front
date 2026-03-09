@@ -15,10 +15,8 @@ type StudentStatus = "invalid" | "draft-exists" | "submitted-exists" | "valid";
 
 const studentMessages: Record<StudentStatus, string> = {
   invalid: "형식이 다릅니다. 숫자 10자리를 입력하세요.",
-  "draft-exists":
-    "",
-  "submitted-exists":
-    "",
+  "draft-exists": "",
+  "submitted-exists": "",
   valid: "지원 가능한 학번입니다.",
 };
 
@@ -32,11 +30,11 @@ const mockCheckStudentId = (id: string): StudentStatus => {
 type ButtonState = "default" | "unactive";
 
 function isHttpUrl(s: string) {
-  return /^https?:\/\//i.test(s.trim());
+  return /^https?:\/\//i.test((s ?? "").trim());
 }
 
 function openInNewTab(url: string) {
-  const u = url.trim();
+  const u = (url ?? "").trim();
   if (!u) return;
   window.open(u, "_blank", "noopener,noreferrer");
 }
@@ -62,7 +60,7 @@ export default function ApplyForm({
   onDirectSubmit,
   onDirectDraftSave,
   isLoaded,
-  onFileDownload, 
+  onFileDownload,
 }: ApplyFormProps) {
   const isSurvey = variant === "survey";
   const isResult = variant === "result";
@@ -72,6 +70,7 @@ export default function ApplyForm({
   const [studentStatus, setStudentStatus] = useState<StudentStatus | undefined>(
     undefined
   );
+
   const STUDENT_ID = studentIdField ?? 15;
   const PASSWORD_ID = passwordField ?? 16;
 
@@ -119,9 +118,9 @@ export default function ApplyForm({
   const [initialFiles, setInitialFiles] = useState<Record<number, File | null>>(
     {}
   );
+
   const [isSubmitSuccessOpen, setIsSubmitSuccessOpen] = useState(false);
   const [isDraftSuccessOpen, setIsDraftSuccessOpen] = useState(false);
-
 
   const safeAllQuestions = useMemo(
     () => (allQuestions && allQuestions.length ? allQuestions : questions),
@@ -148,12 +147,12 @@ export default function ApplyForm({
     const studentQ = questions.find((q) => q.id === STUDENT_ID);
     if (studentQ?.answer) {
       if (isLoaded) {
-        setStudentStatus("valid"); 
+        setStudentStatus("valid");
       } else {
         setStudentStatus(mockCheckStudentId(studentQ.answer));
       }
     }
-  }, [questions, STUDENT_ID, mode]);
+  }, [questions, STUDENT_ID, mode, isLoaded]);
 
   useEffect(() => {
     if (mode !== "view") return;
@@ -178,9 +177,9 @@ export default function ApplyForm({
     setIsLoadingOpen(true);
     setIsDrafting(true);
     try {
-      const success = await onDirectDraftSave?.(); 
-      setIsLoadingOpen(false); 
-      if (success) setIsDraftSuccessOpen(true);
+      const ok = await onDirectDraftSave?.();
+      setIsLoadingOpen(false);
+      if (ok) setIsDraftSuccessOpen(true);
     } catch (error) {
       setIsLoadingOpen(false);
       console.error("임시저장 실패:", error);
@@ -195,9 +194,9 @@ export default function ApplyForm({
     setIsLoadingOpen(true);
     setIsSubmitting(true);
     try {
-      const success = await onDirectSubmit?.(); 
-      setIsLoadingOpen(false); 
-      if (success) setIsSubmitSuccessOpen(true); 
+      const ok = await onDirectSubmit?.();
+      setIsLoadingOpen(false);
+      if (ok) setIsSubmitSuccessOpen(true);
     } catch (error) {
       setIsLoadingOpen(false);
       console.error("최종제출 실패:", error);
@@ -314,17 +313,16 @@ export default function ApplyForm({
     if (status === "valid") {
       setIsLoadingOpen(true);
       try {
-        const success = await onSubmit?.();
-
+        const ok = await onSubmit?.();
         setIsLoadingOpen(false);
 
-        if (!success) return false; // ❗ 실패면 성공모달 금지
+        if (!ok) return false;
 
         setIsSubmitSuccessOpen(true);
         return true;
       } catch (error) {
         setIsLoadingOpen(false);
-        console.error('제출 실패:', error);
+        console.error("제출 실패:", error);
         return false;
       }
     } else if (status === "draft-exists") {
@@ -349,11 +347,10 @@ export default function ApplyForm({
     if (status === "valid") {
       setIsLoadingOpen(true);
       try {
-        const success = await onDraftSave?.();
-
+        const ok = await onDraftSave?.();
         setIsLoadingOpen(false);
 
-        if (!success) return false;
+        if (!ok) return false;
 
         setIsDraftSuccessOpen(true);
         return true;
@@ -376,6 +373,7 @@ export default function ApplyForm({
 
   const handleFileUpload = (id: number) => {
     if (typeof window === "undefined") return;
+
     const input = document.createElement("input");
     input.type = "file";
     input.onchange = (e) => {
@@ -455,7 +453,6 @@ export default function ApplyForm({
     if (mode === "view") return;
     registerValidator(validateInfoSection);
   }, [mode, studentStatus, passwordAnswer, registerValidator]);
-  
 
   const requiredQuestions = safeAllQuestions.filter(
     (q) => q.required && q.id !== STUDENT_ID && q.id !== PASSWORD_ID
@@ -501,6 +498,7 @@ export default function ApplyForm({
         >
           {title}
         </h1>
+
         {subtitle && (
           <p
             className={[
@@ -521,9 +519,9 @@ export default function ApplyForm({
           const inputStateClass = isStudentField
             ? errors[item.id]
               ? styles.inputError
-              : studentStatus === "valid" && !isLoaded 
-                ? styles.inputSuccess
-                : ""
+              : studentStatus === "valid" && !isLoaded
+              ? styles.inputSuccess
+              : ""
             : errors[item.id]
             ? styles.inputError
             : success[item.id]
@@ -546,119 +544,140 @@ export default function ApplyForm({
 
               {item.type === "file" ? (
                 <div className={styles.fileInputWrapper}>
-                  <input
-                    id={`field-${item.id}`}
-                    className={[
-                      styles.input,
-                      isSurvey ? styles.inputDark : styles.inputLight,
-                      errors[item.id]
-                        ? styles.inputError
-                        : success[item.id]
-                        ? styles.inputSuccess
-                        : "",
-                    ].join(" ")}
-                    value={answers[item.id] || ""}
-                    placeholder={item.placeholder}
-                    readOnly={mode === "view"}
-                    onChange={(e) => {
-                      if (mode === "view") return;
+                  {(() => {
+                    const rawAnswer = (answers[item.id] ?? "").trim();
 
-                      const value = e.target.value;
-                      setAnswers((prev) => ({ ...prev, [item.id]: value }));
-                      onChange?.(item.id, value);
+                    const urlFromLink = (item.fileLink ?? "").trim();
+                    const urlFromAnswer = isHttpUrl(rawAnswer) ? rawAnswer : "";
+                    const url = (urlFromLink || urlFromAnswer).trim();
 
-                      if (value.trim() !== "") {
-                        setErrors((prev) => {
-                          const next = { ...prev };
-                          delete next[item.id];
-                          return next;
-                        });
-                      }
-                    }}
-                    onFocus={() =>
-                      setFocusedFields((prev) => ({ ...prev, [item.id]: true }))
-                    }
-                    onBlur={() => {
-                      setFocusedFields((prev) => ({
-                        ...prev,
-                        [item.id]: false,
-                      }));
-                      handleBlur(item.id, safeAllQuestions);
-                    }}
-                  />
+                    const hasAttachment = !!files[item.id] || !!url || rawAnswer !== "";
 
-                  <div className={styles.fileBottomRow}>
-                    <div>
-                      {errors[item.id] && (
-                        <div
+                    const displayValue =
+                      rawAnswer ||
+                      (mode === "view"
+                        ? hasAttachment
+                          ? ""
+                          : "첨부 파일이 없습니다."
+                        : "");
+
+                    const finalValue = rawAnswer || (mode === "view" ? displayValue : "");
+
+                    const canOpen = mode === "view" && !!url;
+
+                    const label =
+                      mode === "view"
+                        ? canOpen
+                          ? isHttpUrl(url)
+                            ? "링크 열기"
+                            : "파일 열기"
+                          : "첨부 없음"
+                        : files[item.id]
+                        ? "파일 변경하기"
+                        : "파일 업로드";
+
+                    return (
+                      <>
+                        <input
+                          id={`field-${item.id}`}
                           className={[
-                            styles.errorText,
-                            styles.fileErrorText,
+                            styles.input,
+                            isSurvey ? styles.inputDark : styles.inputLight,
+                            errors[item.id]
+                              ? styles.inputError
+                              : success[item.id]
+                              ? styles.inputSuccess
+                              : "",
                           ].join(" ")}
-                        >
-                          {errors[item.id]}
-                        </div>
-                      )}
-                      {success[item.id] && !errors[item.id] && (
-                        <div
-                          className={[
-                            styles.successText,
-                            styles.fileErrorText,
-                          ].join(" ")}
-                        >
-                          {success[item.id]}
-                        </div>
-                      )}
-                    </div>
+                          value={finalValue}
+                          placeholder={item.placeholder}
+                          readOnly={mode === "view"}
+                          onChange={(e) => {
+                            if (mode === "view") return;
 
-                    <div className={styles.fileButtons}>
-                      {files[item.id] && (
-                        <button
-                          type="button"
-                          className={styles.deleteButton}
-                          onClick={() => handleFileDelete(item.id)}
-                          disabled={mode === "view"}
-                        >
-                          파일 삭제하기
-                        </button>
-                      )}
+                            const value = e.target.value;
+                            setAnswers((prev) => ({ ...prev, [item.id]: value }));
+                            onChange?.(item.id, value);
 
-                      {(() => {
-                        const url = (item.fileLink || answers[item.id] || "").trim();
-                        const canOpen = mode === "view" && !!url;
-                        const label =
-                          mode === "view"
-                            ? isHttpUrl(url)
-                              ? "링크 열기"
-                              : "파일 열기"
-                            : files[item.id]
-                            ? "파일 변경하기"
-                            : "파일 업로드";
+                            if (value.trim() !== "") {
+                              setErrors((prev) => {
+                                const next = { ...prev };
+                                delete next[item.id];
+                                return next;
+                              });
+                            }
+                          }}
+                          onFocus={() =>
+                            setFocusedFields((prev) => ({
+                              ...prev,
+                              [item.id]: true,
+                            }))
+                          }
+                          onBlur={() => {
+                            setFocusedFields((prev) => ({
+                              ...prev,
+                              [item.id]: false,
+                            }));
+                            handleBlur(item.id, safeAllQuestions);
+                          }}
+                        />
 
-                        return (
-                          <button
-                            type="button"
-                            className={styles.uploadButton}
-                            onClick={() => {
-                              if (mode === "view") {
-                                if (!url) return;
-                                if (onFileDownload) {
-                                  onFileDownload(url, item.question);
+                        <div className={styles.fileBottomRow}>
+                          <div>
+                            {errors[item.id] && (
+                              <div className={[styles.errorText, styles.fileErrorText].join(" ")}>
+                                {errors[item.id]}
+                              </div>
+                            )}
+                            {success[item.id] && !errors[item.id] && (
+                              <div className={[styles.successText, styles.fileErrorText].join(" ")}>
+                                {success[item.id]}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className={styles.fileButtons}>
+                            {files[item.id] && (
+                              <button
+                                type="button"
+                                className={styles.deleteButton}
+                                onClick={() => handleFileDelete(item.id)}
+                                disabled={mode === "view"}
+                              >
+                                파일 삭제하기
+                              </button>
+                            )}
+
+                            <button
+                              type="button"
+                              className={styles.uploadButton}
+                              onClick={() => {
+                                if (mode === "view") {
+                                  if (!url) return;
+                                  if (onFileDownload) {
+                                    onFileDownload(url, item.question);
+                                    return;
+                                  }
+                                  openInNewTab(url);
                                   return;
                                 }
-                                openInNewTab(url);
-                                return;
+                                handleFileUpload(item.id);
+                              }}
+                              disabled={mode === "view" ? !canOpen : false}
+                              aria-disabled={mode === "view" ? !canOpen : false}
+                              title={
+                                mode === "view" && !canOpen
+                                  ? "첨부 파일 또는 링크가 없습니다."
+                                  : undefined
                               }
-                              handleFileUpload(item.id);
-                            }}
-                            disabled={mode === "view" ? !canOpen : false}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })()}
-                    </div>
-                  </div>
+                            >
+                              {label}
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ) : (
                 <>
@@ -672,7 +691,10 @@ export default function ApplyForm({
                     ].join(" ")}
                     value={answers[item.id] || ""}
                     placeholder={placeholderText}
-                    readOnly={mode === "view" || (isLoaded && (isStudentField || isPasswordField))}
+                    readOnly={
+                      mode === "view" ||
+                      (isLoaded && (isStudentField || isPasswordField))
+                    }
                     rows={1}
                     style={{ resize: "none", overflow: "hidden" }}
                     onFocus={() =>
@@ -743,8 +765,7 @@ export default function ApplyForm({
                         if (!/^\d{4}$/.test(value.trim())) {
                           setErrors((prev) => ({
                             ...prev,
-                            [PASSWORD_ID]:
-                              "형식이 다릅니다. 숫자 4자리를 입력하세요.",
+                            [PASSWORD_ID]: "형식이 다릅니다. 숫자 4자리를 입력하세요.",
                           }));
                           setSuccess((prev) => {
                             const next = { ...prev };
@@ -773,7 +794,9 @@ export default function ApplyForm({
                       }
                     >
                       {errors[item.id] ||
-                        (!isLoaded && studentStatus ? studentMessages[studentStatus] : "")}
+                        (!isLoaded && studentStatus
+                          ? studentMessages[studentStatus]
+                          : "")}
                     </div>
                   ) : mode !== "view" ? (
                     <>
@@ -948,10 +971,12 @@ export default function ApplyForm({
                 >
                   현재 작성 중인 지원서 페이지 내에서 트랙을 변경하는 것은{" "}
                   <span className={styles.highlight}>불가능</span> 합니다. <br />
-                  작성 중인 지원서의 <span className={styles.highlight}>‘작성 취소’</span>를
-                  누른 후, <br />
+                  작성 중인 지원서의{" "}
+                  <span className={styles.highlight}>‘작성 취소’</span>를 누른 후,{" "}
+                  <br />
                   변경하고 싶은 트랙을 선택하여 지원서를 다시 작성해 주세요. <br />
-                  내용은 <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
+                  내용은{" "}
+                  <span className={styles.highlight}>자동 저장되지 않으므로</span>{" "}
                   복사/붙여넣기를 권장 드립니다.
                 </p>
               </div>
@@ -960,12 +985,26 @@ export default function ApplyForm({
             <div className={styles.noticeItem}>
               <img src={noticeIcon} alt="" className={styles.noticeIcon} />
               <div className={styles.noticeTextGroup}>
-                <p className={styles.noticeText}>제출한 지원서를 수정할 수 있나요?</p>
-                <p className={styles.noticeTextDetail}>
+                <p
+                  className={[
+                    styles.noticeText,
+                    isResult ? styles.noticeTextBlack : "",
+                  ].join(" ")}
+                >
+                  제출한 지원서를 수정할 수 있나요?
+                </p>
+                <p
+                  className={[
+                    styles.noticeTextDetail,
+                    isResult ? styles.noticeTextDetailBlack : "",
+                  ].join(" ")}
+                >
                   1차 서류 모집 기간 내에 한하여{" "}
                   <span className={styles.highlight}>수정 가능</span> 합니다.{" "}
-                  <span className={styles.highlight}>학번과 본인 확인용 비밀번호</span>를
-                  입력 후, <br />
+                  <span className={styles.highlight}>
+                    학번과 본인 확인용 비밀번호
+                  </span>
+                  를 입력 후, <br />
                   최종 제출 또는 임시 저장한 지원서를 다시 수정할 수 있습니다.
                   <br />
                   <br />
@@ -978,9 +1017,22 @@ export default function ApplyForm({
             <div className={styles.noticeItem}>
               <img src={noticeIcon} alt="" className={styles.noticeIcon} />
               <div className={styles.noticeTextGroup}>
-                <p className={styles.noticeText}>여러 트랙의 지원서를 제출 할 수 있나요?</p>
-                <p className={styles.noticeTextDetail}>
-                  본 모집은 <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span>{" "}
+                <p
+                  className={[
+                    styles.noticeText,
+                    isResult ? styles.noticeTextBlack : "",
+                  ].join(" ")}
+                >
+                  여러 트랙의 지원서를 제출 할 수 있나요?
+                </p>
+                <p
+                  className={[
+                    styles.noticeTextDetail,
+                    isResult ? styles.noticeTextDetailBlack : "",
+                  ].join(" ")}
+                >
+                  본 모집은{" "}
+                  <span className={styles.highlight}>1인당 1개의 트랙에 한하여</span>{" "}
                   1회만 지원 가능합니다.
                 </p>
               </div>
@@ -997,7 +1049,8 @@ export default function ApplyForm({
               onSubmit={handleSubmit}
               onCancelConfirmed={() => (window.location.href = "/")}
               dbStatus={
-                studentStatus === "draft-exists" || studentStatus === "submitted-exists"
+                studentStatus === "draft-exists" ||
+                studentStatus === "submitted-exists"
                   ? studentStatus
                   : "none"
               }
@@ -1055,7 +1108,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>
+              현재 작성한 지원서는{" "}
+              <span style={{ color: "#FF7710" }}>임시저장 </span>
               상태로 저장됩니다.
             </span>
           }
@@ -1086,7 +1140,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>
+              현재 작성한 지원서는{" "}
+              <span style={{ color: "#FF7710" }}>최종제출 </span>
               상태로 저장됩니다.
             </span>
           }
@@ -1117,7 +1172,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>임시저장 </span>
+              현재 작성한 지원서는{" "}
+              <span style={{ color: "#FF7710" }}>임시저장 </span>
               상태로 저장됩니다.
             </span>
           }
@@ -1148,7 +1204,8 @@ export default function ApplyForm({
           }
           extraText={
             <span>
-              현재 작성한 지원서는 <span style={{ color: "#FF7710" }}>최종제출 </span>
+              현재 작성한 지원서는{" "}
+              <span style={{ color: "#FF7710" }}>최종제출 </span>
               상태로 저장됩니다.
             </span>
           }
@@ -1219,7 +1276,7 @@ export default function ApplyForm({
           onClose={() => setIsDraftSuccessOpen(false)}
         />
       )}
-      {/* 로딩 모달 추가 */}
+
       {isLoadingOpen && (
         <Modal
           isOpen={isLoadingOpen}

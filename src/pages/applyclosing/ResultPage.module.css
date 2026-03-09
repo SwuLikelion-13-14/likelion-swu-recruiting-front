@@ -59,15 +59,6 @@
   margin-bottom: 40px;
 }
 
-/* 결과 이미지 */
-.resultImage {
-  margin-top: 24px;
-  width: 1000px;
-  height: 800px;
-  border-radius: 32px;
-  margin-bottom: 80px;
-}
-
 /* 기타 공통 레이아웃 */
 .container {
   min-height: 100vh;
@@ -119,6 +110,7 @@
   flex-direction: column;
   align-items: flex-start;     /* 왼쪽 정렬 */
   margin-top: 80px;
+  margin-bottom: 50px;
 }
 
 /* 불합격 페이지 */
